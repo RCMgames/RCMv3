@@ -1,16 +1,8 @@
-# RCMv2
-https://github.com/rcmgames/RCMv2
-### open in VSCode (using [PlatformIO](https://platformio.org/platformio-ide)), or use the Arduino IDE.
+# RCMv3
 
-### _write a description of what your robot does here:_ The main branch is just template code that doesn't control anything.
+# this will probably never become anything. it's just a place to experiment
 
-## find more information about the Robot Control Module hardware here: [https://github.com/rcmgames](https://github.com/rcmgames?view_as=public)
-
-### Install Driver Station App:
-
-https://github.com/rcmgames/RCMDS-new (recommended)
-
-https://github.com/rcmgames/RCMDS (advanced)
+https://github.com/rcmgames/RCMv3
 
 ### Libraries used:
 * [JMotor](https://github.com/joshua-8/JMotor) library for motor control
