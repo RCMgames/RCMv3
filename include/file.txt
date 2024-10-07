@@ -1,0 +1,1 @@
+this folder and file is just to make c_cpp_properties.json that gets generated in .vscode when vscode and platformIO is used. You can just ignore this folder.
