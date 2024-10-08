@@ -20,35 +20,77 @@ uncomment one of the following lines depending on which communication method you
 
 #include "rcm.h" //defines pins
 
+#include <ESPAsyncWebServer.h>
+#include <LittleFS.h>
+
+AsyncWebServer server(80);
+String data = "hi,mogus\nhow,are,you";
+
 // set up motors and anything else you need here
 // See this page for how to set up servos and motors for each type of RCM board:
 // https://github.com/RCMgames/useful-code/tree/main/boards
 // See this page for information about how to set up a robot's drivetrain using the JMotor library
 // https://github.com/joshua-8/JMotor/wiki/How-to-set-up-a-drivetrain
 
-
 void Enabled()
 {
     // code to run while enabled, put your main code here
-
 }
 
 void Enable()
 {
     // turn on outputs
-
 }
 
 void Disable()
 {
     // turn off outputs
-
 }
 
 void PowerOn()
 {
     // runs once on robot startup, set pin modes and use begin() if applicable here
 
+    // Initialize SPIFFS
+    if (!LittleFS.begin(true)) {
+        Serial.println("An Error has occurred while mounting SPIFFS");
+        return;
+    }
+
+    // Route for root / web page
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(LittleFS, "/index.html", "text/html");
+    });
+
+    // Route to load script.js file
+    server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(LittleFS, "/script.js", "text/javascript");
+    });
+
+    // Route to load style.css file
+    server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(LittleFS, "/style.css", "text/css");
+    });
+
+    // add places you can GET request from to do things
+    server.on("/data", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(200, "text/plain", data);
+    });
+
+    // Route to set GPIO to HIGH
+    server.on("/on", HTTP_GET, [](AsyncWebServerRequest* request) {
+        digitalWrite(2, HIGH);
+        request->send(200, "text/plain", "");
+    });
+
+    // Route to set GPIO to LOW
+    server.on("/off", HTTP_GET, [](AsyncWebServerRequest* request) {
+        digitalWrite(2, LOW);
+        request->send(200, "text/plain", "");
+    });
+
+    // Start server
+    server.begin();
 }
 
 void Always()
@@ -64,13 +106,11 @@ void WifiDataToParse()
 {
     enabled = EWD::recvBl();
     // add data to read here: (EWD::recvBl, EWD::recvBy, EWD::recvIn, EWD::recvFl)(boolean, byte, int, float)
-
 }
 void WifiDataToSend()
 {
     EWD::sendFl(voltageComp.getSupplyVoltage());
     // add data to send here: (EWD::sendBl(), EWD::sendBy(), EWD::sendIn(), EWD::sendFl())(boolean, byte, int, float)
-
 }
 
 void configWifi()
