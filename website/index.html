@@ -9,17 +9,27 @@
 
 <body>
   <h1>driver station</h1>
-  <button class="test-button" onclick='setLed(true)'>ON</button>
-  <button class="test-button" onclick='setLed(false)'>OFF</button>
-  <button onclick='getAndDownloadData("./data")'>download</button>
-  <div>
-    <button onclick='addDSItem("joystick")'>add joystick</button>
-    <button onclick='addDSItem("button")'>add button</button>
-    <button onclick='addDSItem("hslider")'>add hslider</button>
-    <button onclick='addDSItem("vslider")'>add vslider</button>
-    <button onclick='clearDSItems()'>clear</button>
-    <br>
+  <button id="toggleEditDriverstation" onclick='toggleEditDriverstation()'>Run</button>
+  <br>
+  <div style="display:flex; flex-direction: row;">
     <canvas class="ds" id="ds" width="600" height="1000"></canvas>
+    <span id="ds-edit-ui">
+      <div style="display:flex; flex-direction: row;">
+        <div>
+          <div>
+            <button onclick='addDSItem("joystick")'>add joystick</button>
+            <button onclick='addDSItem("button")'>add button</button>
+            <button onclick='addDSItem("hslider")'>add hslider</button>
+            <button onclick='addDSItem("vslider")'>add vslider</button>
+            <button onclick='clearDSItems()'>clear</button>
+          </div>
+          <div id="ds-list"> </div>
+        </div>
+        <div>
+          <div id="ds-properties"> </div>
+        </div>
+      </div>
+    </span>
   </div>
 </body>
 

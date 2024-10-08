@@ -25,8 +25,8 @@ class DSItem {
             this.radius = 0;
         }
 
-        this.x = 0;
-        this.y = 0;
+        this.posX = 0;
+        this.posY = 0;
 
         this.mousePressed = false;
 
@@ -35,15 +35,26 @@ class DSItem {
         this.joyx = 0;
         this.joyy = 0;
 
+        this.numData = 0;
+        this.dataIndices = [];
+
         this.vars = [];
         if (this.type === "joystick") {
+            this.numData = 2;
             this.vars = [0.0, 0.0];
+            this.dataIndices = [null, null];
         } else if (this.type === "hslider") {
+            this.numData = 1;
             this.vars = [0.0];
+            this.dataIndices = [null];
         } else if (this.type === "vslider") {
+            this.numData = 1;
             this.vars = [0.0];
+            this.dataIndices = [null];
         } else if (this.type === "button") {
+            this.numData = 1;
             this.vars = [0];
+            this.dataIndices = [null];
         }
 
         this.dsCanvas.addEventListener('mousedown', this.onMouseDown.bind(this));
@@ -61,9 +72,9 @@ class DSItem {
         const rect = this.dsCanvas.getBoundingClientRect();
         const mouseX = event.clientX - rect.left;
         const mouseY = event.clientY - rect.top;
-        if (mouseX >= this.x && mouseX <= this.x + this.width && mouseY >= this.y && mouseY <= this.y + this.height) {
-            this.offsetX = mouseX - this.x;
-            this.offsetY = mouseY - this.y;
+        if (mouseX >= this.posX && mouseX <= this.posX + this.width && mouseY >= this.posY && mouseY <= this.posY + this.height) {
+            this.offsetX = mouseX - this.posX;
+            this.offsetY = mouseY - this.posY;
             this.mousePressed = true;
             if (this.beingEdited === false && this.type === "button") {
                 this.vars[0] = 1;
@@ -77,9 +88,9 @@ class DSItem {
             const touch = event.touches[i];
             const mouseX = touch.clientX - rect.left;
             const mouseY = touch.clientY - rect.top;
-            if (mouseX >= this.x && mouseX <= this.x + this.width && mouseY >= this.y && mouseY <= this.y + this.height) {
-                this.offsetX = mouseX - this.x;
-                this.offsetY = mouseY - this.y;
+            if (mouseX >= this.posX && mouseX <= this.posX + this.width && mouseY >= this.posY && mouseY <= this.posY + this.height) {
+                this.offsetX = mouseX - this.posX;
+                this.offsetY = mouseY - this.posY;
                 this.mousePressed = true;
                 if (this.beingEdited === false && this.type === "button") {
                     this.vars[0] = 1;
@@ -103,29 +114,29 @@ class DSItem {
         if (this.mousePressed) {
             if (this.beingEdited) {
                 const rect = this.dsCanvas.getBoundingClientRect();
-                this.x = x - rect.left - this.offsetX;
-                this.y = y - rect.top - this.offsetY;
-                this.x = Math.floor(this.x / 10) * 10;
-                this.y = Math.floor(this.y / 10) * 10;
-                if (this.x < 0) this.x = 0;
-                if (this.y < 0) this.y = 0;
-                if (this.x + this.width > this.dsCanvas.width) {
-                    this.x = this.dsCanvas.width - this.width
+                this.posX = x - rect.left - this.offsetX;
+                this.posY = y - rect.top - this.offsetY;
+                this.posX = Math.floor(this.posX / 10) * 10;
+                this.posY = Math.floor(this.posY / 10) * 10;
+                if (this.posX < 0) this.posX = 0;
+                if (this.posY < 0) this.posY = 0;
+                if (this.posX + this.width > this.dsCanvas.width) {
+                    this.posX = this.dsCanvas.width - this.width
                 };
-                if (this.y + this.height > this.dsCanvas.height) {
-                    this.y = this.dsCanvas.height - this.height
+                if (this.posY + this.height > this.dsCanvas.height) {
+                    this.posY = this.dsCanvas.height - this.height
                 };
                 this.redrawCanvas();
                 this.draw();
             } else {
                 const rect = this.dsCanvas.getBoundingClientRect();
                 if (this.type === "joystick" || this.type === "hslider") {
-                    this.joyx = (x - rect.left - this.x - this.width / 2) / (this.width / 2 - this.radius);
+                    this.joyx = (x - rect.left - this.posX - this.width / 2) / (this.width / 2 - this.radius);
                 } else {
                     this.joyx = 0;
                 }
                 if (this.type === "joystick" || this.type === "vslider") {
-                    this.joyy = -(y - rect.top - this.y - this.height / 2) / (this.height / 2 - this.radius);
+                    this.joyy = -(y - rect.top - this.posY - this.height / 2) / (this.height / 2 - this.radius);
                 } else {
                     this.joyy = 0;
                 }
@@ -136,8 +147,11 @@ class DSItem {
                 if (this.type === "joystick") {
                     this.vars[0] = this.joyx;
                     this.vars[1] = this.joyy;
-                } else if (this.type === "hslider" || this.type === "vslider") {
+                } else if (this.type === "hslider") {
                     this.vars[0] = this.joyx;
+                }
+                else if (this.type === "vslider") {
+                    this.vars[0] = this.joyy;
                 }
                 this.draw();
             }
@@ -179,28 +193,83 @@ class DSItem {
         const ctx = this.dsCanvas.getContext('2d');
         ctx.beginPath();
         ctx.fillStyle = 'green';
-        ctx.roundRect(this.x, this.y, this.width, this.height, [this.radius]);
+        ctx.roundRect(this.posX, this.posY, this.width, this.height, [this.radius]);
         ctx.fill();
 
         if (this.type === "button") {
             if (this.vars[0] === 1) {
                 ctx.beginPath();
-                ctx.fillStyle = 'white';
-                ctx.roundRect(this.x, this.y, this.width, this.height, [this.radius]);
+                ctx.fillStyle = 'black';
+                ctx.roundRect(this.posX, this.posY, this.width, this.height, [this.radius]);
                 ctx.fill();
             }
         } else {
             ctx.beginPath();
             ctx.fillStyle = 'white';
-            ctx.arc(this.x + this.width / 2 + this.joyx * (this.width / 2 - this.radius), this.y + this.height / 2 - this.joyy * (this.height / 2 - this.radius), this.radius, 0, 2 * Math.PI);
+            ctx.arc(this.posX + this.width / 2 + this.joyx * (this.width / 2 - this.radius), this.posY + this.height / 2 - this.joyy * (this.height / 2 - this.radius), this.radius, 0, 2 * Math.PI);
             ctx.fill();
+        }
+    }
+
+    nameElement() {
+        let element = document.createElement("div");
+
+        let typeLabel = document.createElement("span");
+        typeLabel.innerHTML = this.type;
+        element.appendChild(typeLabel);
+
+        let propertiesButton = document.createElement("button");
+        propertiesButton.innerHTML = "edit";
+        propertiesButton.onclick = () => {
+            document.getElementById("ds-properties").replaceChildren(this.propertiesElement());
+        }
+        element.appendChild(propertiesButton);
+
+        let deleteButton = document.createElement("button");
+        deleteButton.innerHTML = "delete";
+        deleteButton.onclick = () => {
+            deleteDSItem(this);
+        }
+        element.appendChild(deleteButton);
+
+        return element;
+    }
+    propertiesElement() {
+        // create an element that contains numeric input fields for numData dataIndices
+
+        let element = document.createElement("div");
+
+        for (let i = 0; i < this.numData; i++) {
+            let input = document.createElement("input");
+            input.type = "number";
+            input.value = this.dataIndices[i];
+            input.oninput = () => {
+                this.dataIndices[i] = input.value;
+            }
+            element.appendChild(input);
+        }
+
+        return element;
+
+    }
+
+    run(allData) {
+        for (let i = 0; i < this.numData; i++) {
+            if (this.dataIndices[i] !== null) {
+                allData[this.dataIndices[i]] = this.vars[i];
+            }
         }
     }
 }
 
-async function setLed(status) {
+var driverstationEditable = true;
+function toggleEditDriverstation() {
+    driverstationEditable = !driverstationEditable;
+    document.getElementById("toggleEditDriverstation").innerHTML = !driverstationEditable ? "Edit" : "Run";
+    document.getElementById("ds-edit-ui").hidden = !driverstationEditable;
+
     for (let i = 0; i < DSItems.length; i++) {
-        DSItems[i].beingEdited = status;
+        DSItems[i].beingEdited = driverstationEditable;
     }
 }
 
@@ -221,11 +290,18 @@ function downloadFile(input, fileName) {
 
 let DSItems = [];
 
-function addDSItem(type) {
-    DSItems.push(new DSItem(document.getElementById("ds"), DSItems, type));
+function deleteDSItem(item) { //TODO: THIS DOESN'T WORK
+    DSItems = DSItems.splice(DSItems.indexOf(item), 1);
 }
-function clearDSItems() {
+
+function addDSItem(type) {
+    let item = new DSItem(document.getElementById("ds"), DSItems, type);
+    DSItems.push(item);
+    document.getElementById("ds-list").appendChild(item.nameElement())
+}
+function clearDSItems() { //TODO: THIS DOESN'T WORK
     DSItems = [];
     const ctx = document.getElementById("ds").getContext('2d');
     ctx.clearRect(0, 0, document.getElementById("ds").width, document.getElementById("ds").height);
+    document.getElementById("ds-list").innerHTML = "";
 }
