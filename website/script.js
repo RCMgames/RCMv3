@@ -57,12 +57,20 @@ class DSItem {
             this.dataIndices = [null];
         }
 
-        this.dsCanvas.addEventListener('mousedown', this.onMouseDown.bind(this));
-        this.dsCanvas.addEventListener('mouseup', this.onMouseUp.bind(this));
-        this.dsCanvas.addEventListener('mousemove', this.onMouseMove.bind(this));
-        this.dsCanvas.addEventListener('touchstart', this.onTouchStart.bind(this));
-        this.dsCanvas.addEventListener('touchend', this.onTouchEnd.bind(this));
-        this.dsCanvas.addEventListener('touchmove', this.onTouchMove.bind(this));
+
+        this.onMouseDownBound = this.onMouseDown.bind(this);
+        this.onMouseUpBound = this.onMouseUp.bind(this);
+        this.onMouseMoveBound = this.onMouseMove.bind(this);
+        this.onTouchStartBound = this.onTouchStart.bind(this);
+        this.onTouchEndBound = this.onTouchEnd.bind(this);
+        this.onTouchMoveBound = this.onTouchMove.bind(this);
+
+        this.dsCanvas.addEventListener('mousedown', this.onMouseDownBound);
+        this.dsCanvas.addEventListener('mouseup', this.onMouseUpBound);
+        this.dsCanvas.addEventListener('mousemove', this.onMouseMoveBound);
+        this.dsCanvas.addEventListener('touchstart', this.onTouchStartBound);
+        this.dsCanvas.addEventListener('touchend', this.onTouchEndBound);
+        this.dsCanvas.addEventListener('touchmove', this.onTouchMoveBound);
 
         this.draw();
 
@@ -260,6 +268,16 @@ class DSItem {
             }
         }
     }
+
+    removeEventListeners() {
+        this.dsCanvas.removeEventListener('mousedown', this.onMouseDownBound);
+        this.dsCanvas.removeEventListener('mouseup', this.onMouseUpBound);
+        this.dsCanvas.removeEventListener('mousemove', this.onMouseMoveBound);
+        this.dsCanvas.removeEventListener('touchstart', this.onTouchStartBound);
+        this.dsCanvas.removeEventListener('touchend', this.onTouchEndBound);
+        this.dsCanvas.removeEventListener('touchmove', this.onTouchMoveBound);
+    }
+
 }
 
 var driverstationEditable = true;
@@ -291,17 +309,44 @@ function downloadFile(input, fileName) {
 let DSItems = [];
 
 function deleteDSItem(item) { //TODO: THIS DOESN'T WORK
-    DSItems = DSItems.splice(DSItems.indexOf(item), 1);
+    DSItems.splice(DSItems.indexOf(item), 1);
+
+    item.removeEventListeners();
+
+    clearDSItems(false);
+    refreshDSItems();
 }
 
 function addDSItem(type) {
-    let item = new DSItem(document.getElementById("ds"), DSItems, type);
+    const item = new DSItem(document.getElementById("ds"), DSItems, type);
     DSItems.push(item);
     document.getElementById("ds-list").appendChild(item.nameElement())
 }
-function clearDSItems() { //TODO: THIS DOESN'T WORK
-    DSItems = [];
+function clearDSItems(deletePermanently = true) {
+
+    if (deletePermanently) {
+        for (let i = 0; i < DSItems.length; i++) {
+            DSItems[i].removeEventListeners();
+        }
+        DSItems = [];
+    }
     const ctx = document.getElementById("ds").getContext('2d');
     ctx.clearRect(0, 0, document.getElementById("ds").width, document.getElementById("ds").height);
-    document.getElementById("ds-list").innerHTML = "";
+
+    const list = document.getElementById("ds-list");
+    while (list.firstChild) {
+        list.removeChild(list.firstChild);
+    }
+
+    const plist = document.getElementById("ds-properties");
+    while (plist.firstChild) {
+        plist.removeChild(plist.firstChild);
+    }
+
+}
+function refreshDSItems() {
+    for (let i = 0; i < DSItems.length; i++) {
+        document.getElementById("ds-list").appendChild(DSItems[i].nameElement());
+        DSItems[i].draw();
+    }
 }
