@@ -1,9 +1,11 @@
+let DSItems = [];
 class DSItem {
-    constructor(_dsCanvas, _dsItems, _type) {
-        this.type = _type;
-        this.dsItems = _dsItems;
+    constructor(_dsCanvas, _type) {
         this.dsCanvas = _dsCanvas;
+
+        this.type = _type;
         this.size = 250;
+        this.color = "#808080"; // must be hex code
 
         if (this.type === "joystick") {
             this.width = this.size;
@@ -20,17 +22,22 @@ class DSItem {
             this.height = this.size;
             this.radius = 25;
         } else if (this.type === "button") {
+            this.size = 50;//TODO: DELETE
             this.width = this.size;
             this.height = this.size;
             this.radius = 0;
         }
 
+        this.buttonPressedVal = null;
+
         this.posX = 0;
         this.posY = 0;
 
         this.mousePressed = false;
+        this.highlighted = false;
+        this.myNameElement = null;
 
-        this.beingEdited = true;
+        this.beingEdited = false;
 
         this.joyx = 0;
         this.joyy = 0;
@@ -84,9 +91,7 @@ class DSItem {
             this.offsetX = mouseX - this.posX;
             this.offsetY = mouseY - this.posY;
             this.mousePressed = true;
-            if (this.beingEdited === false && this.type === "button") {
-                this.vars[0] = 1;
-            }
+            this.onMove(event.clientX, event.clientY);
             this.draw();
         }
     }
@@ -100,16 +105,15 @@ class DSItem {
                 this.offsetX = mouseX - this.posX;
                 this.offsetY = mouseY - this.posY;
                 this.mousePressed = true;
-                if (this.beingEdited === false && this.type === "button") {
-                    this.vars[0] = 1;
-                }
                 this.activeTouchId = touch.identifier;
+                this.onMove(touch.clientX, touch.clientY);
                 this.draw();
             }
         }
     }
     onMouseUp() {
         this.mousePressed = false;
+        this.highlighted = false;
         if (this.beingEdited === false && this.type === "button") {
             this.vars[0] = 0;
         }
@@ -168,8 +172,8 @@ class DSItem {
     redrawCanvas() {
         const ctx = this.dsCanvas.getContext('2d');
         ctx.clearRect(0, 0, this.dsCanvas.width, this.dsCanvas.height);
-        for (let i = 0; i < this.dsItems.length; i++) {
-            this.dsItems[i].draw();
+        for (let i = 0; i < DSItems.length; i++) {
+            DSItems[i].draw();
         }
     }
     onTouchEnd(event) {
@@ -180,6 +184,7 @@ class DSItem {
                     this.vars[0] = 0;
                 }
                 this.mousePressed = false;
+                this.highlighted = false;
                 this.activeTouchId = null;
                 this.draw();
                 break;
@@ -200,7 +205,28 @@ class DSItem {
     draw() {
         const ctx = this.dsCanvas.getContext('2d');
         ctx.beginPath();
-        ctx.fillStyle = 'green';
+        if (this.mousePressed) {
+            this.highlighted = true;
+        }
+        if (!this.beingEdited) {
+            this.highlighted = false;
+        }
+
+        if (this.highlighted) {
+            ctx.fillStyle = 'white';
+            for (let i = 0; i < document.getElementById("ds-list").children.length; i++) {
+                if (this.myNameElement === document.getElementById("ds-list").children[i]) {
+                    this.myNameElement.style.backgroundColor = "white";
+                    document.getElementById("ds-properties").replaceChildren(this.propertiesElement(false));
+
+                } else {
+                    document.getElementById("ds-list").children[i].style.backgroundColor = "";
+                }
+            }
+        } else {
+            ctx.fillStyle = this.color;
+        }
+
         ctx.roundRect(this.posX, this.posY, this.width, this.height, [this.radius]);
         ctx.fill();
 
@@ -223,7 +249,13 @@ class DSItem {
         let element = document.createElement("div");
 
         let typeLabel = document.createElement("span");
-        typeLabel.innerHTML = this.type;
+        if (this.type === "vslider") {
+            typeLabel.innerHTML = "vertical slider";
+        } else if (this.type === "hslider") {
+            typeLabel.innerHTML = "horizontal slider";
+        } else {
+            typeLabel.innerHTML = this.type;
+        }
         element.appendChild(typeLabel);
 
         let propertiesButton = document.createElement("button");
@@ -240,32 +272,125 @@ class DSItem {
         }
         element.appendChild(deleteButton);
 
+        this.myNameElement = element;
+
         return element;
     }
-    propertiesElement() {
-        // create an element that contains numeric input fields for numData dataIndices
-
+    propertiesElement(redraw = true) {
         let element = document.createElement("div");
 
+        for (let i = 0; i < DSItems.length; i++) {
+            DSItems[i].highlighted = false;
+        }
+        this.highlighted = true;
+
+        if (redraw) {
+            this.redrawCanvas();
+        }
+
+        let row_data = document.createElement("tr");
+        let row_data_label = document.createElement("td");
+        row_data_label.innerHTML = "Data Indices";
+        row_data.appendChild(row_data_label);
         for (let i = 0; i < this.numData; i++) {
+            let cell = document.createElement("td");
             let input = document.createElement("input");
             input.type = "number";
+            input.min = 0;
             input.value = this.dataIndices[i];
-            input.oninput = () => {
-                this.dataIndices[i] = input.value;
-            }
-            element.appendChild(input);
+            input.onchange = (event) => {
+                this.dataIndices[i] = parseInt(event.target.value);
+                input.value = this.dataIndices[i];
+            };
+            cell.appendChild(input);
+            row_data.appendChild(cell);
         }
+        element.appendChild(row_data);
+
+        if (this.type === "button") {
+            let row_buttonVal = document.createElement("tr");
+            let row_buttonVal_label = document.createElement("td");
+            row_buttonVal_label.innerHTML = "value when pressed";
+            row_buttonVal.appendChild(row_buttonVal_label);
+            let cell_buttonVal = document.createElement("td");
+            let input_buttonVal = document.createElement("input");
+            input_buttonVal.type = "number";
+            input_buttonVal.step = "0.05";
+            input_buttonVal.value = this.buttonPressedVal;
+            input_buttonVal.onchange = (event) => {
+                this.buttonPressedVal = parseFloat(event.target.value);
+                input_buttonVal.value = this.buttonPressedVal;
+            }
+            cell_buttonVal.appendChild(input_buttonVal);
+            row_buttonVal.appendChild(cell_buttonVal);
+            element.appendChild(row_buttonVal);
+        }
+
+
+        let row_color = document.createElement("tr");
+        let row_color_label = document.createElement("td");
+        row_color_label.innerHTML = "Color";
+        row_color.appendChild(row_color_label);
+        let colorInput = document.createElement("input");
+        colorInput.type = "color";
+        colorInput.value = this.color;
+        colorInput.oninput = () => {
+            this.color = colorInput.value;
+            this.highlighted = false;
+            this.draw();
+        }
+        let cell_color = document.createElement("td");
+        cell_color.appendChild(colorInput);
+        row_color.appendChild(cell_color);
+        element.appendChild(row_color);
 
         return element;
 
     }
 
     run(allData) {
-        for (let i = 0; i < this.numData; i++) {
-            if (this.dataIndices[i] !== null) {
-                allData[this.dataIndices[i]] = this.vars[i];
+        if (this.beingEdited === false) {
+            if (this.type !== "button") {
+                if (this.mousePressed) {
+                    for (let i = 0; i < this.numData; i++) {
+                        if (this.dataIndices[i] !== null) {
+                            allData[this.dataIndices[i]] = this.vars[i];
+                        }
+                    }
+                } else {
+                    for (let i = 0; i < this.numData; i++) {
+                        if (this.dataIndices[i] !== null && allData[this.dataIndices[i]] != undefined) {
+                            this.vars[i] = allData[this.dataIndices[i]];
+                        }
+                    }
+                }
+            } else { // button special case
+                if (this.mousePressed) {
+                    if (this.dataIndices[0] !== null) {
+                        allData[this.dataIndices[0]] = this.buttonPressedVal;
+                    }
+                }
             }
+
+            if (this.type === "joystick") {
+                if (this.vars[0] > 1) this.vars[0] = 1;
+                if (this.vars[0] < -1) this.vars[0] = -1;
+                if (this.vars[1] > 1) this.vars[1] = 1;
+                if (this.vars[1] < -1) this.vars[1] = -1;
+                this.joyx = this.vars[0];
+                this.joyy = this.vars[1];
+            } else if (this.type === "hslider") {
+                if (this.vars[0] > 1) this.vars[0] = 1;
+                if (this.vars[0] < -1) this.vars[0] = -1;
+                this.joyx = this.vars[0];
+            }
+            else if (this.type === "vslider") {
+                if (this.vars[0] > 1) this.vars[0] = 1;
+                if (this.vars[0] < -1) this.vars[0] = -1;
+                this.joyy = this.vars[0];
+            }
+
+            this.draw();
         }
     }
 
@@ -280,7 +405,7 @@ class DSItem {
 
 }
 
-var driverstationEditable = true;
+var driverstationEditable = false;
 function toggleEditDriverstation() {
     driverstationEditable = !driverstationEditable;
     document.getElementById("toggleEditDriverstation").innerHTML = !driverstationEditable ? "Edit" : "Run";
@@ -288,6 +413,7 @@ function toggleEditDriverstation() {
 
     for (let i = 0; i < DSItems.length; i++) {
         DSItems[i].beingEdited = driverstationEditable;
+        DSItems[i].draw();
     }
 }
 
@@ -306,9 +432,7 @@ function downloadFile(input, fileName) {
     link.remove();
 }
 
-let DSItems = [];
-
-function deleteDSItem(item) { //TODO: THIS DOESN'T WORK
+function deleteDSItem(item) {
     DSItems.splice(DSItems.indexOf(item), 1);
 
     item.removeEventListeners();
@@ -318,21 +442,13 @@ function deleteDSItem(item) { //TODO: THIS DOESN'T WORK
 }
 
 function addDSItem(type) {
-    const item = new DSItem(document.getElementById("ds"), DSItems, type);
+    const item = new DSItem(document.getElementById("ds"), type);
+    item.beingEdited = driverstationEditable;
     DSItems.push(item);
     document.getElementById("ds-list").appendChild(item.nameElement())
+    document.getElementById("ds-properties").replaceChildren(item.propertiesElement());
 }
 function clearDSItems(deletePermanently = true) {
-
-    if (deletePermanently) {
-        for (let i = 0; i < DSItems.length; i++) {
-            DSItems[i].removeEventListeners();
-        }
-        DSItems = [];
-    }
-    const ctx = document.getElementById("ds").getContext('2d');
-    ctx.clearRect(0, 0, document.getElementById("ds").width, document.getElementById("ds").height);
-
     const list = document.getElementById("ds-list");
     while (list.firstChild) {
         list.removeChild(list.firstChild);
@@ -343,6 +459,14 @@ function clearDSItems(deletePermanently = true) {
         plist.removeChild(plist.firstChild);
     }
 
+    if (deletePermanently) {
+        for (let i = 0; i < DSItems.length; i++) {
+            DSItems[i].removeEventListeners();
+        }
+        DSItems = [];
+    }
+    const ctx = document.getElementById("ds").getContext('2d');
+    ctx.clearRect(0, 0, document.getElementById("ds").width, document.getElementById("ds").height);
 }
 function refreshDSItems() {
     for (let i = 0; i < DSItems.length; i++) {
@@ -350,3 +474,12 @@ function refreshDSItems() {
         DSItems[i].draw();
     }
 }
+
+
+txdata = [];
+setInterval(() => {
+    document.getElementById("console").innerHTML = txdata;
+    for (let i = 0; i < DSItems.length; i++) {
+        DSItems[i].run(txdata);
+    }
+}, 20);
