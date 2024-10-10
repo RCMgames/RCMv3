@@ -1,6 +1,6 @@
 # RCMv3
 
-# this will probably never become anything. it's just a place to experiment
+# this is a work in progress
 
 https://github.com/rcmgames/RCMv3
 
