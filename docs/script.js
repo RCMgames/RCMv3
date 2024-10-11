@@ -7,21 +7,21 @@ class DSItem {
         this.size = 250;
         this.color = "#808080"; // must be hex code
 
-        if (this.type === "joystick") {
+        if (this.type == "joystick") {
             this.width = this.size;
             this.height = this.size;
             this.radius = 25;
         }
-        else if (this.type === "hslider") {
+        else if (this.type == "hslider") {
             this.width = this.size;
             this.height = 50;
             this.radius = 25;
         }
-        else if (this.type === "vslider") {
+        else if (this.type == "vslider") {
             this.width = 50;
             this.height = this.size;
             this.radius = 25;
-        } else if (this.type === "button") {
+        } else if (this.type == "button") {
             this.size = 50;//TODO: DELETE
             this.width = this.size;
             this.height = this.size;
@@ -33,6 +33,8 @@ class DSItem {
 
         this.buttonPressedVal = null;
         this.buttonReleasedVal = null;
+
+        this.keyboardKeys = [];
 
         this.posX = 0;
         this.posY = 0;
@@ -50,19 +52,19 @@ class DSItem {
         this.dataIndices = [];
 
         this.vars = [];
-        if (this.type === "joystick") {
+        if (this.type == "joystick") {
             this.numData = 2;
             this.vars = [0.0, 0.0];
             this.dataIndices = [null, null];
-        } else if (this.type === "hslider") {
+        } else if (this.type == "hslider") {
             this.numData = 1;
             this.vars = [0.0];
             this.dataIndices = [null];
-        } else if (this.type === "vslider") {
+        } else if (this.type == "vslider") {
             this.numData = 1;
             this.vars = [0.0];
             this.dataIndices = [null];
-        } else if (this.type === "button") {
+        } else if (this.type == "button") {
             this.numData = 1;
             this.vars = [0];
             this.dataIndices = [null];
@@ -118,7 +120,7 @@ class DSItem {
     onMouseUp() {
         this.mousePressed = false;
         this.highlighted = false;
-        if (this.beingEdited === false && this.type === "button") {
+        if (this.beingEdited == false && this.type == "button") {
             this.vars[0] = 0;
         }
         this.draw();
@@ -146,12 +148,12 @@ class DSItem {
                 this.draw();
             } else {
                 const rect = this.dsCanvas.getBoundingClientRect();
-                if (this.type === "joystick" || this.type === "hslider") {
+                if (this.type == "joystick" || this.type == "hslider") {
                     this.joyx = (x - rect.left - this.posX - this.width / 2) / (this.width / 2 - this.radius);
                 } else {
                     this.joyx = 0;
                 }
-                if (this.type === "joystick" || this.type === "vslider") {
+                if (this.type == "joystick" || this.type == "vslider") {
                     this.joyy = -(y - rect.top - this.posY - this.height / 2) / (this.height / 2 - this.radius);
                 } else {
                     this.joyy = 0;
@@ -160,13 +162,13 @@ class DSItem {
                 if (this.joyx < -1) this.joyx = -1;
                 if (this.joyy > 1) this.joyy = 1;
                 if (this.joyy < -1) this.joyy = -1;
-                if (this.type === "joystick") {
+                if (this.type == "joystick") {
                     this.vars[0] = this.joyx;
                     this.vars[1] = this.joyy;
-                } else if (this.type === "hslider") {
+                } else if (this.type == "hslider") {
                     this.vars[0] = this.joyx;
                 }
-                else if (this.type === "vslider") {
+                else if (this.type == "vslider") {
                     this.vars[0] = this.joyy;
                 }
                 this.draw();
@@ -183,8 +185,8 @@ class DSItem {
     onTouchEnd(event) {
         for (let i = 0; i < event.changedTouches.length; i++) {
             const touch = event.changedTouches[i];
-            if (touch.identifier === this.activeTouchId) {
-                if (this.beingEdited === false && this.type === "button") {
+            if (touch.identifier == this.activeTouchId) {
+                if (this.beingEdited == false && this.type == "button") {
                     this.vars[0] = 0;
                 }
                 this.mousePressed = false;
@@ -199,7 +201,7 @@ class DSItem {
         event.preventDefault();
         for (let i = 0; i < event.touches.length; i++) {
             const touch = event.touches[i];
-            if (touch.identifier === this.activeTouchId) {
+            if (touch.identifier == this.activeTouchId) {
                 this.onMove(touch.clientX, touch.clientY);
                 break;
             }
@@ -219,7 +221,7 @@ class DSItem {
         if (this.highlighted) {
             ctx.fillStyle = 'white';
             for (let i = 0; i < document.getElementById("ds-list").children.length; i++) {
-                if (this.myNameElement === document.getElementById("ds-list").children[i]) {
+                if (this.myNameElement == document.getElementById("ds-list").children[i]) {
                     document.getElementById("ds-list").children[i].className = "highlighted-ds-list-item";
                     document.getElementById("ds-properties").replaceChildren(this.propertiesElement(false));
 
@@ -234,8 +236,8 @@ class DSItem {
         ctx.roundRect(this.posX, this.posY, this.width, this.height, [this.radius]);
         ctx.fill();
 
-        if (this.type === "button") {
-            if (this.mousePressed) {
+        if (this.type == "button") {
+            if (this.mousePressed || (this.keyboardKeys[0] != null && keysPressed.has(this.keyboardKeys[0]))) {
                 ctx.beginPath();
                 ctx.fillStyle = 'black';
                 ctx.roundRect(this.posX, this.posY, this.width, this.height, [this.radius]);
@@ -253,9 +255,9 @@ class DSItem {
         let element = document.createElement("div");
 
         let typeLabel = document.createElement("span");
-        if (this.type === "vslider") {
+        if (this.type == "vslider") {
             typeLabel.innerHTML = "vertical slider";
-        } else if (this.type === "hslider") {
+        } else if (this.type == "hslider") {
             typeLabel.innerHTML = "horizontal slider";
         } else {
             typeLabel.innerHTML = this.type;
@@ -307,8 +309,8 @@ class DSItem {
                 input.value = this.dataIndices[i];
             };
             let inputlable = document.createElement("label");
-            if (this.type === "joystick") {
-                inputlable.innerHTML = (i === 0 ? "X" : "Y");
+            if (this.type == "joystick") {
+                inputlable.innerHTML = (i == 0 ? "X" : "Y");
             } else {
                 inputlable.innerHTML = "";
             }
@@ -318,7 +320,7 @@ class DSItem {
         }
         element.appendChild(row_data);
 
-        if (this.type === "button") {
+        if (this.type == "button") {
             let row_buttonVal = document.createElement("tr");
             let row_buttonVal_label = document.createElement("td");
             row_buttonVal_label.innerHTML = "value when pressed";
@@ -329,7 +331,10 @@ class DSItem {
             input_buttonVal.step = "0.05";
             input_buttonVal.value = this.buttonPressedVal;
             input_buttonVal.onchange = (event) => {
-                this.buttonPressedVal = parseFloat(event.target.value);
+                let tempFloat = parseFloat(event.target.value);
+                if (!isNaN(tempFloat)) {
+                    this.buttonPressedVal = tempFloat;
+                }
                 input_buttonVal.value = this.buttonPressedVal;
             }
             cell_buttonVal.appendChild(input_buttonVal);
@@ -346,14 +351,96 @@ class DSItem {
             input_buttonRVal.step = "0.05";
             input_buttonRVal.value = this.buttonReleasedVal;
             input_buttonRVal.onchange = (event) => {
-                this.buttonReleasedVal = parseFloat(event.target.value);
+                let tempFloat = parseFloat(event.target.value);
+                if (!isNaN(tempFloat)) {
+                    this.buttonReleasedVal = tempFloat;
+                }
                 input_buttonRVal.value = this.buttonReleasedVal;
             }
             cell_buttonRVal.appendChild(input_buttonRVal);
             row_buttonRVal.appendChild(cell_buttonRVal);
             element.appendChild(row_buttonRVal);
-
         }
+
+        let row_keys = document.createElement("tr");
+        let row_keys_label = document.createElement("td");
+        row_keys_label.innerHTML = "keyboard";
+        row_keys.appendChild(row_keys_label);
+        let cell_table = document.createElement("table");
+
+        let r1 = document.createElement("tr");
+        let r1d1 = document.createElement("td");
+        let r1d2 = document.createElement("td");
+        let r1d3 = document.createElement("td");
+        r1.appendChild(r1d1);
+        r1.appendChild(r1d2);
+        r1.appendChild(r1d3);
+
+        let r2 = document.createElement("tr");
+        let r2d1 = document.createElement("td");
+        let r2d2 = document.createElement("td");
+        let r2d3 = document.createElement("td");
+        r2.appendChild(r2d1);
+        r2.appendChild(r2d2);
+        r2.appendChild(r2d3);
+
+        let r3 = document.createElement("tr");
+        let r3d1 = document.createElement("td");
+        let r3d2 = document.createElement("td");
+        let r3d3 = document.createElement("td");
+        r3.appendChild(r3d1);
+        r3.appendChild(r3d2);
+        r3.appendChild(r3d3);
+
+        cell_table.appendChild(r1);
+        cell_table.appendChild(r2);
+        cell_table.appendChild(r3);
+
+        for (let i = 0; i < this.numData * 2; i++) {
+            let input = document.createElement("input");
+            input.type = "text";
+            input.style.width = "50px";
+            if (this.keyboardKeys[i] == undefined) this.keyboardKeys[i] = null;
+            input.value = this.keyboardKeys[i];
+            input.oninput = (event) => {
+                this.keyboardKeys[i] = event.target.value;
+                this.keyboardKeys[i] = this.keyboardKeys[i].charAt(this.keyboardKeys[i].length - 1);
+                input.value = this.keyboardKeys[i];
+            };
+            if (this.type == "vslider") {
+                row_keys_label.colspan = 2;
+                if (i == 0) {
+                    r1d1.appendChild(input);
+                } else if (i == 1) {
+                    r2d1.appendChild(input);
+                }
+            }
+            if (this.type == "hslider") {
+                if (i == 1) {
+                    r1d1.appendChild(input);
+                } else if (i == 0) {
+                    r1d2.appendChild(input);
+                }
+            }
+            if (this.type == "joystick") {
+                if (i == 2) {
+                    r1d2.appendChild(input);
+                } else if (i == 3) {
+                    r3d2.appendChild(input);
+                } else if (i == 1) {
+                    r2d1.appendChild(input);
+                } else if (i == 0) {
+                    r2d3.appendChild(input);
+                }
+            }
+            if (this.type == "button") {
+                if (i == 0) {
+                    r1d2.appendChild(input);
+                }
+            }
+        }
+        row_keys.appendChild(cell_table);
+        element.appendChild(row_keys);
 
 
         let row_color = document.createElement("tr");
@@ -378,46 +465,61 @@ class DSItem {
     }
 
     run(allData) {
-        if (this.beingEdited === false) {
-            if (this.type !== "button") {
+        if (this.beingEdited == false) { // running
+            if (this.type != "button") {
                 if (this.mousePressed) {
                     for (let i = 0; i < this.numData; i++) {
-                        if (this.dataIndices[i] !== null) {
+                        if (this.dataIndices[i] != null) {
                             allData[this.dataIndices[i]] = this.vars[i];
                         }
                     }
                 } else {
                     for (let i = 0; i < this.numData; i++) {
-                        if (this.dataIndices[i] !== null && allData[this.dataIndices[i]] != undefined) {
+                        if (this.dataIndices[i] != null && allData[this.dataIndices[i]] != undefined) {
                             this.vars[i] = allData[this.dataIndices[i]];
+                        }
+                        if (this.keyboardKeys[i * 2] != null && keysPressed.has(this.keyboardKeys[i * 2])) {
+                            this.vars[i] = 1;
+                            if (this.dataIndices[i] != null) {
+                                allData[this.dataIndices[i]] = this.vars[i];
+                            }
+                        }
+                        if (this.keyboardKeys[i * 2 + 1] != null && keysPressed.has(this.keyboardKeys[i * 2 + 1])) {
+                            this.vars[i] = -1;
+                            if (this.dataIndices[i] != null) {
+                                allData[this.dataIndices[i]] = this.vars[i];
+                            }
                         }
                     }
                 }
             } else { // button special case
                 if (this.mousePressed) {
-                    if (this.dataIndices[0] !== null && !isNaN(this.buttonPressedVal) && this.buttonPressedVal !== null) {
+                    if (this.dataIndices[0] != null && !isNaN(this.buttonPressedVal) && this.buttonPressedVal != null) {
                         allData[this.dataIndices[0]] = this.buttonPressedVal;
                     }
                 } else {
-                    if (this.dataIndices[0] !== null && !isNaN(this.buttonReleasedVal) && this.buttonReleasedVal !== null) {
+                    if (this.dataIndices[0] != null && !isNaN(this.buttonReleasedVal) && this.buttonReleasedVal != null) {
                         allData[this.dataIndices[0]] = this.buttonReleasedVal;
+                    }
+                    if (!isNaN(this.buttonPressedVal) && this.buttonPressedVal != null && this.keyboardKeys[0] != null && keysPressed.has(this.keyboardKeys[0])) {
+                        allData[this.dataIndices[0]] = this.buttonPressedVal;
                     }
                 }
             }
 
-            if (this.type === "joystick") {
+            if (this.type == "joystick") {
                 if (this.vars[0] > 1) this.vars[0] = 1;
                 if (this.vars[0] < -1) this.vars[0] = -1;
                 if (this.vars[1] > 1) this.vars[1] = 1;
                 if (this.vars[1] < -1) this.vars[1] = -1;
                 this.joyx = this.vars[0];
                 this.joyy = this.vars[1];
-            } else if (this.type === "hslider") {
+            } else if (this.type == "hslider") {
                 if (this.vars[0] > 1) this.vars[0] = 1;
                 if (this.vars[0] < -1) this.vars[0] = -1;
                 this.joyx = this.vars[0];
             }
-            else if (this.type === "vslider") {
+            else if (this.type == "vslider") {
                 if (this.vars[0] > 1) this.vars[0] = 1;
                 if (this.vars[0] < -1) this.vars[0] = -1;
                 this.joyy = this.vars[0];
@@ -440,6 +542,7 @@ class DSItem {
 
 var driverstationEditable = false;
 function toggleEditDriverstation() {
+    keysPressed.clear();
     driverstationEditable = !driverstationEditable;
     document.getElementById("toggleEditDriverstation").innerHTML = !driverstationEditable ? "Edit" : "Run";
     document.getElementById("ds-edit-ui").hidden = !driverstationEditable;
@@ -516,3 +619,23 @@ setInterval(() => {
         DSItems[i].run(txdata);
     }
 }, 20);
+
+keysPressed = new Set([]);
+
+document.addEventListener(
+    "keydown",
+    (event) => {
+        const keyName = event.key;
+        keysPressed.add(keyName);
+    },
+    false,
+);
+
+document.addEventListener(
+    "keyup",
+    (event) => {
+        const keyName = event.key;
+        keysPressed.delete(keyName);
+    },
+    false,
+);
