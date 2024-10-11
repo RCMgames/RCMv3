@@ -334,6 +334,8 @@ class DSItem {
                 let tempFloat = parseFloat(event.target.value);
                 if (!isNaN(tempFloat)) {
                     this.buttonPressedVal = tempFloat;
+                }else{
+                    this.buttonPressedVal = null;
                 }
                 input_buttonVal.value = this.buttonPressedVal;
             }
@@ -354,6 +356,8 @@ class DSItem {
                 let tempFloat = parseFloat(event.target.value);
                 if (!isNaN(tempFloat)) {
                     this.buttonReleasedVal = tempFloat;
+                }else{
+                    this.buttonReleasedVal = null;
                 }
                 input_buttonRVal.value = this.buttonReleasedVal;
             }
