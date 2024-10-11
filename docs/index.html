@@ -9,7 +9,7 @@
 
 <body>
   <h1>driver station</h1>
-  <button id="toggleEditDriverstation" onclick='toggleEditDriverstation()'>Edit</button>
+  <button class="toggleEditDriverstation" id="toggleEditDriverstation" onclick='toggleEditDriverstation()'>Edit</button>
   <br>
   <div class="outer-flex-box">
     <canvas class="ds" id="ds" width="600" height="1000"></canvas>
@@ -22,12 +22,12 @@
           <div><button class="add-ds-items-button" onclick='addDSItem("vslider")'>add vslider</button></div>
           <div><button class="add-ds-items-button clear-ds-items-button" onclick='clearDSItems()'>clear</button></div>
         </div>
-        <div>
-          <div style="text-align: center;">controls:</div>
+        <div class="controls-list">
+          <div class="controls-title">controls:</div>
           <div class="ds-list" id="ds-list"> </div>
         </div>
         <div>
-          <div style="text-align: center;">properties:</div>
+          <div class="properties-title">properties:</div>
           <table class="ds-properties" id="ds-properties"> </table>
         </div>
       </div>

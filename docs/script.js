@@ -28,7 +28,11 @@ class DSItem {
             this.radius = 0;
         }
 
+        //TODO: add recenter option
+        //TODO: add min and max options?
+
         this.buttonPressedVal = null;
+        this.buttonReleasedVal = null;
 
         this.posX = 0;
         this.posY = 0;
@@ -216,11 +220,11 @@ class DSItem {
             ctx.fillStyle = 'white';
             for (let i = 0; i < document.getElementById("ds-list").children.length; i++) {
                 if (this.myNameElement === document.getElementById("ds-list").children[i]) {
-                    this.myNameElement.style.backgroundColor = "white";
+                    document.getElementById("ds-list").children[i].className = "highlighted-ds-list-item";
                     document.getElementById("ds-properties").replaceChildren(this.propertiesElement(false));
 
                 } else {
-                    document.getElementById("ds-list").children[i].style.backgroundColor = "";
+                    document.getElementById("ds-list").children[i].className = "non-highlighted-ds-list-item";
                 }
             }
         } else {
@@ -231,7 +235,7 @@ class DSItem {
         ctx.fill();
 
         if (this.type === "button") {
-            if (this.vars[0] === 1) {
+            if (this.mousePressed) {
                 ctx.beginPath();
                 ctx.fillStyle = 'black';
                 ctx.roundRect(this.posX, this.posY, this.width, this.height, [this.radius]);
@@ -258,16 +262,15 @@ class DSItem {
         }
         element.appendChild(typeLabel);
 
-        let propertiesButton = document.createElement("button");
-        propertiesButton.innerHTML = "edit";
-        propertiesButton.onclick = () => {
+        element.onclick = () => { // whole row is clickable
             document.getElementById("ds-properties").replaceChildren(this.propertiesElement());
         }
-        element.appendChild(propertiesButton);
 
         let deleteButton = document.createElement("button");
-        deleteButton.innerHTML = "delete";
-        deleteButton.onclick = () => {
+        deleteButton.className = "ds-list-deleteButton";
+        deleteButton.innerHTML = "X";
+        deleteButton.onclick = (event) => {
+            event.stopPropagation();
             deleteDSItem(this);
         }
         element.appendChild(deleteButton);
@@ -290,18 +293,26 @@ class DSItem {
 
         let row_data = document.createElement("tr");
         let row_data_label = document.createElement("td");
-        row_data_label.innerHTML = "Data Indices";
+        row_data_label.innerHTML = "output variable";
         row_data.appendChild(row_data_label);
         for (let i = 0; i < this.numData; i++) {
             let cell = document.createElement("td");
             let input = document.createElement("input");
             input.type = "number";
             input.min = 0;
+            input.style.width = "50px";
             input.value = this.dataIndices[i];
             input.onchange = (event) => {
                 this.dataIndices[i] = parseInt(event.target.value);
                 input.value = this.dataIndices[i];
             };
+            let inputlable = document.createElement("label");
+            if (this.type === "joystick") {
+                inputlable.innerHTML = (i === 0 ? "X" : "Y");
+            } else {
+                inputlable.innerHTML = "";
+            }
+            cell.appendChild(inputlable);
             cell.appendChild(input);
             row_data.appendChild(cell);
         }
@@ -324,6 +335,24 @@ class DSItem {
             cell_buttonVal.appendChild(input_buttonVal);
             row_buttonVal.appendChild(cell_buttonVal);
             element.appendChild(row_buttonVal);
+
+            let row_buttonRVal = document.createElement("tr");
+            let row_buttonRVal_label = document.createElement("td");
+            row_buttonRVal_label.innerHTML = "value when not pressed";
+            row_buttonRVal.appendChild(row_buttonRVal_label);
+            let cell_buttonRVal = document.createElement("td");
+            let input_buttonRVal = document.createElement("input");
+            input_buttonRVal.type = "number";
+            input_buttonRVal.step = "0.05";
+            input_buttonRVal.value = this.buttonReleasedVal;
+            input_buttonRVal.onchange = (event) => {
+                this.buttonReleasedVal = parseFloat(event.target.value);
+                input_buttonRVal.value = this.buttonReleasedVal;
+            }
+            cell_buttonRVal.appendChild(input_buttonRVal);
+            row_buttonRVal.appendChild(cell_buttonRVal);
+            element.appendChild(row_buttonRVal);
+
         }
 
 
@@ -366,8 +395,12 @@ class DSItem {
                 }
             } else { // button special case
                 if (this.mousePressed) {
-                    if (this.dataIndices[0] !== null) {
+                    if (this.dataIndices[0] !== null && !isNaN(this.buttonPressedVal) && this.buttonPressedVal !== null) {
                         allData[this.dataIndices[0]] = this.buttonPressedVal;
+                    }
+                } else {
+                    if (this.dataIndices[0] !== null && !isNaN(this.buttonReleasedVal) && this.buttonReleasedVal !== null) {
+                        allData[this.dataIndices[0]] = this.buttonReleasedVal;
                     }
                 }
             }
@@ -434,7 +467,7 @@ function downloadFile(input, fileName) {
 
 function deleteDSItem(item) {
     DSItems.splice(DSItems.indexOf(item), 1);
-
+    document.getElementById("ds-properties").replaceChildren([]);
     item.removeEventListeners();
 
     clearDSItems(false);

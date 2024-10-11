@@ -8,11 +8,16 @@
   flex-direction: row;
 }
 
-.ds-edit-div {}
+.ds-edit-div {
+  height: 1000px;
+  width: 400px;
+}
 
 .ds-properties {
   display: flex;
   flex-direction: column;
+  background-color: rgb(168, 207, 168);
+  height: 100%;
 }
 
 .add-ds-items-button-list {
@@ -21,18 +26,59 @@
 }
 
 .ds-list {
-  max-height: 300px;
+  height: 400px;
+  max-height: 400px;
   overflow-y: auto;
-  background-color: lightgrey;
+}
+
+.ds-list-deleteButton {
+  color: red;
+  float: right;
+  border: none;
+}
+
+.highlighted-ds-list-item {
+  background-color: rgb(202, 235, 255);
+}
+
+.non-highlighted-ds-list-item {
+  background-color: lightgray;
+}
+
+.controls-list {
+  background-color: lightgray;
+}
+
+.toggleEditDriverstation {
+  display: inline-block;
+  border: none;
+  font-size: large;
+  padding: 10px 20px;
+  margin: 5px;
+}
+
+.controls-title {
+  text-align: center;
+  font-size: larger;
+  background-color: white;
+  padding: 10px 10px;
+}
+
+.properties-title {
+  text-align: center;
+  font-size: larger;
+  background-color: rgb(168, 207, 168);
+  padding: 10px 10px;
 }
 
 .add-ds-items-button {
   display: inline-block;
-  background-color: #008CBA;
   border: none;
-  color: white;
-  padding: 5px 10px;
+  background-color: #008CBA;
+  padding: 10px 10px;
   margin: 2px;
+  height: 100%;
+  font-size: large;
 }
 
 .clear-ds-items-button {
