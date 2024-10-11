@@ -1,5 +1,5 @@
 .ds {
-  background-color: beige;
+  background-color: black;
   touch-action: none;
 }
 
@@ -35,14 +35,21 @@
   color: red;
   float: right;
   border: none;
+  padding: 5px 5px 5px 5px;
 }
 
 .highlighted-ds-list-item {
   background-color: rgb(202, 235, 255);
+  padding-top: 7px;
+  padding-bottom: 7px;
+  border: 1px solid gray;
 }
 
 .non-highlighted-ds-list-item {
   background-color: lightgray;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  border: 1px solid gray;
 }
 
 .controls-list {

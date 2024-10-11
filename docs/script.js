@@ -239,7 +239,7 @@ class DSItem {
         if (this.type == "button") {
             if (this.mousePressed || (this.keyboardKeys[0] != null && keysPressed.has(this.keyboardKeys[0]))) {
                 ctx.beginPath();
-                ctx.fillStyle = 'black';
+                ctx.fillStyle = 'white';
                 ctx.roundRect(this.posX, this.posY, this.width, this.height, [this.radius]);
                 ctx.fill();
             }
@@ -253,6 +253,7 @@ class DSItem {
 
     nameElement() {
         let element = document.createElement("div");
+        element.className = "non-highlighted-ds-list-item";
 
         let typeLabel = document.createElement("span");
         if (this.type == "vslider") {
@@ -328,13 +329,13 @@ class DSItem {
             let cell_buttonVal = document.createElement("td");
             let input_buttonVal = document.createElement("input");
             input_buttonVal.type = "number";
-            input_buttonVal.step = "0.05";
+            input_buttonVal.step = "0.01";
             input_buttonVal.value = this.buttonPressedVal;
             input_buttonVal.onchange = (event) => {
                 let tempFloat = parseFloat(event.target.value);
                 if (!isNaN(tempFloat)) {
                     this.buttonPressedVal = tempFloat;
-                }else{
+                } else {
                     this.buttonPressedVal = null;
                 }
                 input_buttonVal.value = this.buttonPressedVal;
@@ -350,13 +351,13 @@ class DSItem {
             let cell_buttonRVal = document.createElement("td");
             let input_buttonRVal = document.createElement("input");
             input_buttonRVal.type = "number";
-            input_buttonRVal.step = "0.05";
+            input_buttonRVal.step = "0.01";
             input_buttonRVal.value = this.buttonReleasedVal;
             input_buttonRVal.onchange = (event) => {
                 let tempFloat = parseFloat(event.target.value);
                 if (!isNaN(tempFloat)) {
                     this.buttonReleasedVal = tempFloat;
-                }else{
+                } else {
                     this.buttonReleasedVal = null;
                 }
                 input_buttonRVal.value = this.buttonReleasedVal;
@@ -501,12 +502,14 @@ class DSItem {
                     if (this.dataIndices[0] != null && !isNaN(this.buttonPressedVal) && this.buttonPressedVal != null) {
                         allData[this.dataIndices[0]] = this.buttonPressedVal;
                     }
-                } else {
-                    if (this.dataIndices[0] != null && !isNaN(this.buttonReleasedVal) && this.buttonReleasedVal != null) {
-                        allData[this.dataIndices[0]] = this.buttonReleasedVal;
-                    }
-                    if (!isNaN(this.buttonPressedVal) && this.buttonPressedVal != null && this.keyboardKeys[0] != null && keysPressed.has(this.keyboardKeys[0])) {
-                        allData[this.dataIndices[0]] = this.buttonPressedVal;
+                } else { // not activated by mouse or touchscreen, it can still be controlled by the keyboard
+                    if (this.dataIndices[0] != null && this.keyboardKeys[0] != null) {// if button is connected to a variable and controlled by a key
+                        if (!isNaN(this.buttonReleasedVal) && this.buttonReleasedVal != null && !keysPressed.has(this.keyboardKeys[0])) {
+                            allData[this.dataIndices[0]] = this.buttonReleasedVal;
+                        }
+                        if (!isNaN(this.buttonPressedVal) && this.buttonPressedVal != null && keysPressed.has(this.keyboardKeys[0])) {
+                            allData[this.dataIndices[0]] = this.buttonPressedVal;
+                        }
                     }
                 }
             }
@@ -619,7 +622,7 @@ function refreshDSItems() {
 txdata = [];
 setInterval(() => {
     document.getElementById("console").innerHTML = txdata;
-    for (let i = 0; i < DSItems.length; i++) {
+    for (let i = DSItems.length - 1; i >= 0; i--) { // run in reverse order so items higher on the list override conflicting values set by items lower on the list
         DSItems[i].run(txdata);
     }
 }, 20);
