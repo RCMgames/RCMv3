@@ -1,4 +1,34 @@
 let DSItems = [];
+
+let txdata = [];
+
+setInterval(() => {
+    document.getElementById("console").innerHTML = txdata;
+    for (let i = 0; i < DSItems.length; i++) {
+        DSItems[i].run(txdata);
+    }
+}, 20);
+
+keysPressed = new Set([]);
+
+document.addEventListener(
+    "keydown",
+    (event) => {
+        const keyName = event.key;
+        keysPressed.add(keyName);
+    },
+    false,
+);
+
+document.addEventListener(
+    "keyup",
+    (event) => {
+        const keyName = event.key;
+        keysPressed.delete(keyName);
+    },
+    false,
+);
+
 class DSItem {
     constructor(_dsCanvas, data) {
         this.dsCanvas = _dsCanvas;
@@ -49,6 +79,12 @@ class DSItem {
             this.keyboardKeys = [];
         }
 
+        if (data["gamepadAxes"] != undefined) {
+            this.gamepadAxes = data["gamepadAxes"];
+        } else {
+            this.gamepadAxes = [];
+        }
+
         if (data["dataIndices"] != undefined) {
             this.dataIndices = data["dataIndices"];
         } else {
@@ -90,6 +126,8 @@ class DSItem {
         this.mousePressed = false;
         this.highlighted = false;
         this.myNameElement = null;
+
+        this.gamepadActivatedButton = false;
 
         this.beingEdited = false;
 
@@ -140,6 +178,7 @@ class DSItem {
             buttonPressedVal: this.buttonPressedVal,
             buttonReleasedVal: this.buttonReleasedVal,
             keyboardKeys: this.keyboardKeys,
+            gamepadAxes: this.gamepadAxes,
             dataIndices: this.dataIndices,
         };
         return obj
@@ -293,7 +332,7 @@ class DSItem {
         ctx.fill();
 
         if (this.type == "button") {
-            if (this.mousePressed || (this.keyboardKeys[0] != null && keysPressed.has(this.keyboardKeys[0]))) {
+            if (this.mousePressed || (this.keyboardKeys[0] != null && keysPressed.has(this.keyboardKeys[0])) || this.gamepadActivatedButton) {
                 ctx.beginPath();
                 ctx.fillStyle = 'white';
                 ctx.roundRect(this.posX, this.posY, this.width, this.height, [this.radius]);
@@ -503,6 +542,72 @@ class DSItem {
         row_keys.appendChild(cell_table);
         element.appendChild(row_keys);
 
+        let row_gamepad = document.createElement("tr");
+        let row_gamepad_label = document.createElement("td");
+        row_gamepad_label.innerHTML = "gamepad";
+        row_gamepad.appendChild(row_gamepad_label);
+
+
+        if (this.type != "button") {
+            for (let i = 0; i < this.numData; i++) {
+                let row_gamepad_axis_cell = document.createElement("td");
+                let row_gamepad_axis_button = document.createElement("button");
+                row_gamepad_axis_button.innerHTML = "gamepad " + this.gamepadAxes[2 * i] + " axis " + this.gamepadAxes[2 * i + 1];
+                row_gamepad_axis_button.onclick = () => {
+                    let gp = navigator.getGamepads();
+                    if (gp.length == 0) {
+                        gp = navigator.getGamepads();
+                    }
+                    this.gamepadAxes[2 * i] = undefined;
+                    this.gamepadAxes[2 * i + 1] = undefined;
+                    for (let j = 0; j < gp.length; j++) {
+                        if (gp[j]) {
+                            for (let k = 0; k < gp[j].axes.length; k++) {
+                                if (Math.abs(gp[j].axes[k]) > 0.5) {
+                                    this.gamepadAxes[2 * i] = j;
+                                    this.gamepadAxes[2 * i + 1] = k;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    row_gamepad_axis_button.innerHTML = "gamepad " + this.gamepadAxes[2 * i] + " axis " + this.gamepadAxes[2 * i + 1];
+                }
+                row_gamepad_axis_cell.appendChild(row_gamepad_axis_button);
+                row_gamepad.appendChild(row_gamepad_axis_cell);
+            }
+            element.appendChild(row_gamepad);
+        } else {//button special case
+            for (let i = 0; i < this.numData; i++) {
+                let row_gamepad_axis_cell = document.createElement("td");
+                let row_gamepad_axis_button = document.createElement("button");
+                row_gamepad_axis_button.innerHTML = "gamepad " + this.gamepadAxes[2 * i] + " button " + this.gamepadAxes[2 * i + 1];
+                row_gamepad_axis_button.onclick = () => {
+                    let gp = navigator.getGamepads();
+                    if (gp.length == 0) {
+                        gp = navigator.getGamepads();
+                    }
+                    this.gamepadAxes[2 * i] = undefined;
+                    this.gamepadAxes[2 * i + 1] = undefined;
+                    for (let j = 0; j < gp.length; j++) {
+                        if (gp[j]) {
+                            for (let k = 0; k < gp[j].buttons.length; k++) {
+                                if (gp[j].buttons[k].value) {
+                                    this.gamepadAxes[2 * i] = j;
+                                    this.gamepadAxes[2 * i + 1] = k;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    row_gamepad_axis_button.innerHTML = "gamepad " + this.gamepadAxes[2 * i] + " button " + this.gamepadAxes[2 * i + 1];
+                }
+                row_gamepad_axis_cell.appendChild(row_gamepad_axis_button);
+                row_gamepad.appendChild(row_gamepad_axis_cell);
+            }
+            element.appendChild(row_gamepad);
+
+        }
 
         let row_color = document.createElement("tr");
         let row_color_label = document.createElement("td");
@@ -527,6 +632,7 @@ class DSItem {
 
     run(allData) {
         if (this.beingEdited == false) { // running
+            const gamepad = navigator.getGamepads();
             if (this.type != "button") {
                 if (this.mousePressed) {
                     for (let i = 0; i < this.numData; i++) {
@@ -539,6 +645,25 @@ class DSItem {
                         if (this.dataIndices[i] != null && allData[this.dataIndices[i]] != undefined) {
                             this.vars[i] = allData[this.dataIndices[i]];
                         }
+
+                        for (let j = 0; j < gamepad.length; j++) {
+                            const gp = gamepad[j];
+                            if (gp) {
+                                if (this.gamepadAxes[2 * i] == j && this.gamepadAxes[2 * i + 1] != null && gp.axes[this.gamepadAxes[2 * i + 1]] != undefined) {
+                                    this.vars[i] = gp.axes[this.gamepadAxes[2 * i + 1]];
+                                    if (this.type == "joystick" && i == 1) { // reverse y axis
+                                        this.vars[i] = -this.vars[i];
+                                    }
+                                    if (this.type == "vslider") {
+                                        this.vars[i] = -this.vars[i]; // reverse vslider
+                                    }
+                                    if (this.dataIndices[i] != null) {
+                                        allData[this.dataIndices[i]] = this.vars[i];
+                                    }
+                                }
+                            }
+                        }
+
                         if (this.keyboardKeys[i * 2] != null && keysPressed.has(this.keyboardKeys[i * 2])) {
                             this.vars[i] = 1;
                             if (this.dataIndices[i] != null) {
@@ -551,6 +676,7 @@ class DSItem {
                                 allData[this.dataIndices[i]] = this.vars[i];
                             }
                         }
+
                     }
                 }
             } else { // button special case
@@ -559,14 +685,32 @@ class DSItem {
                         allData[this.dataIndices[0]] = this.buttonPressedVal;
                     }
                 } else { // not activated by mouse or touchscreen, it can still be controlled by the keyboard
-                    if (this.dataIndices[0] != null && this.keyboardKeys[0] != null) {// if button is connected to a variable and controlled by a key
-                        if (!isNaN(this.buttonReleasedVal) && this.buttonReleasedVal != null && !keysPressed.has(this.keyboardKeys[0])) {
+
+                    // if button is connected to a variable and controlled by a gamepad
+                    this.gamepadActivatedButton = false;
+                    if (this.gamepadAxes[0] != null && this.gamepadAxes[1] != null) {
+                        for (let j = 0; j < gamepad.length; j++) {
+                            const gp = gamepad[j];
+                            if (gp) {
+                                if (this.gamepadAxes[0] == j && this.gamepadAxes[1] != null && gp.buttons[this.gamepadAxes[1]].value === 1) {
+                                    this.gamepadActivatedButton = true;
+                                    if (this.dataIndices[0] != null && !isNaN(this.buttonPressedVal) && this.buttonPressedVal != null) {
+                                        allData[this.dataIndices[0]] = this.buttonPressedVal;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (this.dataIndices[0] != null) {// if button is connected to a variable and controlled by a key
+                        if (!isNaN(this.buttonReleasedVal) && this.buttonReleasedVal != null && this.gamepadActivatedButton == false && !keysPressed.has(this.keyboardKeys[0])) {
                             allData[this.dataIndices[0]] = this.buttonReleasedVal;
                         }
-                        if (!isNaN(this.buttonPressedVal) && this.buttonPressedVal != null && keysPressed.has(this.keyboardKeys[0])) {
+                        if (!isNaN(this.buttonPressedVal) && this.buttonPressedVal != null && this.keyboardKeys[0] != null && keysPressed.has(this.keyboardKeys[0])) {
                             allData[this.dataIndices[0]] = this.buttonPressedVal;
                         }
                     }
+
                 }
             }
 
@@ -706,31 +850,3 @@ function uploadUIData() {
     }
     input.click();
 }
-
-txdata = [];
-setInterval(() => {
-    document.getElementById("console").innerHTML = txdata;
-    for (let i = DSItems.length - 1; i >= 0; i--) { // run in reverse order so items higher on the list override conflicting values set by items lower on the list
-        DSItems[i].run(txdata);
-    }
-}, 20);
-
-keysPressed = new Set([]);
-
-document.addEventListener(
-    "keydown",
-    (event) => {
-        const keyName = event.key;
-        keysPressed.add(keyName);
-    },
-    false,
-);
-
-document.addEventListener(
-    "keyup",
-    (event) => {
-        const keyName = event.key;
-        keysPressed.delete(keyName);
-    },
-    false,
-);
