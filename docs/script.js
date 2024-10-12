@@ -1,28 +1,84 @@
 let DSItems = [];
 class DSItem {
-    constructor(_dsCanvas, _type) {
+    constructor(_dsCanvas, data) {
         this.dsCanvas = _dsCanvas;
 
-        this.type = _type;
-        this.size = 250;
-        this.color = "#808080"; // must be hex code
+        this.type = data["type"];
+
+        this.minorDimension = 50;
+
+        if (data["size"] != undefined) {
+            this.size = data["size"];
+        } else {
+            this.size = 250;
+        }
+
+        if (data["color"] != undefined) {
+            this.color = data["color"];
+        } else {
+            this.color = "#808080"; // must be hex code
+        }
+
+        if (data["posX"] != undefined) {
+            this.posX = data["posX"];
+        } else {
+            this.posX = 0;
+        }
+
+        if (data["posY"] != undefined) {
+            this.posY = data["posY"];
+        } else {
+            this.posY = 0;
+        }
+
+        if (data["buttonPressedVal"] != undefined) {
+            this.buttonPressedVal = data["buttonPressedVal"];
+        } else {
+            this.buttonPressedVal = null;
+        }
+
+        if (data["buttonReleasedVal"] != undefined) {
+            this.buttonReleasedVal = data["buttonReleasedVal"];
+        } else {
+            this.buttonReleasedVal = null;
+        }
+
+        if (data["keyboardKeys"] != undefined) {
+            this.keyboardKeys = data["keyboardKeys"];
+        } else {
+            this.keyboardKeys = [];
+        }
+
+        if (data["dataIndices"] != undefined) {
+            this.dataIndices = data["dataIndices"];
+        } else {
+            if (this.type == "joystick") {
+                this.dataIndices = [null, null];
+            } else if (this.type == "hslider") {
+                this.dataIndices = [null];
+            } else if (this.type == "vslider") {
+                this.dataIndices = [null];
+            } else if (this.type == "button") {
+                this.dataIndices = [null];
+            }
+        }
 
         if (this.type == "joystick") {
             this.width = this.size;
             this.height = this.size;
-            this.radius = 25;
+            this.radius = this.minorDimension / 2;
         }
         else if (this.type == "hslider") {
             this.width = this.size;
-            this.height = 50;
-            this.radius = 25;
+            this.height = this.minorDimension;
+            this.radius = this.minorDimension / 2;
         }
         else if (this.type == "vslider") {
-            this.width = 50;
+            this.width = this.minorDimension;
             this.height = this.size;
-            this.radius = 25;
+            this.radius = this.minorDimension / 2;
         } else if (this.type == "button") {
-            this.size = 50;//TODO: DELETE
+            this.size = this.minorDimension;
             this.width = this.size;
             this.height = this.size;
             this.radius = 0;
@@ -30,14 +86,6 @@ class DSItem {
 
         //TODO: add recenter option
         //TODO: add min and max options?
-
-        this.buttonPressedVal = null;
-        this.buttonReleasedVal = null;
-
-        this.keyboardKeys = [];
-
-        this.posX = 0;
-        this.posY = 0;
 
         this.mousePressed = false;
         this.highlighted = false;
@@ -49,27 +97,21 @@ class DSItem {
         this.joyy = 0;
 
         this.numData = 0;
-        this.dataIndices = [];
 
         this.vars = [];
         if (this.type == "joystick") {
             this.numData = 2;
             this.vars = [0.0, 0.0];
-            this.dataIndices = [null, null];
         } else if (this.type == "hslider") {
             this.numData = 1;
             this.vars = [0.0];
-            this.dataIndices = [null];
         } else if (this.type == "vslider") {
             this.numData = 1;
             this.vars = [0.0];
-            this.dataIndices = [null];
         } else if (this.type == "button") {
             this.numData = 1;
             this.vars = [0];
-            this.dataIndices = [null];
         }
-
 
         this.onMouseDownBound = this.onMouseDown.bind(this);
         this.onMouseUpBound = this.onMouseUp.bind(this);
@@ -86,7 +128,21 @@ class DSItem {
         this.dsCanvas.addEventListener('touchmove', this.onTouchMoveBound);
 
         this.draw();
+    }
 
+    jsonify() {
+        const obj = {
+            type: this.type,
+            size: this.size,
+            color: this.color,
+            posX: this.posX,
+            posY: this.posY,
+            buttonPressedVal: this.buttonPressedVal,
+            buttonReleasedVal: this.buttonReleasedVal,
+            keyboardKeys: this.keyboardKeys,
+            dataIndices: this.dataIndices,
+        };
+        return obj
     }
 
     onMouseDown(event) {
@@ -584,8 +640,8 @@ function deleteDSItem(item) {
     refreshDSItems();
 }
 
-function addDSItem(type) {
-    const item = new DSItem(document.getElementById("ds"), type);
+function addDSItem(_type) {
+    const item = new DSItem(document.getElementById("ds"), { type: _type });
     item.beingEdited = driverstationEditable;
     DSItems.push(item);
     document.getElementById("ds-list").appendChild(item.nameElement())
@@ -618,6 +674,38 @@ function refreshDSItems() {
     }
 }
 
+function downloadUIData() {
+    let data = { controls: [] };
+    for (let i = 0; i < DSItems.length; i++) {
+        data["controls"].push(DSItems[i].jsonify());
+    }
+    downloadFile(JSON.stringify(data), 'data.json');
+}
+
+function uploadUIData() {
+    if (driverstationEditable == false) {
+        return;
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = e => {
+            const data = JSON.parse(e.target.result);
+            clearDSItems();
+            for (let i = 0; i < data.controls.length; i++) {
+                const item = new DSItem(document.getElementById("ds"), data.controls[i]);
+                item.beingEdited = driverstationEditable;
+                DSItems.push(item);
+                document.getElementById("ds-list").appendChild(item.nameElement());
+            }
+        }
+        reader.readAsText(file);
+    }
+    input.click();
+}
 
 txdata = [];
 setInterval(() => {
