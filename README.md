@@ -1,6 +1,6 @@
-# RCMv3
+# RCMv3 - Program RCM Robots Without Seeing Any Code
 
-# this is a work in progress
+# work in progress
 
 https://github.com/rcmgames/RCMv3
 

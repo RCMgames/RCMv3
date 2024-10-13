@@ -99,6 +99,12 @@ class DSItem {
             }
         }
 
+        if (data["recenter"] != undefined) {
+            this.recenter = data["recenter"];
+        } else {
+            this.recenter = false;
+        }
+
         if (this.type == "joystick") {
             this.width = this.size;
             this.height = this.size;
@@ -119,9 +125,6 @@ class DSItem {
             this.height = this.size;
             this.radius = 0;
         }
-
-        //TODO: add recenter option
-        //TODO: add min and max options?
 
         this.mousePressed = false;
         this.highlighted = false;
@@ -180,6 +183,7 @@ class DSItem {
             keyboardKeys: this.keyboardKeys,
             gamepadAxes: this.gamepadAxes,
             dataIndices: this.dataIndices,
+            recenter: this.recenter
         };
         return obj
     }
@@ -609,6 +613,23 @@ class DSItem {
 
         }
 
+        if (this.type != "button") {
+            let row_recenter = document.createElement("tr");
+            let row_recenter_label = document.createElement("td");
+            row_recenter_label.innerHTML = "recenter";
+            row_recenter.appendChild(row_recenter_label);
+            let cell_recenter = document.createElement("td");
+            let recenterInput = document.createElement("input");
+            recenterInput.type = "checkbox";
+            recenterInput.checked = this.recenter;
+            recenterInput.onchange = () => {
+                this.recenter = recenterInput.checked;
+            }
+            cell_recenter.appendChild(recenterInput);
+            row_recenter.appendChild(cell_recenter);
+            element.appendChild(row_recenter);
+        }
+
         let row_color = document.createElement("tr");
         let row_color_label = document.createElement("td");
         row_color_label.innerHTML = "Color";
@@ -640,12 +661,14 @@ class DSItem {
                             allData[this.dataIndices[i]] = this.vars[i];
                         }
                     }
-                } else {
+                } else { //axis not activated by mouse or touchscreen, it can still be controlled by the keyboard or gamepad
                     for (let i = 0; i < this.numData; i++) {
                         if (this.dataIndices[i] != null && allData[this.dataIndices[i]] != undefined) {
                             this.vars[i] = allData[this.dataIndices[i]];
                         }
-
+                        if (this.recenter) {
+                            this.vars[i] = 0;
+                        }
                         for (let j = 0; j < gamepad.length; j++) {
                             const gp = gamepad[j];
                             if (gp) {
