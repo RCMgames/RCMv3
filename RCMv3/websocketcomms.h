@@ -1,0 +1,5 @@
+#ifndef WEBSOCKETCOMMS_H
+#define WEBSOCKETCOMMS_H
+
+
+#endif // WEBSOCKETCOMMS_H

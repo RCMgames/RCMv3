@@ -15,16 +15,11 @@ Remember to also choose the "environment" for your microcontroller in PlatformIO
 /**
 uncomment one of the following lines depending on which communication method you want to use
 */
-#define RCM_COMM_METHOD RCM_COMM_EWD // use the normal communication method for RCM robots
+#define RCM_COMM_METHOD RCM_COMM_EWD // use the original communication method for RCM robots
 // #define RCM_COMM_METHOD RCM_COMM_ROS // use the ROS communication method
+// #define RCM_COMM_METHOD RCM_COMM_WEBSOCKETS // use websockets for communication
 
 #include "rcm.h" //defines pins
-
-#include <ESPAsyncWebServer.h>
-#include <LittleFS.h>
-
-AsyncWebServer server(80);
-String data = "hi,mogus\nhow,are,you";
 
 // set up motors and anything else you need here
 // See this page for how to set up servos and motors for each type of RCM board:
@@ -50,47 +45,6 @@ void Disable()
 void PowerOn()
 {
     // runs once on robot startup, set pin modes and use begin() if applicable here
-
-    // Initialize SPIFFS
-    if (!LittleFS.begin(true)) {
-        Serial.println("An Error has occurred while mounting SPIFFS");
-        return;
-    }
-
-    // Route for root / web page
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(LittleFS, "/index.html", "text/html");
-    });
-
-    // Route to load script.js file
-    server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(LittleFS, "/script.js", "text/javascript");
-    });
-
-    // Route to load style.css file
-    server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(LittleFS, "/style.css", "text/css");
-    });
-
-    // add places you can GET request from to do things
-    server.on("/data", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(200, "text/plain", data);
-    });
-
-    // Route to set GPIO to HIGH
-    server.on("/on", HTTP_GET, [](AsyncWebServerRequest* request) {
-        digitalWrite(2, HIGH);
-        request->send(200, "text/plain", "");
-    });
-
-    // Route to set GPIO to LOW
-    server.on("/off", HTTP_GET, [](AsyncWebServerRequest* request) {
-        digitalWrite(2, LOW);
-        request->send(200, "text/plain", "");
-    });
-
-    // Start server
-    server.begin();
 }
 
 void Always()

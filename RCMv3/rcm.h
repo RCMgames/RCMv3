@@ -331,6 +331,10 @@ boolean ROSCheckFail = false;
 
 #include "rcmros.h"
 
+#elif RCM_COMM_METHOD == RCM_COMM_WEBSOCKETS //TODO
+
 #endif
+
+#include "rcmv3.h" //TODO
 
 #endif

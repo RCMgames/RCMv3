@@ -133,6 +133,10 @@ void setup()
 #elif RCM_COMM_METHOD == RCM_COMM_ROS
     setupROS();
 #endif
+    startWebServer(); // TODO:
+#if RCM_COMM_METHOD == RCM_COMM_WEBSOCKETS
+
+#endif
 }
 
 boolean connectedToWifi()
@@ -141,6 +145,8 @@ boolean connectedToWifi()
     return EWD::wifiConnected;
 #elif RCM_COMM_METHOD == RCM_COMM_ROS
     return !ROSCheckFail;
+#elif RCM_COMM_METHOD == RCM_COMM_WEBSOCKETS
+    return true; // TODO:
 #endif
 }
 boolean connectionTimedOut()
