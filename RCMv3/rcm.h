@@ -12,7 +12,7 @@
 
 #define RCM_COMM_EWD 1
 #define RCM_COMM_ROS 2
-#define RCM_COMM_WEBSOCKETS 3
+#define RCM_COMM_WEBSITE 3
 
 #if RCM_HARDWARE_VERSION == RCM_ORIGINAL
 #define port1Pin 32
@@ -306,6 +306,8 @@ void setupMotors() { }
 boolean enabled = false;
 boolean wasEnabled = false;
 
+#include "rcmv3.h"
+
 #if RCM_COMM_METHOD == RCM_COMM_EWD
 
 #ifndef EWDmaxWifiSendBufSize
@@ -331,10 +333,8 @@ boolean ROSCheckFail = false;
 
 #include "rcmros.h"
 
-#elif RCM_COMM_METHOD == RCM_COMM_WEBSOCKETS //TODO
-
+#elif RCM_COMM_METHOD == RCM_COMM_WEBSITE
+#include "websocketcomms.h"
 #endif
-
-#include "rcmv3.h" //TODO
 
 #endif

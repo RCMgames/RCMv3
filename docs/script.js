@@ -873,3 +873,29 @@ function uploadUIData() {
     }
     input.click();
 }
+
+const webs = new WebSocket('/control');
+const datatxlen = 10;
+
+function sendTestWebSocketMessage() {
+    if (webs.readyState) {
+        var txdatafloats = new Float32Array(datatxlen);
+        for (var i = 0; i < datatxlen; i++) {
+            if (txdata[i] == undefined) {
+                txdatafloats[i] = 0;
+            } else {
+                txdatafloats[i] = txdata[i];
+            }
+        }
+        var txByteArray = new Uint8Array(txdatafloats.buffer);
+        var newTxByteArray = new Uint8Array(txByteArray.length + 1);
+        newTxByteArray[0] = 1; // TODO: ENABLED
+        newTxByteArray.set(txByteArray, 1); // Copy the existing data
+        webs.send(newTxByteArray);
+    }
+    webs.onmessage = function (event) {
+        var rxByteArray = new Uint8Array(event.data);
+
+        console.log(event.data);
+    }
+}

@@ -6,6 +6,8 @@
 #include <Arduino.h>
 
 #include "rcm.h"
+#include "websiteserver.h"
+#include "websocketcomms.h"
 
 extern void PowerOn();
 extern void Enable();
@@ -132,11 +134,11 @@ void setup()
     EWD::setupWifi(WifiDataToParse, WifiDataToSend);
 #elif RCM_COMM_METHOD == RCM_COMM_ROS
     setupROS();
+#elif RCM_COMM_METHOD == RCM_COMM_WEBSITE
+    connectToWifi();
+    WSC::startWebSocketComms(WifiDataToParse, WifiDataToSend);
 #endif
     startWebServer(); // TODO:
-#if RCM_COMM_METHOD == RCM_COMM_WEBSOCKETS
-
-#endif
 }
 
 boolean connectedToWifi()
@@ -145,8 +147,8 @@ boolean connectedToWifi()
     return EWD::wifiConnected;
 #elif RCM_COMM_METHOD == RCM_COMM_ROS
     return !ROSCheckFail;
-#elif RCM_COMM_METHOD == RCM_COMM_WEBSOCKETS
-    return true; // TODO:
+#elif RCM_COMM_METHOD == RCM_COMM_WEBSITE
+    return WSC::getWifiConnected();
 #endif
 }
 boolean connectionTimedOut()
@@ -155,6 +157,8 @@ boolean connectionTimedOut()
     return EWD::timedOut();
 #elif RCM_COMM_METHOD == RCM_COMM_ROS
     return (millis() - lastEnableSentMillis) > rosWifiTimeout;
+#elif RCM_COMM_METHOD == RCM_COMM_WEBSITE
+    return WSC::timedOut();
 #endif
 }
 
@@ -166,6 +170,8 @@ void loop()
     EWD::runWifiCommunication();
 #elif RCM_COMM_METHOD == RCM_COMM_ROS
     ROSrun();
+#elif RCM_COMM_METHOD == RCM_COMM_WEBSITE
+    WSC::runWebSocketComms();
 #endif
     if (!connectedToWifi() || connectionTimedOut()) {
         enabled = false;

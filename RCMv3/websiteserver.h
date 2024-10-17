@@ -1,11 +1,54 @@
 #ifndef WEBSITESERVER_H
 #define WEBSITESERVER_H
+
 #include <Arduino.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
+#include <Preferences.h>
+
+AsyncWebServer server(80);
+Preferences wifiSettings;
+
+void connectToWifi()
+{
+    // connect to ssid "router" with password "password"
+    wifiSettings.begin("wifiSettings", false);
+    wifiSettings.putString("ssid", "router");
+    wifiSettings.putString("password", "password");
+    wifiSettings.putInt("mode", WIFI_STA);
+    wifiSettings.end();
+
+    Serial.println("Connecting to wifi");
+    Serial.println(wifiSettings.getString("ssid"));
+    Serial.println(wifiSettings.getString("password"));
+
+    wifiSettings.begin("wifiSettings", false);
+    if (wifiSettings.isKey("ssid") && wifiSettings.isKey("password") && wifiSettings.isKey("mode")) {
+        if (wifiSettings.getInt("mode") == WIFI_STA) {
+            WiFi.mode(WIFI_STA);
+            WiFi.begin(wifiSettings.getString("ssid").c_str(), wifiSettings.getString("password").c_str());
+        }
+    } else {
+        WiFi.mode(WIFI_AP);
+        WiFi.softAP("RCMv3");
+    }
+    if (wifiSettings.getInt("mode") == WIFI_STA) {
+        Serial.println("Connecting to WiFi ");
+        while (WiFi.status() != WL_CONNECTED) {
+            delay(100); //TODO:
+            Serial.print(".");
+        }
+        Serial.println();
+
+        Serial.println(WiFi.localIP());
+    } else {
+        Serial.println(WiFi.softAPIP());
+    }
+    wifiSettings.end(); //TODO
+}
+
 void startWebServer()
 {
-
     // Initialize SPIFFS
     if (!LittleFS.begin(true)) {
         Serial.println("An Error has occurred while mounting SPIFFS");

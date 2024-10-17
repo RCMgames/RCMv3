@@ -15,9 +15,9 @@ Remember to also choose the "environment" for your microcontroller in PlatformIO
 /**
 uncomment one of the following lines depending on which communication method you want to use
 */
-#define RCM_COMM_METHOD RCM_COMM_EWD // use the original communication method for RCM robots
+// #define RCM_COMM_METHOD RCM_COMM_EWD // use the original communication method for RCM robots
 // #define RCM_COMM_METHOD RCM_COMM_ROS // use the ROS communication method
-// #define RCM_COMM_METHOD RCM_COMM_WEBSOCKETS // use websockets for communication
+#define RCM_COMM_METHOD RCM_COMM_WEBSITE // host website and use websockets for communication
 
 #include "rcm.h" //defines pins
 
@@ -79,6 +79,27 @@ void configWifi()
     // EWD::APPassword = "rcmPassword";
     // EWD::APPort = 25210;
 }
+
+#elif RCM_COMM_METHOD == RCM_COMM_WEBSITE
+void WifiDataToParse()
+{
+    enabled = WSC::recvBl();
+    // add data to read here: (EWD::recvBl, EWD::recvBy, EWD::recvIn, EWD::recvFl)(boolean, byte, int, float)
+    Serial.print(WSC::recvFl());
+    Serial.print(" ");
+    Serial.print(WSC::recvFl());
+    Serial.print(" ");
+    Serial.print(WSC::recvFl());
+    Serial.print(" ");
+    Serial.print(WSC::recvFl());
+    Serial.println();
+}
+void WifiDataToSend()
+{
+    WSC::sendFl(voltageComp.getSupplyVoltage());
+    // add data to send here: (EWD::sendBl(), EWD::sendBy(), EWD::sendIn(), EWD::sendFl())(boolean, byte, int, float)
+}
+// wifi name and password is set through the website
 #elif RCM_COMM_METHOD == RCM_COMM_ROS ////////////// ignore everything below this line unless you're using ROS mode /////////////////////////////////////////////
 void ROSWifiSettings()
 {
