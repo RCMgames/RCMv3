@@ -81,23 +81,21 @@ void configWifi()
 }
 
 #elif RCM_COMM_METHOD == RCM_COMM_WEBSITE
+
+float testFloat = 0.0; // TODO: DELETE
+
 void WifiDataToParse()
 {
     enabled = WSC::recvBl();
     // add data to read here: (EWD::recvBl, EWD::recvBy, EWD::recvIn, EWD::recvFl)(boolean, byte, int, float)
-    Serial.print(WSC::recvFl());
-    Serial.print(" ");
-    Serial.print(WSC::recvFl());
-    Serial.print(" ");
-    Serial.print(WSC::recvFl());
-    Serial.print(" ");
-    Serial.print(WSC::recvFl());
-    Serial.println();
+    testFloat = WSC::recvFl();
 }
 void WifiDataToSend()
 {
     WSC::sendFl(voltageComp.getSupplyVoltage());
     // add data to send here: (EWD::sendBl(), EWD::sendBy(), EWD::sendIn(), EWD::sendFl())(boolean, byte, int, float)
+    WSC::sendFl(2521.0); // TODO: DELETE
+    WSC::sendFl(testFloat); // TODO: DELETE
 }
 // wifi name and password is set through the website
 #elif RCM_COMM_METHOD == RCM_COMM_ROS ////////////// ignore everything below this line unless you're using ROS mode /////////////////////////////////////////////

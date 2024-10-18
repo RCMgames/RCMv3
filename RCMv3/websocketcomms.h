@@ -25,8 +25,6 @@ boolean receivedNewData = false;
 
 int wifiArrayCounter = 0;
 
-int clientId = -1;
-
 void (*sendCallback)(void);
 void (*receiveCallback)(void);
 
@@ -59,7 +57,6 @@ void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType 
         // data packet
         AwsFrameInfo* info = (AwsFrameInfo*)arg;
         if (info->final && info->index == 0 && info->len == len) {
-            clientId = client->id();
             // the whole message is in a single frame and we got all of its data
             if (debugPrint) {
                 Serial.printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
@@ -210,10 +207,6 @@ bool newData()
 bool getWifiConnected()
 {
     return wifiConnected;
-}
-int getClientId()
-{
-    return clientId;
 }
 
 }; // namespace WSC

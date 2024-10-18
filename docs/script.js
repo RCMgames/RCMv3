@@ -2,8 +2,10 @@ let DSItems = [];
 
 let txdata = [];
 
+let rxdata = [];
+
 setInterval(() => {
-    document.getElementById("console").innerHTML = txdata;
+    document.getElementById("console").innerHTML = "tx: " + txdata + "rx: " + rxdata;
     for (let i = 0; i < DSItems.length; i++) {
         DSItems[i].run(txdata);
     }
@@ -875,7 +877,23 @@ function uploadUIData() {
 }
 
 const webs = new WebSocket('/control');
+
 const datatxlen = 10;
+
+// TODO: properly start the websocket connection
+// TODO: handle lost websocket connections
+
+webs.onmessage = function (event) {
+    eventData = event;
+    event.data.bytes().then(function (data) {
+        var rxByteArray = new Uint8Array(data);
+        var newrxdata = new Float32Array(rxByteArray.buffer);
+        for (var i = 0; i < newrxdata.length; i++) {
+            rxdata[i] = newrxdata[i];
+        }
+    });
+    sendTestWebSocketMessage();
+};
 
 function sendTestWebSocketMessage() {
     if (webs.readyState) {
@@ -892,10 +910,5 @@ function sendTestWebSocketMessage() {
         newTxByteArray[0] = 1; // TODO: ENABLED
         newTxByteArray.set(txByteArray, 1); // Copy the existing data
         webs.send(newTxByteArray);
-    }
-    webs.onmessage = function (event) {
-        var rxByteArray = new Uint8Array(event.data);
-
-        console.log(event.data);
     }
 }
