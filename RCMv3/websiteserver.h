@@ -35,7 +35,7 @@ void connectToWifi()
     if (wifiSettings.getInt("mode") == WIFI_STA) {
         Serial.println("Connecting to WiFi ");
         while (WiFi.status() != WL_CONNECTED) {
-            delay(100); //TODO:
+            delay(100); // TODO:
             Serial.print(".");
         }
         Serial.println();
@@ -44,7 +44,7 @@ void connectToWifi()
     } else {
         Serial.println(WiFi.softAPIP());
     }
-    wifiSettings.end(); //TODO
+    wifiSettings.end(); // TODO
 }
 
 void startWebServer()
@@ -68,6 +68,25 @@ void startWebServer()
     // Route to load style.css file
     server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest* request) {
         request->send(LittleFS, "/style.css", "text/css");
+    });
+
+    // save driverstation data received in post request and save the json to LittleFS
+    server.on("/saveUI", HTTP_POST, [](AsyncWebServerRequest* request) {
+        if (request->hasParam("UIdata", true)) {
+            Serial.println("post of UIdata");
+            AsyncWebParameter* p = request->getParam("UIdata", true);
+            File f = LittleFS.open("/UIdata", "w");
+            Serial.println(p->value().c_str());
+            f.print(p->value().c_str());
+            f.close();
+            request->send(200, "text/plain", "OK");
+        } else {
+            request->send(200, "text/plain", "FAIL");
+        }
+    });
+
+    server.on("/loadUI.json", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(LittleFS, "/UIdata", "application/json");
     });
 
     server.begin();

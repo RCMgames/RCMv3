@@ -912,3 +912,37 @@ function sendTestWebSocketMessage() {
         webs.send(newTxByteArray);
     }
 }
+
+function saveUI() {
+    const UIDataToSend = JSON.stringify({ "UIdata": DSItems });
+
+    const UIDataToSendEncoded = new URLSearchParams({ UIdata: UIDataToSend });
+
+    fetch('/saveUI', {
+        method: "post",
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: UIDataToSendEncoded
+    }).then(response => {
+        console.log(response);
+    });
+}
+function loadUI() {
+    fetch('/loadUI.json')
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            clearDSItems();
+            for (let i = 0; i < data.UIdata.length; i++) {
+                const item = new DSItem(document.getElementById("ds"), data.UIdata[i]);
+                item.beingEdited = driverstationEditable;
+                DSItems.push(item);
+                document.getElementById("ds-list").appendChild(item.nameElement());
+            }
+        }).catch((error) => {
+            console.error('Error1:', error);
+        }).catch((error) => {
+            console.error('Error2:', error);
+        });
+}
