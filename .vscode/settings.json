@@ -5,7 +5,8 @@
     "darkgrey",
     "driverstation",
     "GPIO",
-    "hslider",
+    "horiz",
+    "horiz. slider",
     "inputlable",
     "joyx",
     "joyy",
@@ -26,7 +27,7 @@
     "ROSIDL",
     "txdata",
     "velcmd",
-    "vslider",
+    "vert. slider",
     "websockets",
     "WEBSOCKETS"
   ],
