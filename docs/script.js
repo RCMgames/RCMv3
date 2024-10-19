@@ -349,6 +349,7 @@ class DSItem {
         } else if (this.type == "button") {
             this.width = this.size;
             this.height = this.size;
+            this.minorDimension = 10;
             this.radius = 0;
         } else if (this.type == "number indicator") {
             this.width = this.size;
@@ -488,8 +489,11 @@ class DSItem {
         input_size.min = this.minorDimension;
         input_size.style.width = "50px";
         input_size.value = this.size;
-        input_size.oninput = (event) => {
-            this.size = parseInt(event.target.value);
+        input_size.onchange = (event) => {
+            let sizeVal = parseInt(event.target.value);
+            if (!isNaN(sizeVal)) {
+                this.size = sizeVal;
+            }
             this.size = Math.max(this.size, this.minorDimension);
             input_size.value = this.size;
             this.processSize();
