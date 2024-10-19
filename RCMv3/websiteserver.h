@@ -70,6 +70,10 @@ void startWebServer()
         request->send(LittleFS, "/style.css", "text/css");
     });
 
+    server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(LittleFS, "/favicon.ico", "image/x-icon");
+    });
+
     // save driverstation data received in post request and save the json to LittleFS
     server.on("/saveUI", HTTP_POST, [](AsyncWebServerRequest* request) {
         if (request->hasParam("UIdata", true)) {

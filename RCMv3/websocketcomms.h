@@ -58,18 +58,12 @@ void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType 
         AwsFrameInfo* info = (AwsFrameInfo*)arg;
         if (info->final && info->index == 0 && info->len == len) {
             // the whole message is in a single frame and we got all of its data
-            if (debugPrint) {
-                Serial.printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
-            }
+            // if (debugPrint) {
+            //     Serial.printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
+            // }
             if (info->opcode == WS_BINARY) {
                 lastMessageTimeMillis = millis();
                 receivedNewData = true;
-                if (debugPrint) {
-                    for (size_t i = 0; i < info->len; i++) {
-                        Serial.printf("%02x ", data[i]);
-                    }
-                    Serial.println();
-                }
                 for (size_t i = 0; i < info->len; i++) {
                     if (i < maxWifiRecvBufSize) {
                         recvdData[i] = data[i];

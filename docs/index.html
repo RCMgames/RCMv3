@@ -9,6 +9,7 @@
 
 <body>
   <h1>RCMv3 Driver Station</h1>
+  <button onclick="txMessage();">Connect</button>
   <button class="toggleEditDriverstation" id="toggleEditDriverstation" onclick='toggleEditDriverstation()'>Edit</button>
   <br>
   <div class="outer-flex-box">
@@ -18,12 +19,16 @@
         <div class="add-ds-items-button-list">
           <div><button class="add-ds-items-button" onclick='addDSItem("joystick")'>add joystick</button></div>
           <div><button class="add-ds-items-button" onclick='addDSItem("button")'>add button</button></div>
-          <div><button class="add-ds-items-button" onclick='addDSItem("hslider")'>add hslider</button></div>
-          <div><button class="add-ds-items-button" onclick='addDSItem("vslider")'>add vslider</button></div>
+          <div><button class="add-ds-items-button" onclick='addDSItem("horiz. slider")'>add horiz. slider</button></div>
+          <div><button class="add-ds-items-button" onclick='addDSItem("vert. slider")'>add vert. slider</button></div>
+          <div><button class="add-ds-items-button" onclick='addDSItem("number indicator")'>add num display</button>
+          </div>
         </div>
         <div class="add-ds-items-button-list">
-          <button onclick="downloadUIData();">backup ui to file</button>
-          <button onclick="uploadUIData();">restore ui from file</button>
+          <button onclick="downloadUIData();">save UI to file</button>
+          <button onclick="uploadUIData();">load UI from file</button>
+          <button onclick="saveUI()">save UI to robot</button>
+          <button onclick="loadUI()">load UI from robot</button>
           <div><button class="add-ds-items-button clear-ds-items-button" onclick='clearDSItems()'>clear</button></div>
         </div>
         <div class="controls-list">
@@ -38,11 +43,6 @@
     </span>
   </div>
   <div id="console"></div>
-  <button onclick="sendTestWebSocketMessage()">sendtestwsmessage</button>
-  <br><br>
-  <button onclick="saveUI()">saveUI</button>
-  <br>
-  <button onclick="loadUI()">loadUI</button>
 </body>
 
 </html>

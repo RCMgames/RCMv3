@@ -7,7 +7,7 @@ let rxdata = [];
 setInterval(() => {
     document.getElementById("console").innerHTML = "tx: " + txdata + "rx: " + rxdata;
     for (let i = 0; i < DSItems.length; i++) {
-        DSItems[i].run(txdata);
+        DSItems[i].run(txdata, rxdata);
     }
 }, 20);
 
@@ -42,7 +42,11 @@ class DSItem {
         if (data["size"] != undefined) {
             this.size = data["size"];
         } else {
-            this.size = 250;
+            if (this.type == "button") {
+                this.size = 50;
+            } else {
+                this.size = 250;
+            }
         }
 
         if (data["color"] != undefined) {
@@ -63,81 +67,76 @@ class DSItem {
             this.posY = 0;
         }
 
-        if (data["buttonPressedVal"] != undefined) {
-            this.buttonPressedVal = data["buttonPressedVal"];
-        } else {
-            this.buttonPressedVal = null;
-        }
-
-        if (data["buttonReleasedVal"] != undefined) {
-            this.buttonReleasedVal = data["buttonReleasedVal"];
-        } else {
-            this.buttonReleasedVal = null;
-        }
-
-        if (data["keyboardKeys"] != undefined) {
-            this.keyboardKeys = data["keyboardKeys"];
-        } else {
-            this.keyboardKeys = [];
-        }
-
-        if (data["gamepadAxes"] != undefined) {
-            this.gamepadAxes = data["gamepadAxes"];
-        } else {
-            this.gamepadAxes = [];
-        }
-
         if (data["dataIndices"] != undefined) {
             this.dataIndices = data["dataIndices"];
         } else {
             if (this.type == "joystick") {
                 this.dataIndices = [null, null];
-            } else if (this.type == "hslider") {
+            } else if (this.type == "horiz. slider") {
                 this.dataIndices = [null];
-            } else if (this.type == "vslider") {
+            } else if (this.type == "vert. slider") {
                 this.dataIndices = [null];
             } else if (this.type == "button") {
+                this.dataIndices = [null];
+            } else if (this.type == "number indicator") {
                 this.dataIndices = [null];
             }
         }
 
-        if (data["recenter"] != undefined) {
-            this.recenter = data["recenter"];
+        this.processSize();
+
+        if (this.type == "number indicator") {
+            this.labelText = "";
+            this.indicator = true;
         } else {
-            this.recenter = false;
+            this.indicator = false;
         }
 
-        if (this.type == "joystick") {
-            this.width = this.size;
-            this.height = this.size;
-            this.radius = this.minorDimension / 2;
-        }
-        else if (this.type == "hslider") {
-            this.width = this.size;
-            this.height = this.minorDimension;
-            this.radius = this.minorDimension / 2;
-        }
-        else if (this.type == "vslider") {
-            this.width = this.minorDimension;
-            this.height = this.size;
-            this.radius = this.minorDimension / 2;
-        } else if (this.type == "button") {
-            this.size = this.minorDimension;
-            this.width = this.size;
-            this.height = this.size;
-            this.radius = 0;
+        if (this.indicator == false) {
+            if (data["buttonPressedVal"] != undefined) {
+                this.buttonPressedVal = data["buttonPressedVal"];
+            } else {
+                this.buttonPressedVal = null;
+            }
+
+            if (data["buttonReleasedVal"] != undefined) {
+                this.buttonReleasedVal = data["buttonReleasedVal"];
+            } else {
+                this.buttonReleasedVal = null;
+            }
+
+            if (data["keyboardKeys"] != undefined) {
+                this.keyboardKeys = data["keyboardKeys"];
+            } else {
+                this.keyboardKeys = [];
+            }
+
+            if (data["gamepadAxes"] != undefined) {
+                this.gamepadAxes = data["gamepadAxes"];
+            } else {
+                this.gamepadAxes = [];
+            }
+
+            if (data["recenter"] != undefined) {
+                this.recenter = data["recenter"];
+            } else {
+                this.recenter = false;
+            }
+
+            this.gamepadActivatedButton = false;
+            this.joyx = 0;
+            this.joyy = 0;
+        } else { // indicator
+
         }
 
         this.mousePressed = false;
         this.highlighted = false;
         this.myNameElement = null;
 
-        this.gamepadActivatedButton = false;
 
         this.beingEdited = false;
 
-        this.joyx = 0;
-        this.joyy = 0;
 
         this.numData = 0;
 
@@ -145,13 +144,16 @@ class DSItem {
         if (this.type == "joystick") {
             this.numData = 2;
             this.vars = [0.0, 0.0];
-        } else if (this.type == "hslider") {
+        } else if (this.type == "horiz. slider") {
             this.numData = 1;
             this.vars = [0.0];
-        } else if (this.type == "vslider") {
+        } else if (this.type == "vert. slider") {
             this.numData = 1;
             this.vars = [0.0];
         } else if (this.type == "button") {
+            this.numData = 1;
+            this.vars = [0];
+        } else if (this.type == "number indicator") {
             this.numData = 1;
             this.vars = [0];
         }
@@ -174,20 +176,33 @@ class DSItem {
     }
 
     jsonify() {
-        const obj = {
-            type: this.type,
-            size: this.size,
-            color: this.color,
-            posX: this.posX,
-            posY: this.posY,
-            buttonPressedVal: this.buttonPressedVal,
-            buttonReleasedVal: this.buttonReleasedVal,
-            keyboardKeys: this.keyboardKeys,
-            gamepadAxes: this.gamepadAxes,
-            dataIndices: this.dataIndices,
-            recenter: this.recenter
-        };
-        return obj
+        if (this.indicator) {
+            const obj = {
+                type: this.type,
+                size: this.size,
+                color: this.color,
+                posX: this.posX,
+                posY: this.posY,
+                labelText: this.labelText,
+                dataIndices: this.dataIndices
+            };
+            return obj;
+        } else {
+            const obj = {
+                type: this.type,
+                size: this.size,
+                color: this.color,
+                posX: this.posX,
+                posY: this.posY,
+                buttonPressedVal: this.buttonPressedVal,
+                buttonReleasedVal: this.buttonReleasedVal,
+                keyboardKeys: this.keyboardKeys,
+                gamepadAxes: this.gamepadAxes,
+                dataIndices: this.dataIndices,
+                recenter: this.recenter
+            };
+            return obj;
+        }
     }
 
     onMouseDown(event) {
@@ -215,6 +230,9 @@ class DSItem {
                 this.activeTouchId = touch.identifier;
                 this.onMove(touch.clientX, touch.clientY);
                 this.draw();
+                if (this.type == "number indicator") {
+                    console.log(this.vars[0]);
+                }
             }
         }
     }
@@ -247,30 +265,32 @@ class DSItem {
                 };
                 this.redrawCanvas();
                 this.draw();
-            } else {
-                const rect = this.dsCanvas.getBoundingClientRect();
-                if (this.type == "joystick" || this.type == "hslider") {
-                    this.joyx = (x - rect.left - this.posX - this.width / 2) / (this.width / 2 - this.radius);
-                } else {
-                    this.joyx = 0;
-                }
-                if (this.type == "joystick" || this.type == "vslider") {
-                    this.joyy = -(y - rect.top - this.posY - this.height / 2) / (this.height / 2 - this.radius);
-                } else {
-                    this.joyy = 0;
-                }
-                if (this.joyx > 1) this.joyx = 1;
-                if (this.joyx < -1) this.joyx = -1;
-                if (this.joyy > 1) this.joyy = 1;
-                if (this.joyy < -1) this.joyy = -1;
-                if (this.type == "joystick") {
-                    this.vars[0] = this.joyx;
-                    this.vars[1] = this.joyy;
-                } else if (this.type == "hslider") {
-                    this.vars[0] = this.joyx;
-                }
-                else if (this.type == "vslider") {
-                    this.vars[0] = this.joyy;
+            } else { // running mode
+                if (this.type == "button" || this.type == "joystick" || this.type == "horiz. slider" || this.type == "vert. slider") {// run ui controls
+                    const rect = this.dsCanvas.getBoundingClientRect();
+                    if (this.type == "joystick" || this.type == "horiz. slider") {
+                        this.joyx = (x - rect.left - this.posX - this.width / 2) / (this.width / 2 - this.radius);
+                    } else {
+                        this.joyx = 0;
+                    }
+                    if (this.type == "joystick" || this.type == "vert. slider") {
+                        this.joyy = -(y - rect.top - this.posY - this.height / 2) / (this.height / 2 - this.radius);
+                    } else {
+                        this.joyy = 0;
+                    }
+                    if (this.joyx > 1) this.joyx = 1;
+                    if (this.joyx < -1) this.joyx = -1;
+                    if (this.joyy > 1) this.joyy = 1;
+                    if (this.joyy < -1) this.joyy = -1;
+                    if (this.type == "joystick") {
+                        this.vars[0] = this.joyx;
+                        this.vars[1] = this.joyy;
+                    } else if (this.type == "horiz. slider") {
+                        this.vars[0] = this.joyx;
+                    }
+                    else if (this.type == "vert. slider") {
+                        this.vars[0] = this.joyy;
+                    }
                 }
                 this.draw();
             }
@@ -309,6 +329,31 @@ class DSItem {
         }
     }
 
+    processSize() {
+        if (this.type == "joystick") {
+            this.width = this.size;
+            this.height = this.size;
+            this.radius = this.minorDimension / 2;
+        } else if (this.type == "horiz. slider") {
+            this.width = this.size;
+            this.height = this.minorDimension;
+            this.radius = this.minorDimension / 2;
+        } else if (this.type == "vert. slider") {
+            this.width = this.minorDimension;
+            this.height = this.size;
+            this.radius = this.minorDimension / 2;
+        } else if (this.type == "button") {
+            this.width = this.size;
+            this.height = this.size;
+            this.radius = 0;
+        } else if (this.type == "number indicator") {
+            this.width = this.size;
+            this.height = this.size / 2;
+            this.minorDimension = 60;
+            this.radius = 0;
+        }
+    }
+
     draw() {
         const ctx = this.dsCanvas.getContext('2d');
         ctx.beginPath();
@@ -344,11 +389,19 @@ class DSItem {
                 ctx.roundRect(this.posX, this.posY, this.width, this.height, [this.radius]);
                 ctx.fill();
             }
-        } else {
+        } else if (this.type == "joystick" || this.type == "horiz. slider" || this.type == "vert. slider") {
             ctx.beginPath();
             ctx.fillStyle = 'white';
             ctx.arc(this.posX + this.width / 2 + this.joyx * (this.width / 2 - this.radius), this.posY + this.height / 2 - this.joyy * (this.height / 2 - this.radius), this.radius, 0, 2 * Math.PI);
             ctx.fill();
+        } else if (this.type == "number indicator") {
+            ctx.font = 50 * this.size / 215 + "px " + "Courier New";
+            ctx.textAlign = "right";
+            ctx.fillStyle = 'white';
+            ctx.textAlign = "left";
+            ctx.fillText(this.labelText, this.posX, this.posY + this.height / 2);
+            ctx.textAlign = "right";
+            ctx.fillText(this.vars[0].toFixed(4).substring(0, 7), this.posX + this.width - 1, this.posY + this.height - 3);
         }
     }
 
@@ -357,9 +410,9 @@ class DSItem {
         element.className = "non-highlighted-ds-list-item";
 
         let typeLabel = document.createElement("span");
-        if (this.type == "vslider") {
+        if (this.type == "vert. slider") {
             typeLabel.innerHTML = "vertical slider";
-        } else if (this.type == "hslider") {
+        } else if (this.type == "horiz. slider") {
             typeLabel.innerHTML = "horizontal slider";
         } else {
             typeLabel.innerHTML = this.type;
@@ -397,7 +450,7 @@ class DSItem {
 
         let row_data = document.createElement("tr");
         let row_data_label = document.createElement("td");
-        row_data_label.innerHTML = "output variable";
+        row_data_label.innerHTML = this.indicator ? "input variable" : "output variable";
         row_data.appendChild(row_data_label);
         for (let i = 0; i < this.numData; i++) {
             let cell = document.createElement("td");
@@ -421,6 +474,44 @@ class DSItem {
             row_data.appendChild(cell);
         }
         element.appendChild(row_data);
+        // size
+        let row_size = document.createElement("tr");
+        let row_size_label = document.createElement("td");
+        row_size_label.innerHTML = "size";
+        row_size.appendChild(row_size_label);
+        let input_size = document.createElement("input");
+        input_size.type = "number";
+        input_size.min = this.minorDimension;
+        input_size.style.width = "50px";
+        input_size.value = this.size;
+        input_size.oninput = (event) => {
+            this.size = parseInt(event.target.value);
+            this.size = Math.max(this.size, this.minorDimension);
+            input_size.value = this.size;
+            this.processSize();
+            this.redrawCanvas();
+            this.draw();
+        }
+        row_size.appendChild(input_size);
+        element.appendChild(row_size);
+
+        if (this.type == "number indicator") {
+            let row_textlable = document.createElement("tr");
+            let row_textlable_label = document.createElement("td");
+            row_textlable_label.innerHTML = "label";
+            row_textlable.appendChild(row_textlable_label);
+            let input_textlable = document.createElement("input");
+            input_textlable.type = "text";
+            input_textlable.style.width = "50px";
+            input_textlable.maxLength = 7;
+            input_textlable.value = this.labelText;
+            input_textlable.onchange = (event) => {
+                this.labelText = event.target.value;
+                this.draw();
+            }
+            row_textlable.appendChild(input_textlable);
+            element.appendChild(row_textlable);
+        }
 
         if (this.type == "button") {
             let row_buttonVal = document.createElement("tr");
@@ -468,154 +559,157 @@ class DSItem {
             element.appendChild(row_buttonRVal);
         }
 
-        let row_keys = document.createElement("tr");
-        let row_keys_label = document.createElement("td");
-        row_keys_label.innerHTML = "keyboard";
-        row_keys.appendChild(row_keys_label);
-        let cell_table = document.createElement("table");
+        if (this.type == "joystick" || this.type == "horiz. slider" || this.type == "vert. slider" || this.type == "button") {// keyboard input and gamepad input
 
-        let r1 = document.createElement("tr");
-        let r1d1 = document.createElement("td");
-        let r1d2 = document.createElement("td");
-        let r1d3 = document.createElement("td");
-        r1.appendChild(r1d1);
-        r1.appendChild(r1d2);
-        r1.appendChild(r1d3);
+            let row_keys = document.createElement("tr");
+            let row_keys_label = document.createElement("td");
+            row_keys_label.innerHTML = "keyboard";
+            row_keys.appendChild(row_keys_label);
+            let cell_table = document.createElement("table");
 
-        let r2 = document.createElement("tr");
-        let r2d1 = document.createElement("td");
-        let r2d2 = document.createElement("td");
-        let r2d3 = document.createElement("td");
-        r2.appendChild(r2d1);
-        r2.appendChild(r2d2);
-        r2.appendChild(r2d3);
+            let r1 = document.createElement("tr");
+            let r1d1 = document.createElement("td");
+            let r1d2 = document.createElement("td");
+            let r1d3 = document.createElement("td");
+            r1.appendChild(r1d1);
+            r1.appendChild(r1d2);
+            r1.appendChild(r1d3);
 
-        let r3 = document.createElement("tr");
-        let r3d1 = document.createElement("td");
-        let r3d2 = document.createElement("td");
-        let r3d3 = document.createElement("td");
-        r3.appendChild(r3d1);
-        r3.appendChild(r3d2);
-        r3.appendChild(r3d3);
+            let r2 = document.createElement("tr");
+            let r2d1 = document.createElement("td");
+            let r2d2 = document.createElement("td");
+            let r2d3 = document.createElement("td");
+            r2.appendChild(r2d1);
+            r2.appendChild(r2d2);
+            r2.appendChild(r2d3);
 
-        cell_table.appendChild(r1);
-        cell_table.appendChild(r2);
-        cell_table.appendChild(r3);
+            let r3 = document.createElement("tr");
+            let r3d1 = document.createElement("td");
+            let r3d2 = document.createElement("td");
+            let r3d3 = document.createElement("td");
+            r3.appendChild(r3d1);
+            r3.appendChild(r3d2);
+            r3.appendChild(r3d3);
 
-        for (let i = 0; i < this.numData * 2; i++) {
-            let input = document.createElement("input");
-            input.type = "text";
-            input.style.width = "50px";
-            if (this.keyboardKeys[i] == undefined) this.keyboardKeys[i] = null;
-            input.value = this.keyboardKeys[i];
-            input.oninput = (event) => {
-                this.keyboardKeys[i] = event.target.value;
-                this.keyboardKeys[i] = this.keyboardKeys[i].charAt(this.keyboardKeys[i].length - 1);
+            cell_table.appendChild(r1);
+            cell_table.appendChild(r2);
+            cell_table.appendChild(r3);
+
+            for (let i = 0; i < this.numData * 2; i++) {
+                let input = document.createElement("input");
+                input.type = "text";
+                input.style.width = "50px";
+                if (this.keyboardKeys[i] == undefined) this.keyboardKeys[i] = null;
                 input.value = this.keyboardKeys[i];
-            };
-            if (this.type == "vslider") {
-                row_keys_label.colspan = 2;
-                if (i == 0) {
-                    r1d1.appendChild(input);
-                } else if (i == 1) {
-                    r2d1.appendChild(input);
-                }
-            }
-            if (this.type == "hslider") {
-                if (i == 1) {
-                    r1d1.appendChild(input);
-                } else if (i == 0) {
-                    r1d2.appendChild(input);
-                }
-            }
-            if (this.type == "joystick") {
-                if (i == 2) {
-                    r1d2.appendChild(input);
-                } else if (i == 3) {
-                    r3d2.appendChild(input);
-                } else if (i == 1) {
-                    r2d1.appendChild(input);
-                } else if (i == 0) {
-                    r2d3.appendChild(input);
-                }
-            }
-            if (this.type == "button") {
-                if (i == 0) {
-                    r1d2.appendChild(input);
-                }
-            }
-        }
-        row_keys.appendChild(cell_table);
-        element.appendChild(row_keys);
-
-        let row_gamepad = document.createElement("tr");
-        let row_gamepad_label = document.createElement("td");
-        row_gamepad_label.innerHTML = "gamepad";
-        row_gamepad.appendChild(row_gamepad_label);
-
-
-        if (this.type != "button") {
-            for (let i = 0; i < this.numData; i++) {
-                let row_gamepad_axis_cell = document.createElement("td");
-                let row_gamepad_axis_button = document.createElement("button");
-                row_gamepad_axis_button.innerHTML = "gamepad " + this.gamepadAxes[2 * i] + " axis " + this.gamepadAxes[2 * i + 1];
-                row_gamepad_axis_button.onclick = () => {
-                    let gp = navigator.getGamepads();
-                    if (gp.length == 0) {
-                        gp = navigator.getGamepads();
+                input.oninput = (event) => {
+                    this.keyboardKeys[i] = event.target.value;
+                    this.keyboardKeys[i] = this.keyboardKeys[i].charAt(this.keyboardKeys[i].length - 1);
+                    input.value = this.keyboardKeys[i];
+                };
+                if (this.type == "vert. slider") {
+                    row_keys_label.colspan = 2;
+                    if (i == 0) {
+                        r1d1.appendChild(input);
+                    } else if (i == 1) {
+                        r2d1.appendChild(input);
                     }
-                    this.gamepadAxes[2 * i] = undefined;
-                    this.gamepadAxes[2 * i + 1] = undefined;
-                    for (let j = 0; j < gp.length; j++) {
-                        if (gp[j]) {
-                            for (let k = 0; k < gp[j].axes.length; k++) {
-                                if (Math.abs(gp[j].axes[k]) > 0.5) {
-                                    this.gamepadAxes[2 * i] = j;
-                                    this.gamepadAxes[2 * i + 1] = k;
-                                    break;
-                                }
-                            }
-                        }
+                }
+                if (this.type == "horiz. slider") {
+                    if (i == 1) {
+                        r1d1.appendChild(input);
+                    } else if (i == 0) {
+                        r1d2.appendChild(input);
                     }
+                }
+                if (this.type == "joystick") {
+                    if (i == 2) {
+                        r1d2.appendChild(input);
+                    } else if (i == 3) {
+                        r3d2.appendChild(input);
+                    } else if (i == 1) {
+                        r2d1.appendChild(input);
+                    } else if (i == 0) {
+                        r2d3.appendChild(input);
+                    }
+                }
+                if (this.type == "button") {
+                    if (i == 0) {
+                        r1d2.appendChild(input);
+                    }
+                }
+            }
+            row_keys.appendChild(cell_table);
+            element.appendChild(row_keys);
+
+            let row_gamepad = document.createElement("tr");
+            let row_gamepad_label = document.createElement("td");
+            row_gamepad_label.innerHTML = "gamepad";
+            row_gamepad.appendChild(row_gamepad_label);
+
+
+            if (this.type == "joystick" || this.type == "horiz. slider" || this.type == "vert. slider") {
+                for (let i = 0; i < this.numData; i++) {
+                    let row_gamepad_axis_cell = document.createElement("td");
+                    let row_gamepad_axis_button = document.createElement("button");
                     row_gamepad_axis_button.innerHTML = "gamepad " + this.gamepadAxes[2 * i] + " axis " + this.gamepadAxes[2 * i + 1];
-                }
-                row_gamepad_axis_cell.appendChild(row_gamepad_axis_button);
-                row_gamepad.appendChild(row_gamepad_axis_cell);
-            }
-            element.appendChild(row_gamepad);
-        } else {//button special case
-            for (let i = 0; i < this.numData; i++) {
-                let row_gamepad_axis_cell = document.createElement("td");
-                let row_gamepad_axis_button = document.createElement("button");
-                row_gamepad_axis_button.innerHTML = "gamepad " + this.gamepadAxes[2 * i] + " button " + this.gamepadAxes[2 * i + 1];
-                row_gamepad_axis_button.onclick = () => {
-                    let gp = navigator.getGamepads();
-                    if (gp.length == 0) {
-                        gp = navigator.getGamepads();
-                    }
-                    this.gamepadAxes[2 * i] = undefined;
-                    this.gamepadAxes[2 * i + 1] = undefined;
-                    for (let j = 0; j < gp.length; j++) {
-                        if (gp[j]) {
-                            for (let k = 0; k < gp[j].buttons.length; k++) {
-                                if (gp[j].buttons[k].value) {
-                                    this.gamepadAxes[2 * i] = j;
-                                    this.gamepadAxes[2 * i + 1] = k;
-                                    break;
+                    row_gamepad_axis_button.onclick = () => {
+                        let gp = navigator.getGamepads();
+                        if (gp.length == 0) {
+                            gp = navigator.getGamepads();
+                        }
+                        this.gamepadAxes[2 * i] = undefined;
+                        this.gamepadAxes[2 * i + 1] = undefined;
+                        for (let j = 0; j < gp.length; j++) {
+                            if (gp[j]) {
+                                for (let k = 0; k < gp[j].axes.length; k++) {
+                                    if (Math.abs(gp[j].axes[k]) > 0.5) {
+                                        this.gamepadAxes[2 * i] = j;
+                                        this.gamepadAxes[2 * i + 1] = k;
+                                        break;
+                                    }
                                 }
                             }
                         }
+                        row_gamepad_axis_button.innerHTML = "gamepad " + this.gamepadAxes[2 * i] + " axis " + this.gamepadAxes[2 * i + 1];
                     }
-                    row_gamepad_axis_button.innerHTML = "gamepad " + this.gamepadAxes[2 * i] + " button " + this.gamepadAxes[2 * i + 1];
+                    row_gamepad_axis_cell.appendChild(row_gamepad_axis_button);
+                    row_gamepad.appendChild(row_gamepad_axis_cell);
                 }
-                row_gamepad_axis_cell.appendChild(row_gamepad_axis_button);
-                row_gamepad.appendChild(row_gamepad_axis_cell);
-            }
-            element.appendChild(row_gamepad);
+                element.appendChild(row_gamepad);
+            } else if (this.type == "button") {//button special case
+                for (let i = 0; i < this.numData; i++) {
+                    let row_gamepad_axis_cell = document.createElement("td");
+                    let row_gamepad_axis_button = document.createElement("button");
+                    row_gamepad_axis_button.innerHTML = "gamepad " + this.gamepadAxes[2 * i] + " button " + this.gamepadAxes[2 * i + 1];
+                    row_gamepad_axis_button.onclick = () => {
+                        let gp = navigator.getGamepads();
+                        if (gp.length == 0) {
+                            gp = navigator.getGamepads();
+                        }
+                        this.gamepadAxes[2 * i] = undefined;
+                        this.gamepadAxes[2 * i + 1] = undefined;
+                        for (let j = 0; j < gp.length; j++) {
+                            if (gp[j]) {
+                                for (let k = 0; k < gp[j].buttons.length; k++) {
+                                    if (gp[j].buttons[k].value) {
+                                        this.gamepadAxes[2 * i] = j;
+                                        this.gamepadAxes[2 * i + 1] = k;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        row_gamepad_axis_button.innerHTML = "gamepad " + this.gamepadAxes[2 * i] + " button " + this.gamepadAxes[2 * i + 1];
+                    }
+                    row_gamepad_axis_cell.appendChild(row_gamepad_axis_button);
+                    row_gamepad.appendChild(row_gamepad_axis_cell);
+                }
+                element.appendChild(row_gamepad);
 
+            }
         }
 
-        if (this.type != "button") {
+        if (this.type == "joystick" || this.type == "horiz. slider" || this.type == "vert. slider") {
             let row_recenter = document.createElement("tr");
             let row_recenter_label = document.createElement("td");
             row_recenter_label.innerHTML = "recenter";
@@ -634,7 +728,7 @@ class DSItem {
 
         let row_color = document.createElement("tr");
         let row_color_label = document.createElement("td");
-        row_color_label.innerHTML = "Color";
+        row_color_label.innerHTML = "color";
         row_color.appendChild(row_color_label);
         let colorInput = document.createElement("input");
         colorInput.type = "color";
@@ -653,108 +747,118 @@ class DSItem {
 
     }
 
-    run(allData) {
+    run(allTXData, allRXData) {
         if (this.beingEdited == false) { // running
-            const gamepad = navigator.getGamepads();
-            if (this.type != "button") {
-                if (this.mousePressed) {
-                    for (let i = 0; i < this.numData; i++) {
-                        if (this.dataIndices[i] != null) {
-                            allData[this.dataIndices[i]] = this.vars[i];
+            if (this.indicator == false) {
+                const gamepad = navigator.getGamepads();
+                if (this.type == "joystick" || this.type == "horiz. slider" || this.type == "vert. slider") {
+                    if (this.mousePressed) {
+                        for (let i = 0; i < this.numData; i++) {
+                            if (this.dataIndices[i] != null) {
+                                allTXData[this.dataIndices[i]] = this.vars[i];
+                            }
+                        }
+                    } else { //axis not activated by mouse or touchscreen, it can still be controlled by the keyboard or gamepad
+                        for (let i = 0; i < this.numData; i++) {
+                            if (this.dataIndices[i] != null && allTXData[this.dataIndices[i]] != undefined) {
+                                this.vars[i] = allTXData[this.dataIndices[i]];
+                            }
+                            if (this.recenter) {
+                                this.vars[i] = 0;
+                                allTXData[this.dataIndices[i]] = this.vars[i];
+                            }
+                            for (let j = 0; j < gamepad.length; j++) {
+                                const gp = gamepad[j];
+                                if (gp) {
+                                    if (this.gamepadAxes[2 * i] == j && this.gamepadAxes[2 * i + 1] != null && gp.axes[this.gamepadAxes[2 * i + 1]] != undefined) {
+                                        this.vars[i] = gp.axes[this.gamepadAxes[2 * i + 1]];
+                                        if (this.type == "joystick" && i == 1) { // reverse y axis
+                                            this.vars[i] = -this.vars[i];
+                                        }
+                                        if (this.type == "vert. slider") {
+                                            this.vars[i] = -this.vars[i]; // reverse vert. slider
+                                        }
+                                        if (this.dataIndices[i] != null) {
+                                            allTXData[this.dataIndices[i]] = this.vars[i];
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (this.keyboardKeys[i * 2] != null && keysPressed.has(this.keyboardKeys[i * 2])) {
+                                this.vars[i] = 1;
+                                if (this.dataIndices[i] != null) {
+                                    allTXData[this.dataIndices[i]] = this.vars[i];
+                                }
+                            }
+                            if (this.keyboardKeys[i * 2 + 1] != null && keysPressed.has(this.keyboardKeys[i * 2 + 1])) {
+                                this.vars[i] = -1;
+                                if (this.dataIndices[i] != null) {
+                                    allTXData[this.dataIndices[i]] = this.vars[i];
+                                }
+                            }
+
                         }
                     }
-                } else { //axis not activated by mouse or touchscreen, it can still be controlled by the keyboard or gamepad
-                    for (let i = 0; i < this.numData; i++) {
-                        if (this.dataIndices[i] != null && allData[this.dataIndices[i]] != undefined) {
-                            this.vars[i] = allData[this.dataIndices[i]];
+                } else if (this.type == "button") { // button special case
+                    if (this.mousePressed) {
+                        if (this.dataIndices[0] != null && !isNaN(this.buttonPressedVal) && this.buttonPressedVal != null) {
+                            allTXData[this.dataIndices[0]] = this.buttonPressedVal;
                         }
-                        if (this.recenter) {
-                            this.vars[i] = 0;
-                        }
-                        for (let j = 0; j < gamepad.length; j++) {
-                            const gp = gamepad[j];
-                            if (gp) {
-                                if (this.gamepadAxes[2 * i] == j && this.gamepadAxes[2 * i + 1] != null && gp.axes[this.gamepadAxes[2 * i + 1]] != undefined) {
-                                    this.vars[i] = gp.axes[this.gamepadAxes[2 * i + 1]];
-                                    if (this.type == "joystick" && i == 1) { // reverse y axis
-                                        this.vars[i] = -this.vars[i];
-                                    }
-                                    if (this.type == "vslider") {
-                                        this.vars[i] = -this.vars[i]; // reverse vslider
-                                    }
-                                    if (this.dataIndices[i] != null) {
-                                        allData[this.dataIndices[i]] = this.vars[i];
+                    } else { // not activated by mouse or touchscreen, it can still be controlled by the keyboard
+
+                        // if button is connected to a variable and controlled by a gamepad
+                        this.gamepadActivatedButton = false;
+                        if (this.gamepadAxes[0] != null && this.gamepadAxes[1] != null) {
+                            for (let j = 0; j < gamepad.length; j++) {
+                                const gp = gamepad[j];
+                                if (gp) {
+                                    if (this.gamepadAxes[0] == j && this.gamepadAxes[1] != null && gp.buttons[this.gamepadAxes[1]].value === 1) {
+                                        this.gamepadActivatedButton = true;
+                                        if (this.dataIndices[0] != null && !isNaN(this.buttonPressedVal) && this.buttonPressedVal != null) {
+                                            allTXData[this.dataIndices[0]] = this.buttonPressedVal;
+                                        }
                                     }
                                 }
                             }
                         }
 
-                        if (this.keyboardKeys[i * 2] != null && keysPressed.has(this.keyboardKeys[i * 2])) {
-                            this.vars[i] = 1;
-                            if (this.dataIndices[i] != null) {
-                                allData[this.dataIndices[i]] = this.vars[i];
+                        if (this.dataIndices[0] != null) {// if button is connected to a variable and controlled by a key
+                            if (!isNaN(this.buttonReleasedVal) && this.buttonReleasedVal != null && this.gamepadActivatedButton == false && !keysPressed.has(this.keyboardKeys[0])) {
+                                allTXData[this.dataIndices[0]] = this.buttonReleasedVal;
                             }
-                        }
-                        if (this.keyboardKeys[i * 2 + 1] != null && keysPressed.has(this.keyboardKeys[i * 2 + 1])) {
-                            this.vars[i] = -1;
-                            if (this.dataIndices[i] != null) {
-                                allData[this.dataIndices[i]] = this.vars[i];
+                            if (!isNaN(this.buttonPressedVal) && this.buttonPressedVal != null && this.keyboardKeys[0] != null && keysPressed.has(this.keyboardKeys[0])) {
+                                allTXData[this.dataIndices[0]] = this.buttonPressedVal;
                             }
                         }
 
                     }
                 }
-            } else { // button special case
-                if (this.mousePressed) {
-                    if (this.dataIndices[0] != null && !isNaN(this.buttonPressedVal) && this.buttonPressedVal != null) {
-                        allData[this.dataIndices[0]] = this.buttonPressedVal;
-                    }
-                } else { // not activated by mouse or touchscreen, it can still be controlled by the keyboard
 
-                    // if button is connected to a variable and controlled by a gamepad
-                    this.gamepadActivatedButton = false;
-                    if (this.gamepadAxes[0] != null && this.gamepadAxes[1] != null) {
-                        for (let j = 0; j < gamepad.length; j++) {
-                            const gp = gamepad[j];
-                            if (gp) {
-                                if (this.gamepadAxes[0] == j && this.gamepadAxes[1] != null && gp.buttons[this.gamepadAxes[1]].value === 1) {
-                                    this.gamepadActivatedButton = true;
-                                    if (this.dataIndices[0] != null && !isNaN(this.buttonPressedVal) && this.buttonPressedVal != null) {
-                                        allData[this.dataIndices[0]] = this.buttonPressedVal;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if (this.dataIndices[0] != null) {// if button is connected to a variable and controlled by a key
-                        if (!isNaN(this.buttonReleasedVal) && this.buttonReleasedVal != null && this.gamepadActivatedButton == false && !keysPressed.has(this.keyboardKeys[0])) {
-                            allData[this.dataIndices[0]] = this.buttonReleasedVal;
-                        }
-                        if (!isNaN(this.buttonPressedVal) && this.buttonPressedVal != null && this.keyboardKeys[0] != null && keysPressed.has(this.keyboardKeys[0])) {
-                            allData[this.dataIndices[0]] = this.buttonPressedVal;
-                        }
-                    }
-
+                if (this.type == "joystick") {
+                    if (this.vars[0] > 1) this.vars[0] = 1;
+                    if (this.vars[0] < -1) this.vars[0] = -1;
+                    if (this.vars[1] > 1) this.vars[1] = 1;
+                    if (this.vars[1] < -1) this.vars[1] = -1;
+                    this.joyx = this.vars[0];
+                    this.joyy = this.vars[1];
+                } else if (this.type == "horiz. slider") {
+                    if (this.vars[0] > 1) this.vars[0] = 1;
+                    if (this.vars[0] < -1) this.vars[0] = -1;
+                    this.joyx = this.vars[0];
                 }
-            }
+                else if (this.type == "vert. slider") {
+                    if (this.vars[0] > 1) this.vars[0] = 1;
+                    if (this.vars[0] < -1) this.vars[0] = -1;
+                    this.joyy = this.vars[0];
+                }
 
-            if (this.type == "joystick") {
-                if (this.vars[0] > 1) this.vars[0] = 1;
-                if (this.vars[0] < -1) this.vars[0] = -1;
-                if (this.vars[1] > 1) this.vars[1] = 1;
-                if (this.vars[1] < -1) this.vars[1] = -1;
-                this.joyx = this.vars[0];
-                this.joyy = this.vars[1];
-            } else if (this.type == "hslider") {
-                if (this.vars[0] > 1) this.vars[0] = 1;
-                if (this.vars[0] < -1) this.vars[0] = -1;
-                this.joyx = this.vars[0];
-            }
-            else if (this.type == "vslider") {
-                if (this.vars[0] > 1) this.vars[0] = 1;
-                if (this.vars[0] < -1) this.vars[0] = -1;
-                this.joyy = this.vars[0];
+            } else {//indicator
+                for (let i = 0; i < this.numData; i++) {
+                    if (this.dataIndices[i] != null && allRXData[this.dataIndices[i]] != undefined) {
+                        this.vars[i] = allRXData[this.dataIndices[i]];
+                    }
+                }
             }
 
             this.draw();
@@ -878,6 +982,10 @@ function uploadUIData() {
 
 const webs = new WebSocket('/control');
 
+webs.onerror = function (event) {
+    console.error("websocket connection error");
+};
+
 const datatxlen = 10;
 
 // TODO: properly start the websocket connection
@@ -892,10 +1000,11 @@ webs.onmessage = function (event) {
             rxdata[i] = newrxdata[i];
         }
     });
-    sendTestWebSocketMessage();
+    txMessage();
 };
 
-function sendTestWebSocketMessage() {
+function txMessage() {
+    console.log("txMessage");
     if (webs.readyState) {
         var txdatafloats = new Float32Array(datatxlen);
         for (var i = 0; i < datatxlen; i++) {
@@ -909,6 +1018,8 @@ function sendTestWebSocketMessage() {
         var newTxByteArray = new Uint8Array(txByteArray.length + 1);
         newTxByteArray[0] = 1; // TODO: ENABLED
         newTxByteArray.set(txByteArray, 1); // Copy the existing data
+        console.log("sending data");
+        console.log(newTxByteArray);
         webs.send(newTxByteArray);
     }
 }
@@ -930,19 +1041,21 @@ function saveUI() {
 }
 function loadUI() {
     fetch('/loadUI.json')
+        .catch((error) => {
+        })
         .then(response => response.json())
+        .catch((error) => {
+        })
         .then(data => {
-            console.log(data);
-            clearDSItems();
-            for (let i = 0; i < data.UIdata.length; i++) {
-                const item = new DSItem(document.getElementById("ds"), data.UIdata[i]);
-                item.beingEdited = driverstationEditable;
-                DSItems.push(item);
-                document.getElementById("ds-list").appendChild(item.nameElement());
+            if (data.UIdata != undefined) {
+                clearDSItems();
+                for (let i = 0; i < data.UIdata.length; i++) {
+                    const item = new DSItem(document.getElementById("ds"), data.UIdata[i]);
+                    item.beingEdited = driverstationEditable;
+                    DSItems.push(item);
+                    document.getElementById("ds-list").appendChild(item.nameElement());
+                }
             }
         }).catch((error) => {
-            console.error('Error1:', error);
-        }).catch((error) => {
-            console.error('Error2:', error);
         });
 }
