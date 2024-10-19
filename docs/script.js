@@ -86,7 +86,11 @@ class DSItem {
         this.processSize();
 
         if (this.type == "number indicator") {
-            this.labelText = "";
+            if (data["labelText"] != undefined) {
+                this.labelText = data["labelText"];
+            } else {
+                this.labelText = "";
+            }
             this.indicator = true;
         } else {
             this.indicator = false;
