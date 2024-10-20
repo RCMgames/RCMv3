@@ -4,12 +4,16 @@ let txdata = [];
 
 let rxdata = [];
 
-setInterval(() => {
-    document.getElementById("console").innerHTML = "tx: " + txdata + "rx: " + rxdata;
-    for (let i = 0; i < DSItems.length; i++) {
-        DSItems[i].run(txdata, rxdata);
-    }
-}, 20);
+document.addEventListener("DOMContentLoaded", () => {
+    loadWifiSettings();
+    loadUI();
+    setInterval(() => {
+        document.getElementById("console").innerHTML = "tx: " + txdata + "rx: " + rxdata;
+        for (let i = 0; i < DSItems.length; i++) {
+            DSItems[i].run(txdata, rxdata);
+        }
+    }, 20);
+});
 
 keysPressed = new Set([]);
 
@@ -988,31 +992,54 @@ function uploadUIData() {
     input.click();
 }
 
-const webs = new WebSocket('/control');
+let webs;
 
-webs.onerror = function (event) {
-    console.error("websocket connection error");
-};
+function disconnect() {
+    if (webs != null) {
+        webs.close();
+    }
+    webs = null;
+    document.getElementById("connection-status").innerHTML = "Disconnected";
+}
+let lastpingtime;
+function connect() {
+    document.getElementById("connection-status").innerHTML = "Connecting...";
+    if (webs != null) {
+        if (webs != null) {
+            webs.close();
+        }
+        webs = null;
+    }
+    webs = new WebSocket('/control');
+    webs.onerror = function (event) {
+        console.error("websocket connection error");
+    };
+    lastpingtime = Date.now();
+    webs.onmessage = function (event) {
+        eventData = event;
+        event.data.bytes().then(function (data) {
+            var rxByteArray = new Uint8Array(data);
+            var newrxdata = new Float32Array(rxByteArray.buffer);
+            for (var i = 0; i < newrxdata.length; i++) {
+                rxdata[i] = newrxdata[i];
+            }
+
+            pingtime = Date.now() - lastpingtime;
+            lastpingtime = Date.now();
+            document.getElementById("connection-status").innerHTML = "Connected, ping: " + pingtime + "ms";
+        });
+        txMessage();
+    };
+    setTimeout(() => {
+        txMessage();
+    }, 5000);
+}
 
 const datatxlen = 10;
 
-// TODO: properly start the websocket connection
 // TODO: handle lost websocket connections
 
-webs.onmessage = function (event) {
-    eventData = event;
-    event.data.bytes().then(function (data) {
-        var rxByteArray = new Uint8Array(data);
-        var newrxdata = new Float32Array(rxByteArray.buffer);
-        for (var i = 0; i < newrxdata.length; i++) {
-            rxdata[i] = newrxdata[i];
-        }
-    });
-    txMessage();
-};
-
 function txMessage() {
-    console.log("txMessage");
     if (webs.readyState) {
         var txdatafloats = new Float32Array(datatxlen);
         for (var i = 0; i < datatxlen; i++) {
@@ -1024,11 +1051,11 @@ function txMessage() {
         }
         var txByteArray = new Uint8Array(txdatafloats.buffer);
         var newTxByteArray = new Uint8Array(txByteArray.length + 1);
-        newTxByteArray[0] = 1; // TODO: ENABLED
+        newTxByteArray[0] = document.getElementById("robot-enabled").checked; // TODO: ENABLED
         newTxByteArray.set(txByteArray, 1); // Copy the existing data
-        console.log("sending data");
-        console.log(newTxByteArray);
         webs.send(newTxByteArray);
+    } else {
+        document.getElementById("connection-status").innerHTML = "error, try pressing connect again";
     }
 }
 
@@ -1049,10 +1076,12 @@ function saveUI() {
 }
 function loadUI() {
     fetch('/loadUI.json')
-        .catch((error) => {
-        })
-        .then(response => response.json())
-        .catch((error) => {
+        .then(response => {
+            if (response.ok) {
+                return response.json()
+            } else {
+                throw new Error();
+            }
         })
         .then(data => {
             if (data.UIdata != undefined) {
@@ -1063,6 +1092,53 @@ function loadUI() {
                     DSItems.push(item);
                     document.getElementById("ds-list").appendChild(item.nameElement());
                 }
+            }
+        })
+        .catch(() => {
+        });
+}
+
+function saveWifiSettings() {
+    let wifiData = {
+        ssid: document.getElementById("wifi-ssid").value,
+        password: document.getElementById("wifi-password").value,
+        hostname: document.getElementById("wifi-hostname").value,
+        mode: document.getElementById("wifi-mode").checked ? 0 : 1
+    };
+    const wifiDataToSend = JSON.stringify({ "wifiData": wifiData });
+    const wifiDataToSendEncoded = new URLSearchParams(wifiData);
+    fetch('/saveWifiSettings', {
+        method: "post",
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: wifiDataToSendEncoded
+    }).then(response => {
+        console.log(response);
+        if (wifiData.hostname != "") {
+            window.location.hostname = wifiData.hostname + ".local";
+        }
+    });
+}
+
+function loadWifiSettings() {
+    fetch('/loadWifiSettings.json')
+        .catch((error) => {
+        })
+        .then(response => response.json())
+        .catch((error) => {
+        })
+        .then(data => {
+            if (data.ssid == undefined || data.password == undefined || data.hostname == undefined || data.mode == undefined) {
+                document.getElementById("wifi-ssid").value = "";
+                document.getElementById("wifi-password").value = "";
+                document.getElementById("wifi-hostname").value = "";
+                document.getElementById("wifi-mode").checked = false;
+            } else {
+                document.getElementById("wifi-ssid").value = data.ssid;
+                document.getElementById("wifi-password").value = data.password;
+                document.getElementById("wifi-hostname").value = data.hostname;
+                document.getElementById("wifi-mode").checked = data.mode != 1;
             }
         }).catch((error) => {
         });

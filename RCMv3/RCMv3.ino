@@ -88,7 +88,7 @@ void WifiDataToParse()
 {
     enabled = WSC::recvBl();
     // add data to read here: (EWD::recvBl, EWD::recvBy, EWD::recvIn, EWD::recvFl)(boolean, byte, int, float)
-    testFloat = WSC::recvFl();
+    testFloat = WSC::recvFl(); // TODO: DELETE
 }
 void WifiDataToSend()
 {

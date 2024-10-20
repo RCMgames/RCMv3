@@ -198,10 +198,6 @@ bool newData()
 {
     return receivedNewData;
 }
-bool getWifiConnected()
-{
-    return wifiConnected;
-}
 
 }; // namespace WSC
 

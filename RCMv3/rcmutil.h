@@ -148,7 +148,7 @@ boolean connectedToWifi()
 #elif RCM_COMM_METHOD == RCM_COMM_ROS
     return !ROSCheckFail;
 #elif RCM_COMM_METHOD == RCM_COMM_WEBSITE
-    return WSC::getWifiConnected();
+    return !WSC::timedOut() || hasWebsiteLoaded;
 #endif
 }
 boolean connectionTimedOut()
