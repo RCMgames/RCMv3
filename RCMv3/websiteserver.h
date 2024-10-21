@@ -7,6 +7,8 @@
 #include <LittleFS.h>
 #include <Preferences.h>
 
+#include "rcmv3.h"
+
 AsyncWebServer server(80);
 Preferences prefs;
 
@@ -196,6 +198,12 @@ void startWebServer()
             request->send(200, "application/json", "{}");
         }
         prefs.end();
+    });
+    server.on("/loadConfig.json", HTTP_GET, [](AsyncWebServerRequest* request) {
+        RCMV3_load_config(request, prefs);
+    });
+    server.on("/saveConfig.json", HTTP_POST, [](AsyncWebServerRequest* request) {
+        RCMV3_save_config(request, prefs);
     });
 
     server.begin();
