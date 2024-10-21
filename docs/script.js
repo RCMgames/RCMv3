@@ -894,7 +894,12 @@ function toggleEditDriverstation() {
     driverstationEditable = !driverstationEditable;
     document.getElementById("toggleEditDriverstation").innerHTML = !driverstationEditable ? "Edit" : "Run";
     document.getElementById("ds-edit-ui").hidden = !driverstationEditable;
-
+    if (driverstationEditable) {
+        document.getElementById("robot-enabled").disabled = true;
+        document.getElementById("robot-enabled").checked = false;
+    } else {
+        document.getElementById("robot-enabled").disabled = false;
+    }
     for (let i = 0; i < DSItems.length; i++) {
         DSItems[i].beingEdited = driverstationEditable;
         DSItems[i].draw();
@@ -999,6 +1004,7 @@ function disconnect() {
         webs.close();
     }
     webs = null;
+    document.getElementById("robot-enabled").checked = false;
     document.getElementById("connection-status").innerHTML = "Disconnected";
 }
 let lastpingtime;
@@ -1012,7 +1018,8 @@ function connect() {
     }
     webs = new WebSocket('/control');
     webs.onerror = function (event) {
-        console.error("websocket connection error");
+        document.getElementById("robot-enabled").checked = false;
+        document.getElementById("connection-status").innerHTML = "connection lost! try pressing connect again";
     };
     lastpingtime = Date.now();
     webs.onmessage = function (event) {
@@ -1051,10 +1058,11 @@ function txMessage() {
         }
         var txByteArray = new Uint8Array(txdatafloats.buffer);
         var newTxByteArray = new Uint8Array(txByteArray.length + 1);
-        newTxByteArray[0] = document.getElementById("robot-enabled").checked; // TODO: ENABLED
+        newTxByteArray[0] = document.getElementById("robot-enabled").checked && !driverstationEditable; // TODO: ENABLED
         newTxByteArray.set(txByteArray, 1); // Copy the existing data
         webs.send(newTxByteArray);
     } else {
+        document.getElementById("robot-enabled").checked = false;
         document.getElementById("connection-status").innerHTML = "error, try pressing connect again";
     }
 }
