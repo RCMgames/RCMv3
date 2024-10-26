@@ -4,6 +4,7 @@
 // contains functions common to all RCMv2 projects
 
 #include <Arduino.h>
+#include <FastLED.h>
 
 #include "rcm.h"
 #include "websiteserver.h"
@@ -19,192 +20,122 @@ extern void WifiDataToParse();
 extern void WifiDataToSend();
 extern void setupMotors();
 
-#if RCM_HARDWARE_VERSION == RCM_ORIGINAL || RCM_HARDWARE_VERSION == RCM_4_V1
+CRGB RSL_leds[1] = { CRGB(0, 0, 0) };
+#define RSL_LED RSL_leds[0]
+#define RSL_COLOR CRGB(250, 45, 0) // orange
+#define RSL_OFF CRGB(0, 0, 0)
 
 void setupRSL()
 {
+#ifndef PIN_NEOPIXEL
+#define ONBOARD_LED 2
     pinMode(ONBOARD_LED, OUTPUT);
-}
-void enabledRSL()
-{
-    digitalWrite(ONBOARD_LED, millis() % 500 < 250); // flash, enabled
-}
-void wifiFailRSL()
-{
-    digitalWrite(ONBOARD_LED, millis() % 1000 <= 100); // short flash, wifi connection fail
-}
-void wifiDisconnectedRSL()
-{
-    digitalWrite(ONBOARD_LED, millis() % 1000 >= 100); // long flash, no driver station connected
-}
-void disabledRSL()
-{
-    digitalWrite(ONBOARD_LED, HIGH); // on, disabled
-}
-
-#elif RCM_HARDWARE_VERSION == RCM_D1_V1
-
-void setupRSL()
-{
-    pinMode(ONBOARD_LED, OUTPUT);
-    digitalWrite(ONBOARD_LED, HIGH);
-}
-void enabledRSL()
-{
-    digitalWrite(ONBOARD_LED, millis() % 500 > 250); // flash, enabled
-}
-void wifiFailRSL()
-{
-    digitalWrite(ONBOARD_LED, millis() % 1000 >= 100); // short flash, wifi connection fail
-}
-void wifiDisconnectedRSL()
-{
-    digitalWrite(ONBOARD_LED, millis() % 1000 >= 100); // long flash, no driver station connected
-}
-void disabledRSL()
-{
-    digitalWrite(ONBOARD_LED, LOW); // on, disabled
-}
-
-#elif RCM_HARDWARE_VERSION == RCM_BYTE_V2 || RCM_HARDWARE_VERSION == RCM_NIBBLE_V1
-
-void setupRSL()
-{
-#if defined(NEOPIXEL_POWER)
+#else
     pinMode(NEOPIXEL_POWER, OUTPUT);
     digitalWrite(NEOPIXEL_POWER, HIGH);
-#endif
     FastLED.addLeds<NEOPIXEL, PIN_NEOPIXEL>(RSL_leds, 1);
     RSL_LED = CRGB(0, 0, 0);
     FastLED.show();
+#endif
 }
 void enabledRSL()
 {
-#ifndef OVERWRITE_RSL
+#ifndef PIN_NEOPIXEL
+    digitalWrite(ONBOARD_LED, millis() % 500 < 250); // flash, enabled
+#else
     if (millis() % 500 < 250) {
-        setRSL(RSLcolor);
+        RSL_LED = RSL_COLOR;
+        FastLED.show();
     } else {
-        setRSL(CRGB(0, 0, 0));
+        RSL_LED = RSL_OFF;
+        FastLED.show();
     }
 #endif
 }
 void wifiFailRSL()
 {
-#ifndef OVERWRITE_RSL
+#ifndef PIN_NEOPIXEL
+    digitalWrite(ONBOARD_LED, millis() % 1000 <= 100); // short flash, wifi connection fail
+#else
     if (millis() % 1000 <= 100) {
-        setRSL(RSLcolor);
+        RSL_LED = RSL_COLOR;
+        FastLED.show();
     } else {
-        setRSL(CRGB(0, 0, 0));
+        RSL_LED = RSL_OFF;
+        FastLED.show();
     }
 #endif
 }
 void wifiDisconnectedRSL()
 {
-#ifndef OVERWRITE_RSL
+#ifndef PIN_NEOPIXEL
+    digitalWrite(ONBOARD_LED, millis() % 1000 >= 100); // long flash, no driver station connected
+#else
     if (millis() % 1000 >= 100) {
-        setRSL(RSLcolor);
+        RSL_LED = RSL_COLOR;
+        FastLED.show();
     } else {
-        setRSL(CRGB(0, 0, 0));
+        RSL_LED = RSL_OFF;
+        FastLED.show();
     }
 #endif
 }
 void disabledRSL()
 {
-#ifndef OVERWRITE_RSL
-    setRSL(RSLcolor);
+#ifndef PIN_NEOPIXEL
+    digitalWrite(ONBOARD_LED, HIGH); // on, disabled
+#else
+    RSL_LED = RSL_COLOR;
+    FastLED.show();
 #endif
 }
 
-#endif
+boolean connectedToWifi()
+{
+    return !WSC::timedOut() || hasWebsiteLoaded;
+}
+boolean connectionTimedOut()
+{
+    return WSC::timedOut();
+}
 
 void setup()
 {
     Serial.begin(115200);
     setupRSL();
-    setupMotors();
-#if RCM_HARDWARE_VERSION == RCM_BYTE_V2 || RCM_HARDWARE_VERSION == RCM_NIBBLE_V1
-#ifndef RCM_BYTE_DO_NOT_USE_SAFE_DISABLE
-    digitalWrite(motorsEnablePin, LOW); // if using safe disable, disable all motors
-#endif
-#endif
+
     PowerOn();
+
     Disable();
-#if RCM_COMM_METHOD == RCM_COMM_EWD
-    configWifi();
-    EWD::setupWifi(WifiDataToParse, WifiDataToSend);
-#elif RCM_COMM_METHOD == RCM_COMM_ROS
-    setupROS();
-#elif RCM_COMM_METHOD == RCM_COMM_WEBSITE
+
     connectToWifi();
     WSC::startWebSocketComms(WifiDataToParse, WifiDataToSend);
-#endif
-    startWebServer(); // TODO:
+    startWebServer();
 }
-
-boolean connectedToWifi()
-{
-#if RCM_COMM_METHOD == RCM_COMM_EWD
-    return EWD::wifiConnected;
-#elif RCM_COMM_METHOD == RCM_COMM_ROS
-    return !ROSCheckFail;
-#elif RCM_COMM_METHOD == RCM_COMM_WEBSITE
-    return !WSC::timedOut() || hasWebsiteLoaded;
-#endif
-}
-boolean connectionTimedOut()
-{
-#if RCM_COMM_METHOD == RCM_COMM_EWD
-    return EWD::timedOut();
-#elif RCM_COMM_METHOD == RCM_COMM_ROS
-    return (millis() - lastEnableSentMillis) > rosWifiTimeout;
-#elif RCM_COMM_METHOD == RCM_COMM_WEBSITE
-    return WSC::timedOut();
-#endif
-}
-
-extern void ROSrun();
 
 void loop()
 {
-#if RCM_COMM_METHOD == RCM_COMM_EWD
-    EWD::runWifiCommunication();
-#elif RCM_COMM_METHOD == RCM_COMM_ROS
-    ROSrun();
-#elif RCM_COMM_METHOD == RCM_COMM_WEBSITE
     WSC::runWebSocketComms();
-#endif
     if (!connectedToWifi() || connectionTimedOut()) {
         enabled = false;
     }
     Always();
-    if (enabled && !wasEnabled) {
-#if RCM_HARDWARE_VERSION == RCM_BYTE_V2 || RCM_HARDWARE_VERSION == RCM_NIBBLE_V1
-#ifndef RCM_BYTE_DO_NOT_USE_SAFE_DISABLE
-        digitalWrite(motorsEnablePin, HIGH);
-#endif
-#endif
 
-        Enable();
-    }
+    Enable();
+
     if (!enabled && wasEnabled) {
         Disable();
-
-#if RCM_HARDWARE_VERSION == RCM_BYTE_V2 || RCM_HARDWARE_VERSION == RCM_NIBBLE_V1
-#ifndef RCM_BYTE_DO_NOT_USE_SAFE_DISABLE
-        digitalWrite(motorsEnablePin, LOW);
-#endif
-#endif
     }
     if (enabled) {
         Enabled();
-        enabledRSL(); //        digitalWrite(ONBOARD_LED, millis() % 500 < 250); // flash, enabled
+        enabledRSL();
     } else {
         if (!connectedToWifi())
-            wifiFailRSL(); //            digitalWrite(ONBOARD_LED, millis() % 1000 <= 100); // short flash, wifi connection fail
+            wifiFailRSL();
         else if (connectionTimedOut())
-            wifiDisconnectedRSL(); //            digitalWrite(ONBOARD_LED, millis() % 1000 >= 100); // long flash, no driver station connected
+            wifiDisconnectedRSL();
         else
-            disabledRSL(); //            digitalWrite(ONBOARD_LED, HIGH); // on, disabled
+            disabledRSL();
     }
     wasEnabled = enabled;
 }

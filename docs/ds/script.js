@@ -1042,7 +1042,7 @@ function connect() {
     }, 5000);
 }
 
-const datatxlen = 10;
+const datatxlen = 10;// byte //TODO set to length of txdata
 
 // TODO: handle lost websocket connections
 
@@ -1057,9 +1057,10 @@ function txMessage() {
             }
         }
         var txByteArray = new Uint8Array(txdatafloats.buffer);
-        var newTxByteArray = new Uint8Array(txByteArray.length + 1);
-        newTxByteArray[0] = document.getElementById("robot-enabled").checked && !driverstationEditable; // TODO: ENABLED
-        newTxByteArray.set(txByteArray, 1); // Copy the existing data
+        var newTxByteArray = new Uint8Array(txByteArray.length + 2);
+        newTxByteArray[0] = document.getElementById("robot-enabled").checked && !driverstationEditable; // ENABLED
+        newTxByteArray[1] = datatxlen;
+        newTxByteArray.set(txByteArray, 2); // Copy the existing data
         webs.send(newTxByteArray);
     } else {
         document.getElementById("robot-enabled").checked = false;
@@ -1124,7 +1125,8 @@ function saveWifiSettings() {
     }).then(response => {
         console.log(response);
         if (wifiData.hostname != "") {
-            window.location.hostname = wifiData.hostname + ".local";
+            window.location = "http://" + wifiData.hostname;
+            //            TODO: TEST
         }
     });
 }
@@ -1151,3 +1153,236 @@ function loadWifiSettings() {
         }).catch((error) => {
         });
 }
+
+var boardInfo = {};
+
+var activeComponentList = [];
+
+class ActiveComponent {
+    constructor(jsonData, index) {
+        this.index = index;
+        this.typeid = jsonData.type;
+        this.typename = jsonData.name; //TODO: can the type string be stored in board info instead of the config?
+        this.username = jsonData.username == undefined ? "" : jsonData.username;
+        this.inputs = Array(jsonData.num_inputs).fill(-1);
+        this.outputs = Array(jsonData.num_outputs).fill(-1);
+
+        this.parameters = [];//TODO: CREATE DEFAULT PARAMETERS, use boardInfo.potential_components[this.typeid]["parameters"]
+        for (let i = 0; i < boardInfo.potential_components[this.typeid]["parameters"].length; i++) {
+            switch (boardInfo.potential_components[this.typeid]["parameters"][i].type) {
+                case "int":
+                    this.parameters.push(0);
+                    break;
+                case "float":
+                    this.parameters.push(0.0);
+                    break;
+                case "bool":
+                    this.parameters.push(false);
+                    break;
+                case "TMC7300IC":
+                    this.parameters.push(0);
+                    break;
+                default:
+                    console.log("unknown parameter type");
+                    this.parameters.push(null);
+            }
+        }
+
+        this.element = document.createElement("div");
+        this.element.innerHTML = this.index + " " + this.typename + " " + this.username;
+        this.element.onclick = () => { this.openProperties(); };
+        document.getElementById("active-components").appendChild(this.element);
+    }
+    openProperties() {
+        document.getElementById("component-properties").replaceChildren();
+        // user name
+        let usernameInputElement = document.createElement("input");
+        usernameInputElement.type = "text";
+        usernameInputElement.value = this.username;
+        usernameInputElement.onchange = (event) => {
+            this.username = event.target.value;
+            this.element.innerHTML = this.index + " " + this.typename + " " + this.username;
+        }
+        document.getElementById("component-properties").appendChild(usernameInputElement);
+
+        // display all constructor parameters
+        for (let i = 0; i < boardInfo.potential_components[this.typeid]["parameters"].length; i++) {
+            let constructorParameter = boardInfo.potential_components[this.typeid]["parameters"][i];
+            let element = document.createElement("div");
+            // this.parameters //TODO: make inputs for each parameter
+            switch (constructorParameter.type) {
+                case "int":
+                    {
+                        let label = document.createElement("label");
+                        let input = document.createElement("input");
+                        label.innerHTML = constructorParameter.name;
+                        input.type = "number";
+                        input.step = "1";
+                        input.value = this.parameters[i];
+                        input.onchange = (event) => {
+                            this.parameters[i] = parseInt(event.target.value);
+                        }
+                        element.appendChild(label);
+                        element.appendChild(input);
+                    }
+                    break;
+                case "float":
+                    {
+                        let label = document.createElement("label");
+                        let input = document.createElement("input");
+                        label.innerHTML = constructorParameter.name;
+                        input.type = "number";
+                        input.value = this.parameters[i];
+                        input.onchange = (event) => {
+                            this.parameters[i] = parseFloat(event.target.value);
+                        }
+                        element.appendChild(label);
+                        element.appendChild(input);
+                    }
+                    break;
+                case "bool":
+                    let label = document.createElement("label");
+                    let input = document.createElement("input");
+                    label.innerHTML = constructorParameter.name;
+                    input.type = "checkbox";
+                    input.checked = this.parameters[i];
+                    input.onchange = (event) => {
+                        this.parameters[i] = event.target.checked;
+                    }
+                    element.appendChild(label);
+                    element.appendChild(input);
+                    break;
+            }
+            document.getElementById("component-properties").appendChild(element);
+        }
+
+        // display all inputs
+        let inputsElement = document.createElement("div");
+        let inputsTitle = document.createElement("label");
+        inputsTitle.innerHTML = "inputs: ";
+        inputsElement.appendChild(inputsTitle);
+        for (let i = 0; i < this.inputs.length; i++) {
+            let element = document.createElement("div");
+            let label = document.createElement("label");
+            label.innerHTML = i + ": ";
+            element.appendChild(label);
+            let input = document.createElement("input");
+            input.type = "number";
+            input.value = this.inputs[i];
+            input.onchange = (event) => {
+                this.inputs[i] = parseInt(event.target.value);
+            }
+            element.appendChild(input);
+            inputsElement.appendChild(element);
+        }
+        document.getElementById("component-properties").appendChild(inputsElement);
+
+
+        // display all outputs
+        let outputsElement = document.createElement("div");
+        let outputsTitle = document.createElement("label");
+        outputsTitle.innerHTML = "outputs: ";
+        outputsElement.appendChild(outputsTitle);
+        for (let i = 0; i < this.outputs.length; i++) {
+            let element = document.createElement("div");
+            let label = document.createElement("label");
+            label.innerHTML = i + ": ";
+            element.appendChild(label);
+            let input = document.createElement("input");
+            input.type = "number";
+            input.value = this.outputs[i];
+            input.onchange = (event) => {
+                this.outputs[i] = parseInt(event.target.value);
+            }
+            element.appendChild(input);
+            outputsElement.appendChild(element);
+        }
+        document.getElementById("component-properties").appendChild(outputsElement);
+
+    }
+    jsonify() {
+        let processedParameters = [];
+        for (let i = 0; i < this.parameters.length; i++) {
+            processedParameters.push(this.parameters[i]);
+        }
+
+        return {
+            type: this.typeid,
+            name: this.typename,
+            username: this.username,
+            inputs: this.inputs,
+            outputs: this.outputs,
+            parameters: processedParameters
+        };
+    }
+};
+
+function updateBoardInfoUI() {
+    document.getElementById("active-components").replaceChildren();
+    document.getElementById("component-properties").replaceChildren();
+
+    document.getElementById("potential-components").replaceChildren();
+    console.log(boardInfo);
+    for (let i = 0; i < boardInfo.potential_components.length; i++) {
+        let component = boardInfo.potential_components[i];
+        let element = document.createElement("div");
+        console.log(component);
+        element.innerHTML = component.name;
+        element.onclick = () => {
+            document.getElementById("component-properties").replaceChildren();
+            activeComponentList.push(new ActiveComponent(component, activeComponentList.length));
+        }
+        document.getElementById("potential-components").appendChild(element);
+    }
+}
+
+function loadBoardInfo() {
+    fetch('/loadBoardInfo.json')
+        .catch((error) => {
+        })
+        .then(response => response.json())
+        .catch((error) => {
+        })
+        .then(data => {
+            console.log(data);
+            boardInfo = data;
+            activeComponentList = [];
+            updateBoardInfoUI()
+        }).catch((error) => {
+        });
+}
+function loadConfig() {
+    fetch('/loadConfig.json')
+        .catch((error) => {
+        })
+        .then(response => response.json())
+        .catch((error) => {
+        })
+        .then(data => {
+            console.log(data);
+        }).catch((error) => {
+        });
+}
+function saveConfig() {
+    let componentDataToSend = [];
+    for (let i = 0; i < activeComponentList.length; i++) {
+        console.log(activeComponentList[i].jsonify());
+        componentDataToSend.push(activeComponentList[i].jsonify());
+    }
+    componentDataToSend = JSON.stringify(componentDataToSend);
+    console.log(componentDataToSend);
+    const robotDataToSendEncoded = new URLSearchParams({ components: componentDataToSend });
+
+    fetch('/saveConfig', {
+        method: "post",
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: robotDataToSendEncoded
+    }).then(response => {
+        console.log(response);
+    });
+}
+
+
+

@@ -9,10 +9,16 @@
 
 <body>
   <h1>RCMv3 Driver Station</h1>
+  <button onclick="loadBoardInfo();">loadBoard</button>
+  <button onclick="loadConfig();">loadConfig</button>
+  <button onclick="saveConfig();">saveConfig</button>
+  <br>
   <button onclick="connect();">Connect</button>
   <button onclick="disconnect();">Disconnect</button>
   <div id="connection-status">Not connected</div>
-  <button class="toggleEditDriverstation" id="toggleEditDriverstation" onclick='toggleEditDriverstation()'>Edit</button>
+  <button class="toggleEditDriverstation" id="toggleEditDriverstation" onclick='toggleEditDriverstation()'>Edit
+    Driverstation</button>
+  <button class="toggleEditDriverstation" id="toggleEditConfig" onclick='toggleEditConfig()'>Configure Robot</button>
   <br>
   ssid
   <input id="wifi-ssid" type="text"></input>
@@ -60,6 +66,11 @@
           <table class="ds-properties" id="ds-properties"> </table>
         </div>
       </div>
+    </span>
+    <span id="config-edit" class="config-edit">
+      <div id="potential-components" class="potential-components"> </div>
+      <div id="active-components" class="active-components"> </div>
+      <div id="component-properties" class="component-properties"> </div>
     </span>
   </div>
   <div id="console"></div>

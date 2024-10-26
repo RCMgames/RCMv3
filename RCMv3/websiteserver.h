@@ -199,11 +199,17 @@ void startWebServer()
         }
         prefs.end();
     });
-    server.on("/loadConfig.json", HTTP_GET, [](AsyncWebServerRequest* request) {
-        RCMV3_load_config(request, prefs);
+
+    server.on("/saveConfig", HTTP_POST, [](AsyncWebServerRequest* request) {
+        RCMV3_website_save_config(request);
     });
-    server.on("/saveConfig.json", HTTP_POST, [](AsyncWebServerRequest* request) {
-        RCMV3_save_config(request, prefs);
+
+    server.on("/loadConfig.json", HTTP_GET, [](AsyncWebServerRequest* request) {
+        RCMV3_website_load_config(request);
+    });
+
+    server.on("/loadBoardInfo.json", HTTP_GET, [](AsyncWebServerRequest* request) {
+        RCMV3_website_load_board_info(request);
     });
 
     server.begin();

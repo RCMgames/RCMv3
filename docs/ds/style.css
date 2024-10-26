@@ -91,3 +91,22 @@
 .clear-ds-items-button {
   background-color: #f44336;
 }
+
+.config-edit {
+  width: 800px;
+  display: flex;
+  flex-direction: row;
+  background-color: rgb(168, 207, 168);
+}
+
+.potential-components {
+  padding: 5px 5px;
+}
+
+.active-components {
+  padding: 5px 5px;
+}
+
+.component-properties {
+  padding: 5px 5px;
+}

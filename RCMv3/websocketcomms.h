@@ -13,11 +13,12 @@ boolean debugPrint = true;
 
 unsigned long signalLossTimeout = 1000;
 
-int maxWifiRecvBufSize = 41;
-byte recvdData[41];
+// up to 255 input and output variables
+int maxWifiRecvBufSize = 257 * 4;
+byte recvdData[257 * 4];
 
-int maxWifiSendBufSize = 12;
-byte dataToSend[12];
+int maxWifiSendBufSize = 100 * 4;
+byte dataToSend[257 * 4];
 
 unsigned long lastMessageTimeMillis = 0;
 boolean wifiConnected = false;
