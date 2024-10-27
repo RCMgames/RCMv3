@@ -2,9 +2,8 @@
 #define RCMV3_H
 
 // this file allows for runtime configuration of robots using ArduinoJson and a factory for JMotor components
-
-#include "rcmv3board.h"
 #include <Arduino.h>
+
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
 #include <JMotor.h>
@@ -12,9 +11,10 @@
 #include <mutex>
 #include <vector>
 
-std::mutex componentMutex;
+boolean enabled = false;
+boolean wasEnabled = false;
 
-#define DEBUG_PRINT_COMPONENT_FACTORY
+std::mutex componentMutex;
 
 enum RCMv3DataType {
     RC_DATA_Int,
@@ -86,7 +86,8 @@ public:
         case RC_TYPE_JMotorDriverTMC7300:
             return {
                 { "TMC7300IC index", RC_DATA_TMC7300IC },
-                { "channel", RC_DATA_Bool }
+                { "channel", RC_DATA_Bool },
+                { "enablePin", RC_DATA_Pin }
             };
         case RC_TYPE_JMotorDriverEsp32Servo:
             return {
@@ -216,10 +217,10 @@ public:
 
 class RCMv3ComponentJMotorDriverTMC7300 : public RCMv3ComponentJMotorDriver {
 public:
-    RCMv3ComponentJMotorDriverTMC7300(TMC7300IC& ic, boolean channel)
+    RCMv3ComponentJMotorDriverTMC7300(TMC7300IC& ic, boolean channel, byte enPin)
         : RCMv3ComponentJMotorDriver(RC_TYPE_JMotorDriverTMC7300)
     {
-        internalInstance = new JMotorDriverTMC7300(ic, channel);
+        internalInstance = new JMotorDriverTMC7300(ic, channel, true, enPin);
     }
     ~RCMv3ComponentJMotorDriverTMC7300()
     {
@@ -311,8 +312,8 @@ public:
         case RC_TYPE_JMotorDriverTMC7300: {
             int icIndex = data[0];
             TMC7300IC* ic = (TMC7300IC*)components[icIndex]->getInternalInstance();
-            Serial.printf("creating JMotorDriverTMC7300 with icIndex %d and channel %d\n", icIndex, (boolean)data[1]);
-            components.push_back(new RCMv3ComponentJMotorDriverTMC7300(*ic, (boolean)data[1]));
+            Serial.printf("creating JMotorDriverTMC7300 with icIndex %d and channel %d and enPin %d\n", icIndex, (boolean)data[1], (int)data[2]);
+            components.push_back(new RCMv3ComponentJMotorDriverTMC7300(*ic, (boolean)data[1], (int)data[2]));
         } break;
         case RC_TYPE_JMotorDriverEsp32Servo: {
             Serial.printf("creating JMotorDriverEsp32Servo with pwmChannel %d and servoPin %d\n", (int)data[0], (int)data[1]);

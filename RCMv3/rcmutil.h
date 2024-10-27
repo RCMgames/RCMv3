@@ -6,7 +6,6 @@
 #include <Arduino.h>
 #include <FastLED.h>
 
-#include "rcm.h"
 #include "websiteserver.h"
 #include "websocketcomms.h"
 

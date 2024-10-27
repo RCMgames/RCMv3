@@ -2,7 +2,8 @@
 //   https://github.com/rcmgames/RCMv3
 //   for information see this page: https://github.com/RCMgames
 
-#include "rcm.h" //defines pins
+#include "rcmv3.h"
+#include "websocketcomms.h"
 
 #include <vector>
 
@@ -28,6 +29,10 @@ void Disable()
 
 void PowerOn()
 {
+
+    Serial.println("starting 1");
+    delay(5000);
+    Serial.println("starting 2");
     // runs once on robot startup, set pin modes and use begin() if applicable here
     RCMV3_begin();
 }

@@ -1048,11 +1048,11 @@ function txMessage() {
     if (webs.readyState) {
 
         // set datatxlen to the largest value of a DSItem.dataIndices
-        datatxlen = 0;
-        for (let dsItem in DSItems) {
-            for (let dataIndexValue in dsItem.dataIndices) {
-                if (dataIndexValue > datatxlen) {
-                    datatxlen = dataIndexValue;
+        let datatxlen = 0;
+        for (let i = 0; i < DSItems.length; i++) {
+            for (let j = 0; j < DSItems[i].dataIndices.length; j++) {
+                if (DSItems[i].dataIndices[j] + 1 > datatxlen) {
+                    datatxlen = DSItems[i].dataIndices[j] + 1;
                 }
             }
         }
@@ -1173,12 +1173,12 @@ class ActiveComponent {
     constructor(jsonData, index) {
         this.index = index;
         this.typeid = jsonData.type;
-        this.typename = jsonData.name; //TODO: can the type string be stored in board info instead of the config?
+        this.typename = jsonData.name;
         this.username = jsonData.username == undefined ? "" : jsonData.username;
         this.inputs = Array(jsonData.num_inputs).fill(-1);
         this.outputs = Array(jsonData.num_outputs).fill(-1);
 
-        this.parameters = [];//TODO: CREATE DEFAULT PARAMETERS, use boardInfo.potential_components[this.typeid]["parameters"]
+        this.parameters = [];
         for (let i = 0; i < boardInfo.potential_components[this.typeid]["parameters"].length; i++) {
             switch (boardInfo.potential_components[this.typeid]["parameters"][i].type) {
                 case "int":
@@ -1222,6 +1222,7 @@ class ActiveComponent {
             let element = document.createElement("div");
             // this.parameters //TODO: make inputs for each parameter
             switch (constructorParameter.type) {
+                case "TMC7300IC":
                 case "int":
                     {
                         let label = document.createElement("label");
@@ -1262,6 +1263,9 @@ class ActiveComponent {
                     }
                     element.appendChild(label);
                     element.appendChild(input);
+                    break;
+                default:
+                    console.log("unknown parameter input type");
                     break;
             }
             document.getElementById("component-properties").appendChild(element);
