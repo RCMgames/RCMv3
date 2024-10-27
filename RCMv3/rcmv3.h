@@ -112,7 +112,6 @@ public:
     RCMv3Component(RCMv3ComponentType _type)
     {
         type = _type;
-        Serial.println("RCMv3Component constructor");
         inputs = new int[RCMv3ComponentNumInputs[type]];
         outputs = new int[RCMv3ComponentNumOutputs[type]];
     }
@@ -140,7 +139,7 @@ public:
 
     virtual ~RCMv3Component()
     {
-        Serial.println("RCMv3Component destructor");
+        // child classes should call disable() in their destructor if needed
         jsonData.clear();
         delete inputs;
         delete outputs;
@@ -184,7 +183,6 @@ public:
     RCMv3ComponentJMotorDriver(RCMv3ComponentType type)
         : RCMv3Component(type)
     {
-        Serial.println("RCMv3ComponentJMotorDriver constructor");
     }
     void begin()
     {
@@ -207,12 +205,13 @@ public:
     void write(int index, float value)
     {
         if (index == 0) {
-            Serial.print("setting JMotorDriver value to: ");
-            Serial.println(value);
             ((JMotorDriver*)internalInstance)->set(value);
         }
     }
-    virtual ~RCMv3ComponentJMotorDriver() { }
+    virtual ~RCMv3ComponentJMotorDriver()
+    {
+        disable();
+    }
 };
 
 class RCMv3ComponentJMotorDriverTMC7300 : public RCMv3ComponentJMotorDriver {
@@ -327,6 +326,9 @@ public:
                 if (!inputs[i].is<int>()) {
                     return false;
                 }
+                if (inputs[i].as<int>() < 0) {
+                    return false;
+                }
             }
         } else {
             return false;
@@ -336,11 +338,13 @@ public:
                 if (!outputs[i].is<int>()) {
                     return false;
                 }
+                if (outputs[i].as<int>() < 0) {
+                    return false;
+                }
             }
         } else {
             return false;
         }
-        Serial.println("inputs validated");
 
         // inputs
         for (int i = 0; i < inputs.size(); i++) {
@@ -379,7 +383,7 @@ void RCMV3_run(const std::vector<float>& inputVars, std::vector<float>& outputVa
     if (refreshOutputListSize) {
         refreshOutputListSize = false;
         // resize outputVars if a component has a output index greater than the current size and less than 256
-        int maxOutputIndex = 0;
+        int maxOutputIndex = -1;
         for (int i = 0; i < components.size(); i++) {
             for (int j = 0; j < RCMv3ComponentNumOutputs[components[i]->getType()]; j++) {
                 if (components[i]->outputs[j] >= outputVars.size()) {

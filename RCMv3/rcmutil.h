@@ -121,8 +121,9 @@ void loop()
     }
     Always();
 
-    Enable();
-
+    if (enabled && !wasEnabled) {
+        Enable();
+    }
     if (!enabled && wasEnabled) {
         Disable();
     }

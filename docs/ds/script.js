@@ -1126,7 +1126,6 @@ function saveWifiSettings() {
         console.log(response);
         if (wifiData.hostname != "") {
             window.location = "http://" + wifiData.hostname;
-            //            TODO: TEST
         }
     });
 }
