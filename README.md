@@ -2,9 +2,14 @@
 
 # work in progress
 
-https://github.com/rcmgames/RCMv3
+## Programmer Website (start here)
+https://rcmgames.github.io/RCMv3/programmer
 
-### Libraries used:
-* [JMotor](https://github.com/joshua-8/JMotor) library for motor control
-* [micro-ROS](https://micro.ros.org/) as optional method of communication
-* [ESP32_easy_wifi_data](https://github.com/joshua-8/ESP32_easy_wifi_data) as optional method of communication
+### Driverstation
+https://github.com/rcmgames/RCMv3/ds
+
+### Acknowledgements
+* [PlatformIO](https://registry.platformio.org/platforms/platformio/espressif32)
+* [ArduinoJson](https://arduinojson.org/) library for using JSON data in Arduino by Benoit Blanchon
+* [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) web server library for ESP32 by @me-no-dev
+* [JMotor](https://github.com/joshua-8/JMotor) library for motor control by @joshua-8

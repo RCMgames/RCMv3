@@ -1007,7 +1007,7 @@ function disconnect() {
     document.getElementById("robot-enabled").checked = false;
     document.getElementById("connection-status").innerHTML = "Disconnected";
 }
-let lastpingtime;
+let lastPingTime;
 function connect() {
     document.getElementById("connection-status").innerHTML = "Connecting...";
     if (webs != null) {
@@ -1021,7 +1021,7 @@ function connect() {
         document.getElementById("robot-enabled").checked = false;
         document.getElementById("connection-status").innerHTML = "connection lost! try pressing connect again";
     };
-    lastpingtime = Date.now();
+    lastPingTime = Date.now();
     webs.onmessage = function (event) {
         eventData = event;
         event.data.bytes().then(function (data) {
@@ -1031,9 +1031,9 @@ function connect() {
                 rxdata[i] = newrxdata[i];
             }
 
-            pingtime = Date.now() - lastpingtime;
-            lastpingtime = Date.now();
-            document.getElementById("connection-status").innerHTML = "Connected, ping: " + pingtime + "ms";
+            pingTime = Date.now() - lastPingTime;
+            lastPingTime = Date.now();
+            document.getElementById("connection-status").innerHTML = "Connected, ping: " + pingTime + "ms";
         });
         txMessage();
     };
@@ -1042,12 +1042,24 @@ function connect() {
     }, 5000);
 }
 
-const datatxlen = 10;// byte //TODO set to length of txdata
-
 // TODO: handle lost websocket connections
 
 function txMessage() {
     if (webs.readyState) {
+
+        // set datatxlen to the largest value of a DSItem.dataIndices
+        datatxlen = 0;
+        for (let dsItem in DSItems) {
+            for (let dataIndexValue in dsItem.dataIndices) {
+                if (dataIndexValue > datatxlen) {
+                    datatxlen = dataIndexValue;
+                }
+            }
+        }
+        if (datatxlen > 255) {
+            datatxlen = 255;
+        }
+
         var txdatafloats = new Float32Array(datatxlen);
         for (var i = 0; i < datatxlen; i++) {
             if (txdata[i] == undefined) {
