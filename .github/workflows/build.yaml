@@ -24,20 +24,9 @@ jobs:
           python-version: '3.11'
       - name: build
         run: | 
-            pip install --upgrade platformio
-            pio pkg install -g -t platformio/tool-mkspiffs
-            pio run
-            pio run --target buildfs
-            cd .pio/build
-            for folder in ./*; do
-            if [ -d "$folder" ]; then
-                mkdir ../../docs/programmer/$folder
-                cp -rf $folder/firmware.bin ../../docs/programmer/$folder/firmware.bin
-                cp -rf $folder/littlefs.bin ../../docs/programmer/$folder/littlefs.bin
-            fi
-            done
+            echo "hi" > hi.txt
             git config user.name "joshua-8[bot]"
-            git config user.email "joshua-8@users.noreply.github.com"
+            git config user.email "59814881+joshua-8@users.noreply.github.com"
             git config advice.addIgnoredFile false
             git add .
             git commit -m "compiled firmware"
