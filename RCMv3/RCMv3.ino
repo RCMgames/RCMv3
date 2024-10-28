@@ -29,11 +29,8 @@ void Disable()
 
 void PowerOn()
 {
-
-    Serial.println("starting 1");
-    delay(5000);
-    Serial.println("starting 2");
     // runs once on robot startup, set pin modes and use begin() if applicable here
+    load_config_from_memory();
     RCMV3_begin();
 }
 

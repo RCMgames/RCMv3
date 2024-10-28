@@ -95,8 +95,28 @@
 .config-edit {
   width: 800px;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   background-color: rgb(168, 207, 168);
+  visibility: hidden;
+}
+
+.toggleEditConfig {
+  display: inline-block;
+  border: none;
+  font-size: large;
+  padding: 10px 20px;
+  margin: 5px;
+}
+
+
+.config-buttons {
+  display: flex;
+  flex-direction: row;
+}
+
+.config-edit-main {
+  display: flex;
+  flex-direction: row;
 }
 
 .potential-components {

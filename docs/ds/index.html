@@ -9,16 +9,13 @@
 
 <body>
   <h1>RCMv3 Driver Station</h1>
-  <button onclick="loadBoardInfo();">loadBoard</button>
-  <button onclick="loadConfig();">loadConfig</button>
-  <button onclick="saveConfig();">saveConfig</button>
   <br>
   <button onclick="connect();">Connect</button>
   <button onclick="disconnect();">Disconnect</button>
   <div id="connection-status">Not connected</div>
   <button class="toggleEditDriverstation" id="toggleEditDriverstation" onclick='toggleEditDriverstation()'>Edit
     Driverstation</button>
-  <button class="toggleEditDriverstation" id="toggleEditConfig" onclick='toggleEditConfig()'>Configure Robot</button>
+  <button class="toggleEditConfig" id="toggleEditConfig" onclick='toggleEditConfig()'>Configure Robot</button>
   <br>
   hostname
   <input id="wifi-hostname" type="text"></input>
@@ -54,7 +51,7 @@
           <button onclick="downloadUIData();">save UI to file</button>
           <button onclick="uploadUIData();">load UI from file</button>
           <button onclick="saveUI()">save UI to robot</button>
-          <button onclick="loadUI()">load UI from robot</button>
+          <button onclick="loadUI()">reload UI from robot</button>
           <div><button class="add-ds-items-button clear-ds-items-button" onclick='clearDSItems()'>clear</button></div>
         </div>
         <div class="controls-list">
@@ -67,10 +64,19 @@
         </div>
       </div>
     </span>
-    <span id="config-edit" class="config-edit">
-      <div id="potential-components" class="potential-components"> </div>
-      <div id="active-components" class="active-components"> </div>
-      <div id="component-properties" class="component-properties"> </div>
+    <span class="config-edit" id="config-edit">
+      <div class="config-buttons">
+        <button onclick="saveConfigToFile();">save config to file</button>
+        <button onclick="loadConfigFromFile();">load config from file</button>
+        <button onclick="loadConfig();">reload config from robot</button>
+        <button onclick="saveConfig();">send config to robot</button>
+        <button onclick="clearConfig();">clear</button>
+      </div>
+      <div class="config-edit-main">
+        <div id="potential-components" class="potential-components"> </div>
+        <div id="active-components" class="active-components"> </div>
+        <div id="component-properties" class="component-properties"> </div>
+      </div>
     </span>
   </div>
   <div id="console"></div>

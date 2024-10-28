@@ -7,6 +7,8 @@ let rxdata = [];
 document.addEventListener("DOMContentLoaded", () => {
     loadWifiSettings();
     loadUI();
+    loadBoardInfo();//TODO: handle loading errors
+    loadConfig();
     setInterval(() => {
         document.getElementById("console").innerHTML = "tx: " + txdata + "rx: " + rxdata;
         for (let i = 0; i < DSItems.length; i++) {
@@ -892,7 +894,7 @@ var driverstationEditable = false;
 function toggleEditDriverstation() {
     keysPressed.clear();
     driverstationEditable = !driverstationEditable;
-    document.getElementById("toggleEditDriverstation").innerHTML = !driverstationEditable ? "Edit" : "Run";
+    document.getElementById("toggleEditDriverstation").innerHTML = !driverstationEditable ? "Edit Driverstation" : "Run Driverstation";
     document.getElementById("ds-edit-ui").hidden = !driverstationEditable;
     if (driverstationEditable) {
         document.getElementById("robot-enabled").disabled = true;
@@ -904,6 +906,12 @@ function toggleEditDriverstation() {
         DSItems[i].beingEdited = driverstationEditable;
         DSItems[i].draw();
     }
+}
+var configEditable = false;
+function toggleEditConfig() {
+    configEditable = !configEditable;
+    document.getElementById("toggleEditConfig").innerHTML = !configEditable ? "Configure Robot" : "Close Robot Configuration";
+    document.getElementById("config-edit").style.visibility = configEditable ? "visible" : "hidden";
 }
 
 function getAndDownloadData(path) {
@@ -1170,33 +1178,40 @@ var boardInfo = {};
 var activeComponentList = [];
 
 class ActiveComponent {
-    constructor(jsonData, index) {
+    constructor(jsonData, index, setParameterVals) {
         this.index = index;
         this.typeid = jsonData.type;
         this.typename = jsonData.name;
         this.username = jsonData.username == undefined ? "" : jsonData.username;
-        this.inputs = Array(jsonData.num_inputs).fill(-1);
-        this.outputs = Array(jsonData.num_outputs).fill(-1);
 
-        this.parameters = [];
-        for (let i = 0; i < boardInfo.potential_components[this.typeid]["parameters"].length; i++) {
-            switch (boardInfo.potential_components[this.typeid]["parameters"][i].type) {
-                case "int":
-                    this.parameters.push(0);
-                    break;
-                case "float":
-                    this.parameters.push(0.0);
-                    break;
-                case "bool":
-                    this.parameters.push(false);
-                    break;
-                case "TMC7300IC":
-                    this.parameters.push(0);
-                    break;
-                default:
-                    console.log("unknown parameter type");
-                    this.parameters.push(null);
+        if (setParameterVals == false) {
+            this.inputs = Array(jsonData.num_inputs).fill(-1);
+            this.outputs = Array(jsonData.num_outputs).fill(-1);
+
+            this.parameters = [];
+            for (let i = 0; i < boardInfo.potential_components[this.typeid]["parameters"].length; i++) {
+                switch (boardInfo.potential_components[this.typeid]["parameters"][i].type) {
+                    case "int":
+                        this.parameters.push(0);
+                        break;
+                    case "float":
+                        this.parameters.push(0.0);
+                        break;
+                    case "bool":
+                        this.parameters.push(false);
+                        break;
+                    case "TMC7300IC":
+                        this.parameters.push(0);
+                        break;
+                    default:
+                        console.log("unknown parameter type");
+                        this.parameters.push(null);
+                }
             }
+        } else {
+            this.parameters = jsonData.parameters;
+            this.inputs = jsonData.inputs;
+            this.outputs = jsonData.outputs;
         }
 
         this.element = document.createElement("div");
@@ -1345,10 +1360,51 @@ function updateBoardInfoUI() {
         element.innerHTML = component.name;
         element.onclick = () => {
             document.getElementById("component-properties").replaceChildren();
-            activeComponentList.push(new ActiveComponent(component, activeComponentList.length));
+            activeComponentList.push(new ActiveComponent(component, activeComponentList.length, false));
         }
         document.getElementById("potential-components").appendChild(element);
     }
+}
+
+function clearConfig() {
+    activeComponentList = [];
+    document.getElementById("active-components").replaceChildren();
+    document.getElementById("component-properties").replaceChildren();
+}
+
+function saveConfigToFile() {
+    let componentDataToSend = [];
+    for (let i = 0; i < activeComponentList.length; i++) {
+        componentDataToSend.push(activeComponentList[i].jsonify());
+    }
+    componentDataToSend = JSON.stringify(componentDataToSend);
+    downloadFile(componentDataToSend, 'config.json');
+}
+function loadConfigFromFile() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = e => {
+            const data = JSON.parse(e.target.result);
+            activeComponentList = [];
+            document.getElementById("active-components").replaceChildren();
+            document.getElementById("component-properties").replaceChildren();
+            for (let i = 0; i < data.length; i++) {
+                activeComponentList.push(new ActiveComponent(data[i], i, true));
+            }
+        }
+        reader.readAsText(file);
+    }
+    input.click();
+}
+
+function robotSaveConfig() {
+    fetch('/saveConfigToMemory').then(response => {
+        console.log(response);
+    });
 }
 
 function loadBoardInfo() {
@@ -1366,6 +1422,7 @@ function loadBoardInfo() {
         }).catch((error) => {
         });
 }
+// TODO: SHOW saving... and loading... message
 function loadConfig() {
     fetch('/loadConfig.json')
         .catch((error) => {
@@ -1375,6 +1432,12 @@ function loadConfig() {
         })
         .then(data => {
             console.log(data);
+            activeComponentList = [];
+            document.getElementById("active-components").replaceChildren();
+            document.getElementById("component-properties").replaceChildren();
+            for (let i = 0; i < data.components.length; i++) {
+                activeComponentList.push(new ActiveComponent(data.components[i], i, true));
+            }
         }).catch((error) => {
         });
 }
@@ -1396,6 +1459,7 @@ function saveConfig() {
         body: robotDataToSendEncoded
     }).then(response => {
         console.log(response);
+        robotSaveConfig();
     });
 }
 

@@ -212,6 +212,11 @@ void startWebServer()
         RCMV3_website_load_board_info(request);
     });
 
+    server.on("/saveConfigToMemory", HTTP_GET, [](AsyncWebServerRequest* request) {
+        save_config_to_memory();
+        request->send(200, "text/plain", "OK");
+    });
+
     server.begin();
 }
 

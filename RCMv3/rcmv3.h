@@ -402,8 +402,6 @@ void RCMV3_run(const std::vector<float>& inputVars, std::vector<float>& outputVa
                 if (components[i]->inputs[j] < inputVars.size()) {
                     components[i]->write(j, inputVars[components[i]->inputs[j]]);
                 } else {
-                    Serial.print("invalid input index ");
-                    Serial.println(components[i]->inputs[j]);
                     components[i]->write(j, 0);
                 }
             }
@@ -565,4 +563,25 @@ void RCMV3_website_load_board_info(AsyncWebServerRequest* request)
         request->send(200, "application/json", "{}");
     }
 }
+
+void save_config_to_memory()
+{
+    Preferences preferences;
+    preferences.begin("config", false);
+    String configData;
+    if (RCMV3_ComponentList_To_JSON_String(configData)) {
+        preferences.putString("config", configData);
+    }
+    preferences.end();
+}
+void load_config_from_memory()
+{
+    Preferences preferences;
+    preferences.begin("config", true);
+    String configData = preferences.getString("config", "[]");
+    configData = configData.substring(strlen("{\"components\":"), configData.length() - 1);
+    RCMV3_parse_config(configData);
+    preferences.end();
+}
+
 #endif // RCMV3_H
