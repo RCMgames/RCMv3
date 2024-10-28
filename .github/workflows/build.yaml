@@ -34,10 +34,11 @@ jobs:
                 echo "Folder is $folder"
                 mkdir ../../docs/programmer/$folder
                 cp -rf $folder/firmware.bin ../../docs/programmer/$folder/firmware.bin
-                cp -rf $folder/LittleFS.bin ../../docs/programmer/$folder/littlefs.bin
+                cp -rf $folder/littleFS.bin ../../docs/programmer/$folder/littlefs.bin
             fi
             done
-            pwd
-            cd ../../docs/programmer
-            pwd
-            ls
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .
+            git commit -m "compiled firmware"
+            git push
