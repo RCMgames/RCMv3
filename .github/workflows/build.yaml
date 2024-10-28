@@ -1,0 +1,53 @@
+name: compile
+
+on: 
+    workflow_dispatch:
+
+concurrency:
+    group: Compile
+    cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+
+      - name: Build PlatformIO Project
+        run: pio run
+        
+      - name: build littlefs
+        run: |
+            pwd
+            ls
+            run --target buildfs
+
+      - name: copy firmware
+        run: |
+            pwd
+            ls
+            cd .pio/build
+            for folder in ./*; do
+            if [ -d "$folder" ]; then
+                echo "Folder is $folder"
+                mkdir ../../docs/programmer/$folder
+                cp -rf $folder/firmware.bin ../../docs/programmer/$folder/firmware.bin
+                cp -rf $folder/LittleFS.bin ../../docs/programmer/$folder/LittleFS.bin
+            fi
+            done
+            pwd
+            ls
+            cd ../../docs/programmer
+            pwd
+            ls
