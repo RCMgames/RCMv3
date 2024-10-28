@@ -34,7 +34,7 @@ jobs:
                 echo "Folder is $folder"
                 mkdir ../../docs/programmer/$folder
                 cp -rf $folder/firmware.bin ../../docs/programmer/$folder/firmware.bin
-                cp -rf $folder/LittleFS.bin ../../docs/programmer/$folder/LittleFS.bin
+                cp -rf $folder/LittleFS.bin ../../docs/programmer/$folder/littlefs.bin
             fi
             done
             pwd
