@@ -31,14 +31,13 @@ jobs:
             cd .pio/build
             for folder in ./*; do
             if [ -d "$folder" ]; then
-                echo "Folder is $folder"
                 mkdir ../../docs/programmer/$folder
                 cp -rf $folder/firmware.bin ../../docs/programmer/$folder/firmware.bin
                 cp -rf $folder/littlefs.bin ../../docs/programmer/$folder/littlefs.bin
             fi
             done
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config user.name "joshua-8[bot]"
+            git config user.email "joshua-8@users.noreply.github.com"
             git add .
             git commit -m "compiled firmware"
             git push
