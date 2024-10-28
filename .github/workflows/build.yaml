@@ -32,12 +32,9 @@ jobs:
             for folder in ./*; do
             if [ -d "$folder" ]; then
                 echo "Folder is $folder"
-                cd $folder
-                ls
-                cd ..
                 mkdir ../../docs/programmer/$folder
                 cp -rf $folder/firmware.bin ../../docs/programmer/$folder/firmware.bin
-                cp -rf $folder/littleFS.bin ../../docs/programmer/$folder/littlefs.bin
+                cp -rf $folder/littlefs.bin ../../docs/programmer/$folder/littlefs.bin
             fi
             done
             git config user.name "github-actions[bot]"
