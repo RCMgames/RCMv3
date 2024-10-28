@@ -31,7 +31,7 @@ jobs:
         run: |
             pwd
             ls
-            run --target buildfs
+            pio run --target buildfs
 
       - name: copy firmware
         run: |
