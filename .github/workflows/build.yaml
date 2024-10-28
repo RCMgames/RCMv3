@@ -22,21 +22,10 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install PlatformIO Core
-        run: pip install --upgrade platformio
-
-      - name: Build PlatformIO Project
-        run: pio run
-        
-      - name: build littlefs
-        run: |
-            pwd
-            ls
+        run: | 
+            pip install --upgrade platformio
+            pio run
             pio run --target buildfs
-
-      - name: copy firmware
-        run: |
-            pwd
-            ls
             cd .pio/build
             for folder in ./*; do
             if [ -d "$folder" ]; then
@@ -47,7 +36,6 @@ jobs:
             fi
             done
             pwd
-            ls
             cd ../../docs/programmer
             pwd
             ls
