@@ -1,2 +1,3 @@
-
+adafruit_qtpy_esp32s3_n4r2/
+adafruit_qtpy_esp32s3_nopsram/
 esp32dev/
