@@ -11,6 +11,8 @@
 #include <mutex>
 #include <vector>
 
+const char* nvsPartition = "nvs2";
+
 boolean enabled = false;
 boolean wasEnabled = false;
 
@@ -567,7 +569,7 @@ void RCMV3_website_load_board_info(AsyncWebServerRequest* request)
 void save_config_to_memory()
 {
     Preferences preferences;
-    preferences.begin("config", false);
+    preferences.begin("config", false, nvsPartition);
     String configData;
     if (RCMV3_ComponentList_To_JSON_String(configData)) {
         preferences.putString("config", configData);
@@ -577,7 +579,7 @@ void save_config_to_memory()
 void load_config_from_memory()
 {
     Preferences preferences;
-    preferences.begin("config", true);
+    preferences.begin("config", true, nvsPartition);
     String configData = preferences.getString("config", "[]");
     configData = configData.substring(strlen("{\"components\":"), configData.length() - 1);
     RCMV3_parse_config(configData);

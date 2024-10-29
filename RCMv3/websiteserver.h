@@ -30,7 +30,7 @@ void connectToWifi()
     hasWifiConnected = false;
 
     delay(100);
-    prefs.begin("wifiSettings", true);
+    prefs.begin("wifiSettings", true, nvsPartition);
 
     if (prefs.isKey("ssid") && prefs.isKey("password") && prefs.isKey("mode") && prefs.isKey("hostname")) {
         if (prefs.getInt("mode") == WIFI_STA) {
@@ -137,7 +137,7 @@ void startWebServer()
     server.on("/saveUI", HTTP_POST, [](AsyncWebServerRequest* request) {
         if (request->hasParam("UIdata", true)) {
             AsyncWebParameter* p = request->getParam("UIdata", true);
-            prefs.begin("uiSettings", false);
+            prefs.begin("uiSettings", false, nvsPartition);
             prefs.putString("uidata", p->value().c_str());
             prefs.end();
             request->send(200, "text/plain", "OK");
@@ -149,25 +149,25 @@ void startWebServer()
     server.on("/saveWifiSettings", HTTP_POST, [](AsyncWebServerRequest* request) {
         if (request->hasParam("ssid", true)) {
             AsyncWebParameter* p = request->getParam("ssid", true);
-            prefs.begin("wifiSettings", false);
+            prefs.begin("wifiSettings", false, nvsPartition);
             prefs.putString("ssid", p->value().c_str());
             prefs.end();
         }
         if (request->hasParam("password", true)) {
             AsyncWebParameter* p = request->getParam("password", true);
-            prefs.begin("wifiSettings", false);
+            prefs.begin("wifiSettings", false, nvsPartition);
             prefs.putString("password", p->value().c_str());
             prefs.end();
         }
         if (request->hasParam("hostname", true)) {
             AsyncWebParameter* p = request->getParam("hostname", true);
-            prefs.begin("wifiSettings", false);
+            prefs.begin("wifiSettings", false, nvsPartition);
             prefs.putString("hostname", p->value().c_str());
             prefs.end();
         }
         if (request->hasParam("mode", true)) {
             AsyncWebParameter* p = request->getParam("mode", true);
-            prefs.begin("wifiSettings", false);
+            prefs.begin("wifiSettings", false, nvsPartition);
             prefs.putInt("mode", p->value().toInt());
             prefs.end();
         }
@@ -177,7 +177,7 @@ void startWebServer()
     });
 
     server.on("/loadWifiSettings.json", HTTP_GET, [](AsyncWebServerRequest* request) {
-        prefs.begin("wifiSettings", true);
+        prefs.begin("wifiSettings", true, nvsPartition);
         if (prefs.isKey("ssid") && prefs.isKey("password") && prefs.isKey("mode") && prefs.isKey("hostname")) {
             String ssid = prefs.getString("ssid");
             String password = prefs.getString("password");
@@ -191,7 +191,7 @@ void startWebServer()
         prefs.end();
     });
     server.on("/loadUI.json", HTTP_GET, [](AsyncWebServerRequest* request) {
-        prefs.begin("uiSettings", true);
+        prefs.begin("uiSettings", true, nvsPartition);
         if (prefs.isKey("uidata")) {
             request->send(200, "application/json", prefs.getString("uidata"));
         } else {
