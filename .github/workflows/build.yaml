@@ -35,7 +35,6 @@ jobs:
       - name: copy
         run: |
             cd .pio/build
-            ls -a
             for folder in */; do
             if [ -d "$folder" ]; then
                 mkdir -p ../../docs/programmer/firmware/$folder
