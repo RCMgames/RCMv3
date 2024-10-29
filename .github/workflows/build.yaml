@@ -36,6 +36,7 @@ jobs:
         run: |
             cd .pio/build
             for folder in */; do
+            echo "" > ../../docs/programmer/firmware/configurations_info.txt
             if [ -d "$folder" ]; then
                 mkdir -p ../../docs/programmer/firmware/$folder
                 cp -rf $folder/firmware.bin ../../docs/programmer/firmware/$folder/firmware.bin
@@ -43,6 +44,7 @@ jobs:
                 cp -rf $folder/partitions.bin ../../docs/programmer/firmware/$folder/partitions.bin
                 cp -rf $folder/bootloader.bin ../../docs/programmer/firmware/$folder/bootloader.bin
                 cp -rf ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin ../../docs/programmer/firmware/$folder/boot_app0.bin
+                echo "$folder" >> ../../docs/programmer/firmware/configurations_info.txt
             fi
             done
       - name: git push
