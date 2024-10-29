@@ -37,9 +37,9 @@ jobs:
             cd .pio/build
             for folder in ./*; do
             if [ -d "$folder" ]; then
-                mkdir ../../docs/programmer/$folder
-                cp -rf $folder/firmware.bin ../../docs/programmer/$folder/firmware.bin
-                cp -rf $folder/littlefs.bin ../../docs/programmer/$folder/littlefs.bin
+                mkdir ../../docs/programmer/firmware/$folder
+                cp -rf $folder/firmware.bin ../../docs/programmer/firmware/$folder/firmware.bin
+                cp -rf $folder/littlefs.bin ../../docs/programmer/firmware/$folder/littlefs.bin
             fi
             done
       - name: git push
@@ -47,8 +47,6 @@ jobs:
             git config user.name "joshua-8[bot]"
             git config user.email "59814881+joshua-8@users.noreply.github.com"
             git config advice.addIgnoredFile false
-            git status
             git add .
-            git status
             git commit -m "compiled firmware"
             git push
