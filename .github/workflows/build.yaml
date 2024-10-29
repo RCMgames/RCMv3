@@ -38,7 +38,7 @@ jobs:
             ls -a
             for folder in */; do
             if [ -d "$folder" ]; then
-                mkdir ../../docs/programmer/firmware/$folder
+                mkdir -p ../../docs/programmer/firmware/$folder
                 cp -rf $folder/firmware.bin ../../docs/programmer/firmware/$folder/firmware.bin
                 cp -rf $folder/littlefs.bin ../../docs/programmer/firmware/$folder/littlefs.bin
             fi
