@@ -9,14 +9,13 @@ document.addEventListener('DOMContentLoaded', async function () {
 async function getCode() {
     code = {};
     var program_selector = document.getElementById("board-selector");
-    var program = program_selector.options[program_selector.selectedIndex].value;
+    var board = program_selector.options[program_selector.selectedIndex].value;
     var codeDirectoryURL = "";
     if (configInfo[0] == "release") {
-        codeDirectoryURL = "https://github.com/RCMgames/RCMv3/raw/refs/tags/" + configInfo[1] + "/docs/programmer/firmware/" + program;
+        codeDirectoryURL = "https://raw.githubusercontent.com/RCMgames/RCMv3/refs/tags/" + configInfo[1] + "/docs/programmer/firmware/" + board;
     } else {
-        codeDirectoryURL = "https://github.com/RCMgames/RCMv3/raw/refs/heads/main/docs/programmer/firmware/" + program;
+        codeDirectoryURL = "https://raw.githubusercontent.com/RCMgames/RCMv3/refs/heads/main/docs/programmer/firmware/" + board;
     }
-    console.log(codeDirectoryURL);
 
     code["boot_app0"] = await getRequest(codeDirectoryURL + "boot_app0.bin", true);
     code["bootloader"] = await getRequest(codeDirectoryURL + "bootloader.bin", true);
