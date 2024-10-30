@@ -27,7 +27,7 @@ function errorConnecting() {
     let element = document.createElement("span");
 
     if (window.location.hash == "#new") {
-        element.innerHTML = "<br>Connect your computer to the wifi network named 'http://rcmv3.local' then press the connect button.<br>";
+        element.innerHTML = "<br><strong>Welcome to the RCMv3 Driver Station. Connect your computer to the wifi network named 'http://rcmv3.local' then press the connect button below.</strong><br>";
     } else {
         element.innerHTML = "<br>This website isn't connected to a RCM robot. To connect to your robot, enter your robot's hostname then press the connect button.<br>";
     }

@@ -5,6 +5,7 @@
     <title>RCMv3 programmer</title>
 
     <script src="./esptool-js.js"></script>
+    <script src="./cryptojs.js"></script>
     <script src="./script.js"></script>
 
 </head>
@@ -25,6 +26,11 @@
     <input id="pull-from-main" type="checkbox" onchange="getConfigInfo();">
     <span id="release"></span>
     <br>
+    <button id="upload-button" onclick="upload();" disabled>loading...</button>
+    <br>
+    <span id="upload-progress"></span>
+    <br>
+    <span class="upload-info"></span>
 
     <h2>driverstation</h2>
     After programming the microcontroller, click <a href="https://rcmgames.github.io/RCMv3/ds/#new">here</a> to go to
