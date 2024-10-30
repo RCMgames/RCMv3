@@ -5,10 +5,13 @@
 ## Programmer Website (start here)
 https://rcmgames.github.io/RCMv3/programmer
 
-### Driverstation
-https://github.com/rcmgames/RCMv3/ds
+## Driverstation
+https://rcmgames.github.io/RCMv3/ds/
 
-### Acknowledgements
+## References
+[JMotor library](https://joshua-8.github.io/JMotor/md_readme.html)
+
+## Acknowledgements
 * [PlatformIO](https://registry.platformio.org/platforms/platformio/espressif32)
 * [ArduinoJson](https://arduinojson.org/) library for using JSON data in Arduino by Benoit Blanchon
 * [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) web server library for ESP32 by @me-no-dev

@@ -5,10 +5,14 @@ let txdata = [];
 let rxdata = [];
 
 document.addEventListener("DOMContentLoaded", () => {
-    loadWifiSettings();
-    loadUI();
-    loadBoardInfo();//TODO: handle loading errors
-    loadConfig();
+    if (window.location.hostname == "rcmgames.github.io") {
+        errorConnecting();
+    } else {
+        loadBoardInfo(() => { });
+        loadWifiSettings();
+        loadUI();
+        loadConfig();
+    }
     setInterval(() => {
         document.getElementById("console").innerHTML = "tx: " + txdata + "rx: " + rxdata;
         for (let i = 0; i < DSItems.length; i++) {
@@ -16,6 +20,26 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }, 20);
 });
+
+function errorConnecting() {
+    document.getElementById("hostname-box").className = "hostname-error-connecting";
+    document.getElementById("wifi-hostname").value = "rcmv3.local";
+    let element = document.createElement("span");
+
+    element.innerHTML = "To connect to your robot, enter your robot's hostname then press the connect button. If you just programmed your robot, connect your computer to the network named 'http://rcmv3.local' and leave the hostname box with rcmv3.local.";
+
+    document.getElementById("hostname-box").appendChild(element);
+    let element2 = document.createElement("button");
+    element2.innerHTML = "connect";
+    element2.onclick = () => {
+        element.innerHTML = "redirecting you to your robot, please wait...";
+        let wifiDataHostname = document.getElementById("wifi-hostname").value;
+        if (wifiDataHostname != "") {
+            window.location = "http://" + wifiDataHostname;
+        }
+    }
+    document.getElementById("hostname-box").appendChild(element2);
+}
 
 keysPressed = new Set([]);
 
@@ -1407,19 +1431,16 @@ function robotSaveConfig() {
     });
 }
 
-function loadBoardInfo() {
+function loadBoardInfo(errorCallback) {
     fetch('/loadBoardInfo.json')
-        .catch((error) => {
-        })
         .then(response => response.json())
-        .catch((error) => {
-        })
         .then(data => {
             console.log(data);
             boardInfo = data;
             activeComponentList = [];
             updateBoardInfoUI()
         }).catch((error) => {
+            errorCallback();
         });
 }
 // TODO: SHOW saving... and loading... message

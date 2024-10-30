@@ -130,3 +130,7 @@
 .component-properties {
   padding: 5px 5px;
 }
+
+.hostname-error-connecting {
+  outline: 5px solid red;
+}
