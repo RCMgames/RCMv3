@@ -2,8 +2,16 @@ var configInfo = null;
 var code = null;
 
 document.addEventListener('DOMContentLoaded', async function () {
-    await getConfigInfo();
 
+    if (!("serial" in navigator)) {
+        var x = document.getElementsByClassName("serial-alert");
+        for (var i = 0; i < x.length; i++) {
+            x[i].innerHTML = "Web Serial is not available, so this site won't be able to communicate with your car. Please use Google Chrome, Opera, or Edge, and make sure Web Serial is enabled.<br>";
+        }
+    } else {
+
+        await getConfigInfo();
+    }
     // watch the upload-progress span to get information about the program upload progress
     const observer = new MutationObserver(mutationRecords => {
         if (mutationRecords[0].addedNodes[0].data === "Done!") {
