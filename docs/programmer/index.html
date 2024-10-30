@@ -16,17 +16,19 @@
     <h2>programmer</h2>
     <mark class="serial-alert"></mark>
     <br>
+    <label for="pull-from-main">
+        use untested code from main instead of the latest release:
+    </label>
+    <input id="pull-from-main" type="checkbox" onchange="getConfigInfo();">
+    <span id="release"></span>
+    <br>
     <label for="board-selector">
         select the type of ESP32 board you are using:
     </label>
     <select id="board-selector" onchange="getCode();">
     </select>
     <br>
-    <label for="pull-from-main">
-        use untested code from main instead of the latest release:
-    </label>
-    <input id="pull-from-main" type="checkbox" onchange="getConfigInfo();">
-    <span id="release"></span>
+    <mark id="upload-instructions"></mark>
     <br>
     <button id="upload-button" onclick="upload();" disabled>loading...</button>
     <br>

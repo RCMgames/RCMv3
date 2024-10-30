@@ -1,5 +1,6 @@
 var configInfo = null;
 var code = null;
+var boardType = null;
 
 document.addEventListener('DOMContentLoaded', async function () {
 
@@ -17,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (mutationRecords[0].addedNodes[0].data === "Done!") {
             var x = document.getElementsByClassName("upload-info");
             for (var i = 0; i < x.length; i++) {
-                x[i].innerHTML = 'Upload complete! Press the reset button on the ESP32 to run the program.';
+                x[i].innerHTML = 'Upload complete!';
             }
         } else if (mutationRecords[0].addedNodes[0].data === "Error!") {
             var x = document.getElementsByClassName("upload-info");
@@ -29,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             var x = document.getElementsByClassName("upload-info");
             for (var i = 0; i < x.length; i++) {
-                x[i].innerHTML = "Upload starting..."
+                x[i].innerHTML = "Uploading! This may take a minute."
             }
         } else if (mutationRecords[0].addedNodes[0].data === "Ready") {
         } else {
@@ -71,6 +72,16 @@ async function getCode() {
         code["firmware"] = await getRequest(codeDirectoryURL + "firmware.bin", true);
         document.getElementById("upload-button").disabled = false;
         document.getElementById("upload-button").innerHTML = "Upload";
+        boardType = board.slice(0, -1);
+
+        if (boardType == "adafruit_qtpy_esp32s3_nopsram" || boardType == "adafruit_qtpy_esp32s3_n4r2") {
+            document.getElementById("upload-instructions").innerHTML = "<ol><li>Plug in the ESP32.</li><li>Press and hold the IO0 button on the ESP32 then press and release the the reset button then release the IO0 button.</li><li>Press the Upload button when you have completed this.</li><li>Select your ESP32's serial port in the box that will pop up.</li><li>When the upload is finished press and release the reset button on the esp32 to start the program.</li></ol>";
+        } else if (boardType == "esp32dev") {
+            document.getElementById("upload-instructions").innerHTML = "<ol><li>Plug in the ESP32.</li><li>Press and hold the IO0 button on the ESP32</li><li>Press the Upload button when you have started to hold the button.</li><li>Select your ESP32's serial port in the box that will pop up.</li><li>When a green progress bar appears, let go of the IO0 button.</li></ol>";
+        } else {
+            document.getElementById("upload-instructions").innerHTML = "Board type unsupported. Please make an issue on github";
+        }
+
     } catch (e) {
         document.getElementById("upload-button").innerHTML = "Error: Couldn't get code";
         document.getElementById("upload-button").disabled = true
@@ -82,7 +93,6 @@ async function upload() {
         console.log("upload button is disabled");
         return;
     }
-    console.log(code);
     if (code == null || code["boot_app0"] == null || code["bootloader"] == null || code["partitions"] == null || code["littlefs"] == null || code["firmware"] == null) {
         console.log("code is not loaded");
         return;
@@ -90,14 +100,11 @@ async function upload() {
     document.getElementById("upload-button").disabled = true;
 
     try {
-        var device = await navigator.serial.requestPort({});
-        var transport = new Transport(device, true);
 
         let espLoaderTerminal = {
             clean() {
             },
             writeLine(data) {
-                console.log(data);
                 if (data === "Leaving...") {
                     document.getElementById("upload-progress").innerHTML = "Done!"
                 }
@@ -107,8 +114,6 @@ async function upload() {
         };
 
         let fileArray = [];
-
-        console.log(code);
 
         const readFileAsBinaryString = (file) => {
             return new Promise((resolve, reject) => {
@@ -134,19 +139,27 @@ async function upload() {
             code["littlefs"] = results[3];
             code["firmware"] = results[4];
 
-            console.log(code);
+            var devicePromise = navigator.serial.requestPort({});
+            var device = await devicePromise;
+            var transport = new Transport(device, true);
 
-            await fileArray.push({ data: code["boot_app0"], address: 0xe000 });
-            await fileArray.push({ data: code["bootloader"], address: 0x1000 });
-            await fileArray.push({ data: code["partitions"], address: 0x8000 });
-            await fileArray.push({ data: code["littlefs"], address: 0x210000 });
-            await fileArray.push({ data: code["firmware"], address: 0x10000 });
-
-            console.log(fileArray);
+            let bootloaderAddress = 0x1000;
+            if (boardType == "adafruit_qtpy_esp32s3_nopsram" || boardType == "adafruit_qtpy_esp32s3_n4r2") {
+                bootloaderAddress = 0x0000;
+            } else if (boardType == "esp32dev") {
+                bootloaderAddress = 0x1000;
+            } else {
+                alert("Board type unsupported. Please make an issue on github");
+            }
+            fileArray.push({ data: code["boot_app0"], address: 0xe000 });
+            fileArray.push({ data: code["bootloader"], address: bootloaderAddress });
+            fileArray.push({ data: code["partitions"], address: 0x8000 });
+            fileArray.push({ data: code["littlefs"], address: 0x210000 });
+            fileArray.push({ data: code["firmware"], address: 0x10000 });
 
             const flashOptionsMain = {
                 transport,
-                baudrate: 921600,
+                baudrate: 460800,
                 enableTracing: false,
                 debugLogging: false,
                 terminal: espLoaderTerminal
@@ -154,42 +167,47 @@ async function upload() {
 
             let esploader = new ESPLoader(flashOptionsMain);
 
-            alert("Hold the IO0 button on the ESP32 until the green progress bar appears. Press OK on this message when you have started to hold the button.")
-
             document.getElementById("upload-progress").innerHTML = "0%"
+
 
             setTimeout(() => {
                 if (document.getElementById("upload-progress").innerHTML === "0%") {
-                    alert("It's taking too long to connect to the ESP32. This can happen if you weren't holding the IO0 button. Try refreshing the website and trying again.");
+                    alert("It's taking too long to connect to the ESP32. This can happen if you didn't press the IO0 button correctly or if another program on your computer is connected to the ESP32. Try refreshing the website and trying again.");
                 }
-            }, 5000);
+            }, 20000);
+
 
             await esploader.main();
 
             const flashOptions = {
                 fileArray: fileArray,
                 flashSize: "keep",
-                eraseAll: false,
+                flashFreq: "keep",
+                flashMode: "keep",
                 compress: true,
-                baudrate: 921600,
+                eraseAll: true,
+                baudrate: 460800,
                 reportProgress: (fileIndex, written, total) => {
                     console.log("PROGRESS:" + fileIndex + "," + written + "," + total);
                     document.getElementById("upload-progress").innerHTML = Math.floor(1 + (fileIndex * 10) + ((fileIndex < 4) ? 9 * (written / total) : 58 * (written / total))) + "%";
-                }
-                , calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image))
+                },
+                calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image))
             };
 
             await esploader.writeFlash(flashOptions);
 
-            await esploader.hardReset();
+            await esploader.hardReset(transport);
 
         } catch (error) {
+            document.getElementById("upload-progress").innerHTML = "Error!";
             console.error("Error reading files:", error);
+            getCode();
         }
 
     } catch (e) {
         console.log(e);
         document.getElementById("upload-progress").innerHTML = "Error!";
+        getCode();
     }
     finally {
         try {
