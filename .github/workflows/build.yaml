@@ -49,9 +49,9 @@ jobs:
             done
       - name: git push
         run: |
-            git config user.name "joshua-8[bot]"
-            git config user.email "59814881+joshua-8@users.noreply.github.com"
+            git config user.name "robot-control-modules"
+            git config user.email "166165902+robot-control-modules@users.noreply.github.com"
             git config advice.addIgnoredFile false
             git add .
-            git commit -m "compiled firmware"
+            git commit -m "[bot] compiled firmware"
             git push

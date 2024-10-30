@@ -1,14 +1,28 @@
-
-
-
+var configInfo = null;
+var code = null;
 
 document.addEventListener('DOMContentLoaded', async function () {
-
-    getConfigInfo();
+    await getConfigInfo();
+    await getCode();
 });
 
-async function updateUpload() {
+async function getCode() {
+    code = {};
+    var program_selector = document.getElementById("board-selector");
+    var program = program_selector.options[program_selector.selectedIndex].value;
+    var codeDirectoryURL = "";
+    if (configInfo[0] == "release") {
+        codeDirectoryURL = "https://github.com/RCMgames/RCMv3/raw/refs/tags/" + configInfo[1] + "/docs/programmer/firmware/" + program;
+    } else {
+        codeDirectoryURL = "https://github.com/RCMgames/RCMv3/raw/refs/heads/main/docs/programmer/firmware/" + program;
+    }
+    console.log(codeDirectoryURL);
 
+    code["boot_app0"] = await getRequest(codeDirectoryURL + "boot_app0.bin", true);
+    code["bootloader"] = await getRequest(codeDirectoryURL + "bootloader.bin", true);
+    code["partitions"] = await getRequest(codeDirectoryURL + "partitions.bin", true);
+    code["littlefs"] = await getRequest(codeDirectoryURL + "littlefs.bin", true);
+    code["firmware"] = await getRequest(codeDirectoryURL + "firmware.bin", true);
 }
 
 /**
@@ -58,6 +72,36 @@ async function getConfigInfo() {
             retVal = null;
         }
     }
-    console.log(retVal);
-    return retVal;
+    let options;
+    if (retVal == null) {
+        options = null;
+    } else {
+        configInfo = retVal.split("\n");
+
+        document.getElementById("release").innerHTML = configInfo[1];
+
+        options = configInfo.slice(2, -1); //get just the rows with data for an option
+        //split rows and make 2d array
+        for (var i = 0; i < options.length; i++) {
+            options[i] = options[i].split(", ");
+        }
+    }
+
+    if (options == null) {
+        boardSelector = document.getElementById("board-selector");
+        boardSelector.replaceChildren();
+        configInfo = null;
+        //TODO: ERROR, couldn't get config info
+    } else {
+        boardSelector = document.getElementById("board-selector");
+        boardSelector.replaceChildren();
+        // https://www.geeksforgeeks.org/how-to-create-a-dropdown-list-with-array-values-using-javascript/
+        for (var i = 0; i < options.length; i++) {
+            var optn = options[i][0];
+            var el = document.createElement("option");
+            el.textContent = optn.slice(0, -1);
+            el.value = optn;
+            boardSelector.appendChild(el);
+        }
+    }
 };

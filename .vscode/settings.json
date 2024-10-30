@@ -1,11 +1,14 @@
 {
   "cSpell.words": [
     "APIP",
+    "baudrate",
     "colspan",
     "Comms",
     "darkgrey",
     "datatxlen",
     "driverstation",
+    "esploader",
+    "esptool",
     "GPIO",
     "horiz",
     "horiz. slider",
@@ -15,6 +18,7 @@
     "jsonified",
     "jsonify",
     "Lcolor",
+    "littlefs",
     "MDNS",
     "Mecanum",
     "microcontroller",

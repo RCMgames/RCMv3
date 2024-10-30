@@ -12,12 +12,17 @@
 <body>
     <h1>Welcome to the RCMv3 Programmer!</h1>
 
-    main not release:
-    <input id="pull-from-main" type="checkbox" onchange="getConfigInfo();">
-    <br>
-
-    <select id="board-selector" onchage="getConfigInfo();">
+    <label for="board-selector">
+        select the type of ESP32 board you are using:
+    </label>
+    <select id="board-selector" onchange="getCode();">
     </select>
+    <br>
+    <label for="pull-from-main">
+        use untested code from main instead of the latest release:
+    </label>
+    <input id="pull-from-main" type="checkbox" onchange="getConfigInfo();">
+    <span id="release"></span>
     <br>
 
 </body>
