@@ -26,7 +26,11 @@ function errorConnecting() {
     document.getElementById("wifi-hostname").value = "rcmv3.local";
     let element = document.createElement("span");
 
-    element.innerHTML = "To connect to your robot, enter your robot's hostname then press the connect button. If you just programmed your robot, connect your computer to the network named 'http://rcmv3.local' and leave the hostname box with rcmv3.local.";
+    if (window.location.hash == "#new") {
+        element.innerHTML = "<br>Connect your computer to the wifi network named 'http://rcmv3.local' then press the connect button.<br>";
+    } else {
+        element.innerHTML = "<br>This website isn't connected to a RCM robot. To connect to your robot, enter your robot's hostname then press the connect button.<br>";
+    }
 
     document.getElementById("hostname-box").appendChild(element);
     let element2 = document.createElement("button");
