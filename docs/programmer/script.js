@@ -22,6 +22,7 @@ async function getCode() {
     code["partitions"] = await getRequest(codeDirectoryURL + "partitions.bin", true);
     code["littlefs"] = await getRequest(codeDirectoryURL + "littlefs.bin", true);
     code["firmware"] = await getRequest(codeDirectoryURL + "firmware.bin", true);
+
 }
 
 /**
