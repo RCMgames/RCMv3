@@ -36,7 +36,7 @@ jobs:
         run: |
             cd .pio/build
             rm ../../docs/programmer/firmware/configurations_info.txt
-            for folder in (ls -td -- */); do
+            for folder in $(ls -td -- */); do
             if [ -d "$folder" ]; then
                 mkdir -p ../../docs/programmer/firmware/$folder
                 cp -rf $folder/firmware.bin ../../docs/programmer/firmware/$folder/firmware.bin
