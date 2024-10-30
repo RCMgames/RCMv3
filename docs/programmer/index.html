@@ -3,13 +3,22 @@
 
 <head>
     <title>RCMv3 programmer</title>
+
+    <script src="./esptool-js.js"></script>
+    <script src="./script.js"></script>
+
 </head>
 
 <body>
     <h1>Welcome to the RCMv3 Programmer!</h1>
 
-    <a href="https://rcmgames.github.io/RCMv3/programmer/">go here, enter your robot's hostname then press "save wifi
-        settings and reboot"</a>
+    main not release:
+    <input id="pull-from-main" type="checkbox" onchange="getConfigInfo();">
+    <br>
+
+    <select id="board-selector" onchage="getConfigInfo();">
+    </select>
+    <br>
 
 </body>
 
