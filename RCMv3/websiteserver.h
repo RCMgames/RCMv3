@@ -138,9 +138,13 @@ void startWebServer()
         if (request->hasParam("UIdata", true)) {
             AsyncWebParameter* p = request->getParam("UIdata", true);
             prefs.begin("uiSettings", false, nvsPartition);
-            prefs.putString("uidata", p->value().c_str());
+            boolean success = prefs.putBytes("uidata", p->value().c_str(), p->value().length());
             prefs.end();
-            request->send(200, "text/plain", "OK");
+            if (success) {
+                request->send(200, "text/plain", "OK");
+            } else {
+                request->send(200, "text/plain", "FAIL to save data");
+            }
         } else {
             request->send(200, "text/plain", "FAIL to receive data");
         }
@@ -193,7 +197,10 @@ void startWebServer()
     server.on("/loadUI.json", HTTP_GET, [](AsyncWebServerRequest* request) {
         prefs.begin("uiSettings", true, nvsPartition);
         if (prefs.isKey("uidata")) {
-            request->send(200, "application/json", prefs.getString("uidata"));
+            size_t len = prefs.getBytesLength("uidata"); // Preferences library allows long byte arrays but limits strings
+            char buf[len];
+            prefs.getBytes("uidata", buf, len);
+            request->send(200, "application/json", buf);
         } else {
             request->send(200, "application/json", "{}");
         }

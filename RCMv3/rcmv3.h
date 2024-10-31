@@ -12,7 +12,7 @@
 #include <mutex>
 #include <vector>
 
-const char* nvsPartition = "nvs2";
+#define nvsPartition "nvs2"
 
 boolean enabled = false;
 boolean wasEnabled = false;
@@ -92,7 +92,7 @@ public:
         case RC_TYPE_JMotorDriverTMC7300:
             return {
                 { "TMC7300IC index", RC_DATA_TMC7300IC },
-                { "channel B", RC_DATA_Bool },
+                { "motor1", RC_DATA_Bool },
                 { "enablePin", RC_DATA_Pin }
             };
         case RC_TYPE_JMotorDriverEsp32Servo:

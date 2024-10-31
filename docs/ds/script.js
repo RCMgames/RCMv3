@@ -1008,7 +1008,7 @@ function downloadUIData() {
     for (let i = 0; i < DSItems.length; i++) {
         data["controls"].push(DSItems[i].jsonify());
     }
-    downloadFile(JSON.stringify(data), 'data.json');
+    downloadFile(JSON.stringify(data), 'UIdata.json');
 }
 
 function uploadUIData() {
@@ -1138,10 +1138,13 @@ function loadUI() {
     fetch('/loadUI.json')
         .then(response => {
             if (response.ok) {
-                return response.json()
+                return response.text();
             } else {
                 throw new Error();
             }
+        })
+        .then(data => {
+            return JSON.parse(data.substring(0, data.length - 1));// trim null character from end of string
         })
         .then(data => {
             if (data.UIdata != undefined) {
@@ -1165,7 +1168,6 @@ function saveWifiSettings() {
         hostname: document.getElementById("wifi-hostname").value,
         mode: document.getElementById("wifi-mode").checked ? 0 : 1
     };
-    const wifiDataToSend = JSON.stringify({ "wifiData": wifiData });
     const wifiDataToSendEncoded = new URLSearchParams(wifiData);
     fetch('/saveWifiSettings', {
         method: "post",
@@ -1433,6 +1435,9 @@ function loadConfigFromFile() {
 }
 
 function robotSaveConfig() {
+    document.getElementById("config-status").innerHTML = "Saving...";
+    document.getElementById("config-status").style.backgroundColor = "yellow";
+
     fetch('/saveConfigToMemory').then(response => {
         response.text().then((text) => {
             if (text == "OK") {

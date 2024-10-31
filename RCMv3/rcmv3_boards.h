@@ -63,7 +63,7 @@
 
 /*
     "default_components":[
-        //CommponentListToJsonString style
+        //ComponentListToJsonString style
     ],
     "data_type_presets":[
         {"type": RC_DATA_Pin, "name": "pin1", "val": 1}
