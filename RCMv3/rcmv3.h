@@ -4,7 +4,6 @@
 // this file allows for runtime configuration of robots using ArduinoJson and a factory for JMotor components
 #include <Arduino.h>
 
-#include "rcmv3_boards.h"
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
 #include <JMotor.h>

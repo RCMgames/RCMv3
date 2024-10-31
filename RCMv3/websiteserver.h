@@ -224,6 +224,8 @@ void startWebServer()
         request->send(200, "text/plain", "OK");
     });
 
+    server.serveStatic("/presets", LittleFS, "/presets");
+
     server.begin();
 }
 

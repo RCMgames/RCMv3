@@ -286,7 +286,6 @@ async function getConfigInfo() {
         boardSelector = document.getElementById("board-selector");
         boardSelector.replaceChildren();
         configInfo = null;
-        //TODO: ERROR, couldn't get config info
     } else {
         boardSelector = document.getElementById("board-selector");
         boardSelector.replaceChildren();

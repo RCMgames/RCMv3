@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loadWifiSettings();
         loadUI();
         loadConfig();
+        //TODO: handle errors loading from robot
     }
     setInterval(() => {
         document.getElementById("console").innerHTML = "tx: " + txdata + "rx: " + rxdata;
@@ -1250,6 +1251,15 @@ class ActiveComponent {
         this.element = document.createElement("div");
         this.element.innerHTML = this.index + " " + this.typename + " " + this.username;
         this.element.onclick = () => { this.openProperties(); };
+
+        let deleteButton = document.createElement("button");
+        deleteButton.innerHTML = "X";
+        deleteButton.onclick = () => {
+            activeComponentList.splice(activeComponentList.indexOf(this), 1);
+            updateBoardInfoUI();
+        }
+        this.element.appendChild(deleteButton);
+
         document.getElementById("active-components").appendChild(this.element);
     }
     openProperties() {
@@ -1268,7 +1278,6 @@ class ActiveComponent {
         for (let i = 0; i < boardInfo.potential_components[this.typeid]["parameters"].length; i++) {
             let constructorParameter = boardInfo.potential_components[this.typeid]["parameters"][i];
             let element = document.createElement("div");
-            // this.parameters //TODO: make inputs for each parameter
             switch (constructorParameter.type) {
                 case "TMC7300IC":
                 case "int":
