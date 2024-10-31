@@ -134,3 +134,17 @@
 .hostname-error-connecting {
   outline: 5px solid red;
 }
+
+.config-status {
+  width: 500px;
+  height: 100px;
+  overflow-y: auto;
+}
+
+.config-save-buttons {
+  display: inline-block;
+  border: none;
+  margin: 0px 2px;
+  height: 100%;
+  font-size: large;
+}

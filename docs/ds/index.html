@@ -68,11 +68,12 @@
     </span>
     <span class="config-edit" id="config-edit">
       <div class="config-buttons">
-        <button onclick="saveConfigToFile();">save config to file</button>
-        <button onclick="loadConfigFromFile();">load config from file</button>
-        <button onclick="loadConfig();">reload config from robot</button>
-        <button onclick="saveConfig();">send config to robot</button>
-        <button onclick="clearConfig();">clear</button>
+        <button class="config-save-buttons" onclick="saveConfigToFile();">save config to file</button>
+        <button class="config-save-buttons" onclick="loadConfigFromFile();">load config from file</button>
+        <button class="config-save-buttons" onclick="loadConfig();">reload config from robot</button>
+        <button class="config-save-buttons" onclick="saveConfig();">send config to robot</button>
+        <button class="config-save-buttons" onclick="clearConfig();">clear</button>
+        <span id="config-status" class="config-status"> </span>
       </div>
       <div class="config-edit-main">
         <div id="potential-components" class="potential-components"> </div>

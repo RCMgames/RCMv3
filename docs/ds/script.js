@@ -940,6 +940,9 @@ function toggleEditConfig() {
     configEditable = !configEditable;
     document.getElementById("toggleEditConfig").innerHTML = !configEditable ? "Configure Robot" : "Close Robot Configuration";
     document.getElementById("config-edit").style.visibility = configEditable ? "visible" : "hidden";
+    document.getElementById("config-status").innerHTML = "";
+    document.getElementById("config-status").style.backgroundColor = "lightgrey";
+
 }
 
 function getAndDownloadData(path) {
@@ -1431,7 +1434,13 @@ function loadConfigFromFile() {
 
 function robotSaveConfig() {
     fetch('/saveConfigToMemory').then(response => {
-        console.log(response);
+        response.text().then((text) => {
+            if (text == "OK") {
+                document.getElementById("config-status").innerHTML = "Saved";
+                document.getElementById("config-status").style.backgroundColor = "lightgreen";
+            }
+        }
+        );
     });
 }
 
@@ -1450,13 +1459,10 @@ function loadBoardInfo(errorCallback) {
 // TODO: SHOW saving... and loading... message
 function loadConfig() {
     fetch('/loadConfig.json')
-        .catch((error) => {
-        })
         .then(response => response.json())
-        .catch((error) => {
-        })
         .then(data => {
-            console.log(data);
+            document.getElementById("config-status").innerHTML = "";
+            document.getElementById("config-status").style.backgroundColor = "gray";
             activeComponentList = [];
             document.getElementById("active-components").replaceChildren();
             document.getElementById("component-properties").replaceChildren();
@@ -1483,10 +1489,15 @@ function saveConfig() {
         },
         body: robotDataToSendEncoded
     }).then(response => {
-        console.log(response);
-        robotSaveConfig();
+        response.text().then((text) => {
+            if (text == "OK") {
+                robotSaveConfig();
+                document.getElementById("config-status").innerHTML = "";
+                document.getElementById("config-status").style.backgroundColor = "lightgrey";
+            } else {
+                document.getElementById("config-status").style.backgroundColor = "#ff9999";
+                document.getElementById("config-status").innerHTML = text;
+            }
+        });
     });
 }
-
-
-

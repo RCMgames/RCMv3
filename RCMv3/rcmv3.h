@@ -17,6 +17,9 @@ const char* nvsPartition = "nvs2";
 boolean enabled = false;
 boolean wasEnabled = false;
 
+String parse_config_error_msg = "";
+String create_component_error_msg = "";
+
 std::mutex componentMutex;
 
 enum RCMv3DataType {
@@ -89,7 +92,7 @@ public:
         case RC_TYPE_JMotorDriverTMC7300:
             return {
                 { "TMC7300IC index", RC_DATA_TMC7300IC },
-                { "channel", RC_DATA_Bool },
+                { "channel B", RC_DATA_Bool },
                 { "enablePin", RC_DATA_Pin }
             };
         case RC_TYPE_JMotorDriverEsp32Servo:
@@ -290,7 +293,12 @@ public:
                     return false;
                 }
                 int icIndex = data[i];
+                if (icIndex < 0 || icIndex >= components.size()) {
+                    create_component_error_msg += " invalid TMC7300IC index (" + String(icIndex) + ") ";
+                    return false;
+                }
                 if (components[icIndex]->getType() != RC_TYPE_TMC7300IC) {
+                    create_component_error_msg += " component specified with the TMC7300IC index parameter (" + String(icIndex) + ") is not a TMC7300IC";
                     return false;
                 }
             } break;
@@ -304,13 +312,13 @@ public:
                 break;
             }
         }
-        Serial.println("parameters validated");
         // parameters validated
         // create component!
         switch (type) {
         case RC_TYPE_TMC7300IC: {
             Serial.printf("creating TMC7300IC with pin %d and chipAddress %d\n", (int)data[0], (int)data[1]);
             if ((int)data[1] < 0 || (int)data[1] > 3) { // invalid chip address
+                create_component_error_msg += " chipAddress must be between 0 and 3";
                 return false;
             }
             components.push_back(new RCMv3ComponentTMC7300IC((int)data[0], (int)data[1]));
@@ -392,7 +400,6 @@ void RCMV3_run(const std::vector<float>& inputVars, std::vector<float>& outputVa
                 }
             }
         }
-        Serial.println("resizing outputVars");
         outputVars.resize(min(maxOutputIndex, 255) + 1, 0);
     }
 
@@ -417,37 +424,31 @@ void RCMV3_run(const std::vector<float>& inputVars, std::vector<float>& outputVa
 
 boolean RCMV3_parse_config(const String& str)
 {
-    Serial.println("RCMV3_parse_config");
-    Serial.println(str);
     JsonDocument json;
     DeserializationError error = deserializeJson(json, str);
     if (error) {
-        Serial.println(F("deserializeJson() failed: "));
         return false;
     }
     if (json.is<JsonArray>() == false) {
-        Serial.println("json is not an array");
         return false;
     }
 
     std::vector<RCMv3Component*> tempComponents;
     boolean success = true;
+    int jsonComponentNum = -1;
     for (JsonObject jsonComponent : json.as<JsonArray>()) {
+        jsonComponentNum++;
         if (jsonComponent["parameters"].is<JsonArray>() == false || jsonComponent["inputs"].is<JsonArray>() == false || jsonComponent["outputs"].is<JsonArray>() == false) {
-            Serial.println("jsonComponent is not valid");
             success = false;
         } else {
             if (jsonComponent["type"].is<int>() == false) {
-                Serial.println("jsonComponent type is not valid");
                 success = false;
             } else {
-                Serial.print("trying to make jsonComponent, type: ");
-                Serial.println((int)jsonComponent["type"]);
+                create_component_error_msg = "";
                 if (RCMv3ComponentFactory::createComponent(tempComponents, (RCMv3ComponentType)(int)jsonComponent["type"], jsonComponent["parameters"], jsonComponent["inputs"], jsonComponent["outputs"]) == true) {
-                    Serial.println("created component");
                     tempComponents[tempComponents.size() - 1]->jsonData.set(jsonComponent);
                 } else {
-                    Serial.println("error when creating a component");
+                    parse_config_error_msg += "Error in component " + String(jsonComponentNum) + ": " + create_component_error_msg + "<br>";
                     success = false;
                 }
             }
@@ -458,10 +459,7 @@ boolean RCMV3_parse_config(const String& str)
         for (RCMv3Component* component : tempComponents) {
             delete component;
         }
-        Serial.println("ERROR! components not set");
-        Serial.println(components.size());
     } else {
-        Serial.println("locking componentMutex");
         componentMutex.lock();
         for (RCMv3Component* component : components) {
             delete component;
@@ -472,28 +470,23 @@ boolean RCMV3_parse_config(const String& str)
         }
         refreshOutputListSize = true;
         componentMutex.unlock();
-        Serial.print(components.size());
-        Serial.println(" components set");
     }
     return success;
 }
 
 boolean RCMV3_ComponentList_To_JSON_String(String& output)
 {
-    Serial.println("RCMV3_ComponentList_To_JSON_String");
     JsonDocument json;
     JsonArray jsonComponentList = json["components"].to<JsonArray>();
     for (RCMv3Component* component : components) {
         jsonComponentList.add(component->jsonData);
     }
     serializeJson(json, output);
-    Serial.println(output);
     return true;
 }
 
 boolean RCMv3_Board_Info_To_JSON_String(String& output)
 {
-    Serial.println("RCMv3_PotentialComponentInfo_To_JSON_String");
     JsonDocument json;
     JsonArray jsonComponentList = json["potential_components"].to<JsonArray>();
     for (int i = 0; i < RC_TYPE_COUNT; i++) {
@@ -537,16 +530,13 @@ void RCMV3_website_load_config(AsyncWebServerRequest* request)
 void RCMV3_website_save_config(AsyncWebServerRequest* request)
 {
     // print request to Serial
-    Serial.println("RCMV3_website_save_config");
-
     if (request->hasParam("components", true)) {
         AsyncWebParameter* p = request->getParam("components", true);
-        Serial.println(p->value());
+        parse_config_error_msg = "";
         if (RCMV3_parse_config(p->value())) {
-            Serial.println(" parsed config ");
             request->send(200, "text/plain", "OK");
         } else {
-            request->send(200, "text/plain", "Error");
+            request->send(200, "text/plain", parse_config_error_msg);
         }
     } else {
         request->send(200, "text/plain", "Error");
