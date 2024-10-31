@@ -4,6 +4,7 @@
 // this file allows for runtime configuration of robots using ArduinoJson and a factory for JMotor components
 #include <Arduino.h>
 
+#include "rcmv3_boards.h"
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
 #include <JMotor.h>
@@ -309,6 +310,9 @@ public:
         switch (type) {
         case RC_TYPE_TMC7300IC: {
             Serial.printf("creating TMC7300IC with pin %d and chipAddress %d\n", (int)data[0], (int)data[1]);
+            if ((int)data[1] < 0 || (int)data[1] > 3) { // invalid chip address
+                return false;
+            }
             components.push_back(new RCMv3ComponentTMC7300IC((int)data[0], (int)data[1]));
         } break;
         case RC_TYPE_JMotorDriverTMC7300: {
@@ -329,9 +333,6 @@ public:
                 if (!inputs[i].is<int>()) {
                     return false;
                 }
-                if (inputs[i].as<int>() < 0) {
-                    return false;
-                }
             }
         } else {
             return false;
@@ -339,9 +340,6 @@ public:
         if (outputs.size() == RCMv3ComponentNumOutputs[type]) {
             for (int i = 0; i < outputs.size(); i++) {
                 if (!outputs[i].is<int>()) {
-                    return false;
-                }
-                if (outputs[i].as<int>() < 0) {
                     return false;
                 }
             }
@@ -446,7 +444,6 @@ boolean RCMV3_parse_config(const String& str)
                 Serial.print("trying to make jsonComponent, type: ");
                 Serial.println((int)jsonComponent["type"]);
                 if (RCMv3ComponentFactory::createComponent(tempComponents, (RCMv3ComponentType)(int)jsonComponent["type"], jsonComponent["parameters"], jsonComponent["inputs"], jsonComponent["outputs"]) == true) {
-                    Serial.println(tempComponents.size());
                     Serial.println("created component");
                     tempComponents[tempComponents.size() - 1]->jsonData.set(jsonComponent);
                 } else {
@@ -521,7 +518,7 @@ boolean RCMv3_Board_Info_To_JSON_String(String& output)
             jsonParameter["type"] = RCMv3DataTypeNames[param.type];
         }
     }
-    JsonArray jsonPresetList = json["component_presets"].to<JsonArray>();
+    // JsonArray jsonPresetList = json["component_presets"].to<JsonArray>();
     serializeJson(json, output);
     return true;
 }
@@ -552,7 +549,7 @@ void RCMV3_website_save_config(AsyncWebServerRequest* request)
             request->send(200, "text/plain", "Error");
         }
     } else {
-        request->send(200, "text/plain", "Error2");
+        request->send(200, "text/plain", "Error");
     }
 }
 

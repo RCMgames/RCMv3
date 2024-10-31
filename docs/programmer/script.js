@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (!("serial" in navigator)) {
         var x = document.getElementsByClassName("serial-alert");
         for (var i = 0; i < x.length; i++) {
-            x[i].innerHTML = "Web Serial is not available, so this site won't be able to communicate with your car. Please use Google Chrome, Opera, or Edge, and make sure Web Serial is enabled.<br>";
+            x[i].innerHTML = "Web Serial is not available, so this site won't be able to communicate with your RCM. Please use Google Chrome, Opera, or Edge, and make sure Web Serial is enabled.<br>";
         }
     } else {
 

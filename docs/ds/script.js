@@ -1189,7 +1189,7 @@ function loadWifiSettings() {
             if (data.ssid == undefined || data.password == undefined || data.hostname == undefined || data.mode == undefined) {
                 document.getElementById("wifi-ssid").value = "";
                 document.getElementById("wifi-password").value = "";
-                document.getElementById("wifi-hostname").value = "";
+                document.getElementById("wifi-hostname").value = "rcmv3";
                 document.getElementById("wifi-mode").checked = false;
             } else {
                 document.getElementById("wifi-ssid").value = data.ssid;
