@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             var x = document.getElementsByClassName("upload-info");
             for (var i = 0; i < x.length; i++) {
-                x[i].innerHTML = "Uploading! This may take a minute."
+                x[i].innerHTML = "Starting upload. This may take a minute..."
             }
         } else if (mutationRecords[0].addedNodes[0].data === "Ready") {
         } else {

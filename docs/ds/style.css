@@ -120,10 +120,16 @@
 }
 
 .potential-components {
+  height: 400px;
+  max-height: 400px;
+  overflow-y: auto;
   padding: 5px 5px;
 }
 
 .active-components {
+  height: 900px;
+  max-height: 900px;
+  overflow-y: auto;
   padding: 5px 5px;
 }
 

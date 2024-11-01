@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loadBoardInfo(() => { });
         loadWifiSettings();
         loadUI();
+        loadPresets();
         loadConfig();
         //TODO: handle errors loading from robot
     }
@@ -1254,9 +1255,11 @@ class ActiveComponent {
 
         let deleteButton = document.createElement("button");
         deleteButton.innerHTML = "X";
-        deleteButton.onclick = () => {
+        deleteButton.onclick = (event) => {
+            event.stopPropagation();
+            this.element.remove();
             activeComponentList.splice(activeComponentList.indexOf(this), 1);
-            updateBoardInfoUI();
+            propertiesElement.replaceChildren();
         }
         this.element.appendChild(deleteButton);
 
@@ -1472,11 +1475,13 @@ function loadBoardInfo(errorCallback) {
 }
 // TODO: SHOW saving... and loading... message
 function loadConfig() {
+    document.getElementById("config-status").innerHTML = "Loading...";
+    document.getElementById("config-status").style.backgroundColor = "yellow";
     fetch('/loadConfig.json')
         .then(response => response.json())
         .then(data => {
-            document.getElementById("config-status").innerHTML = "";
-            document.getElementById("config-status").style.backgroundColor = "gray";
+            document.getElementById("config-status").innerHTML = "reloaded";
+            document.getElementById("config-status").style.backgroundColor = "lightgreen";
             activeComponentList = [];
             document.getElementById("active-components").replaceChildren();
             document.getElementById("component-properties").replaceChildren();
@@ -1487,6 +1492,9 @@ function loadConfig() {
         });
 }
 function saveConfig() {
+    document.getElementById("config-status").innerHTML = "saving...";
+    document.getElementById("config-status").style.backgroundColor = "yellow";
+
     let componentDataToSend = [];
     for (let i = 0; i < activeComponentList.length; i++) {
         console.log(activeComponentList[i].jsonify());
@@ -1506,12 +1514,40 @@ function saveConfig() {
         response.text().then((text) => {
             if (text == "OK") {
                 robotSaveConfig();
-                document.getElementById("config-status").innerHTML = "";
-                document.getElementById("config-status").style.backgroundColor = "lightgrey";
+                document.getElementById("config-status").innerHTML = "Sent config";
+                document.getElementById("config-status").style.backgroundColor = "lightgreen";
             } else {
                 document.getElementById("config-status").style.backgroundColor = "#ff9999";
                 document.getElementById("config-status").innerHTML = text;
             }
         });
+    });
+}
+
+async function loadPresets() {
+    fetch('/presets/presets.json').then(response => response.json()).then(presets => {
+        config_presets = presets.presets.config_presets;
+        document.getElementById("config-presets-list").replaceChildren();
+        for (let i = 0; i < config_presets.length; i++) {
+            let element = document.createElement("div");
+            console.log(config_presets[i]);
+            element.innerHTML = config_presets[i].substring(0, config_presets[i].length - 5);// remove .json
+
+            element.onclick = () => {
+                document.getElementById("config-status").innerHTML = "Loading...";
+                document.getElementById("config-status").style.backgroundColor = "yellow"; //TODO: CLEAN UP CONFIG-STATUS WINDOW SETTING CODE
+                activeComponentList = []; //TODO: ADD OPTION TO NOT CLEAR
+                document.getElementById("active-components").replaceChildren();
+                document.getElementById("component-properties").replaceChildren();
+                fetch('/presets/config_presets/' + config_presets[i]).then(response => response.json()).then(configComponents => {
+                    for (let j = 0; j < configComponents.length; j++) {
+                        activeComponentList.push(new ActiveComponent(configComponents[j], j, true));
+                    }
+                    document.getElementById("config-status").innerHTML = "Loaded Preset";
+                    document.getElementById("config-status").style.backgroundColor = "lightgreen"; //TODO: CLEAN UP CONFIG-STATUS WINDOW SETTING CODE    
+                });
+            }
+            document.getElementById("config-presets-list").appendChild(element);
+        }
     });
 }
