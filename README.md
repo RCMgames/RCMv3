@@ -13,6 +13,7 @@ https://rcmgames.github.io/RCMv3/ds/
 
 ## Compatibility
 ### RCM Boards
+* RCM_BYTE
 
 ### ESP32 Boards
 * ESP32 DevKitC with 38 pins
