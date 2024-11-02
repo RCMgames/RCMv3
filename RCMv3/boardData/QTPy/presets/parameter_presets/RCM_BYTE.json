@@ -1,0 +1,62 @@
+[
+    {
+        "type": "pin",
+        "name": "port1Pin (A0)",
+        "value": 18
+    },
+    {
+        "type": "pin",
+        "name": "port2Pin (MO)",
+        "value": 35
+    },
+    {
+        "type": "pin",
+        "name": "port3Pin (A1)",
+        "value": 17
+    },
+    {
+        "type": "pin",
+        "name": "port4Pin (A2)",
+        "value": 9
+    },
+    {
+        "type": "pin",
+        "name": "port5Pin (A3)",
+        "value": 8
+    },
+    {
+        "type": "pin",
+        "name": "port6Pin (SDA)",
+        "value": 7
+    },
+    {
+        "type": "pin",
+        "name": "port7Pin (SCL)",
+        "value": 6
+    },
+    {
+        "type": "pin",
+        "name": "port8Pin (TX)",
+        "value": 5
+    },
+    {
+        "type": "pin",
+        "name": "batMonitorPin (RX)",
+        "value": 16
+    },
+    {
+        "type": "pin",
+        "name": "tmc7300DataPin (MI)",
+        "value": 37
+    },
+    {
+        "type": "pin",
+        "name": "motorsEnablePin (SCK)",
+        "value": 36
+    },
+    {
+        "type": "pin",
+        "name": "buttonPin",
+        "value": 0
+    }
+]

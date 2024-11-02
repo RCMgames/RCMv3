@@ -32,4 +32,4 @@ def describe_directory(directory, dir_description):
 describe_directory(destination_dir, directory_description["presets"])
 
 with open(os.path.join(destination_dir, 'presets.json'), 'w') as f:
-    f.write(json.dumps(directory_description))
+    f.write(json.dumps(directory_description, separators=(',', ':'), indent=None))

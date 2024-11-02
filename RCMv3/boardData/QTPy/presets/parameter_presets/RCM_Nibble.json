@@ -1,0 +1,52 @@
+[
+    {
+        "type": "pin",
+        "name": "port1Pin (A0)",
+        "value": 18
+    },
+    {
+        "type": "pin",
+        "name": "port2Pin (A1)",
+        "value": 17
+    },
+    {
+        "type": "pin",
+        "name": "port3Pin (A2)",
+        "value": 9
+    },
+    {
+        "type": "pin",
+        "name": "port4Pin (TX)",
+        "value": 5
+    },
+    {
+        "type": "pin",
+        "name": "batMonitorPin (A3)",
+        "value": 8
+    },
+    {
+        "type": "pin",
+        "name": "uartPin (MI)",
+        "value": 37
+    },
+    {
+        "type": "pin",
+        "name": "motorsEnablePin (MO)",
+        "value": 35
+    },
+    {
+        "type": "pin",
+        "name": "buttonPin",
+        "value": 0
+    },
+    {
+        "type": "pin",
+        "name": "auxPin1 (RX)",
+        "value": 16
+    },
+    {
+        "type": "pin",
+        "name": "auxPin2 (SCK)",
+        "value": 36
+    }
+]

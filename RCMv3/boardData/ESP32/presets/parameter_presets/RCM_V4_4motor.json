@@ -1,0 +1,93 @@
+[
+    {
+        "type": "pin",
+        "name": "port1Pin",
+        "value": 14
+    },
+    {
+        "type": "pin",
+        "name": "port2Pin",
+        "value": 27
+    },
+    {
+        "type": "pin",
+        "name": "port3Pin",
+        "value": 5
+    },
+    {
+        "type": "pin",
+        "name": "port4Pin",
+        "value": 19
+    },
+    {
+        "type": "pin",
+        "name": "port5Pin",
+        "value": 33
+    },
+    {
+        "type": "pin",
+        "name": "port6Pin",
+        "value": 32
+    },
+    {
+        "type": "pin",
+        "name": "port7Pin",
+        "value": 23
+    },
+    {
+        "type": "HBridgeESP32",
+        "name": "portA",
+        "value": [
+            8,
+            4,
+            16
+        ]
+    },
+    {
+        "type": "HBridgeESP32",
+        "name": "portB",
+        "value": [
+            9,
+            13,
+            12
+        ]
+    },
+    {
+        "type": "HBridgeESP32",
+        "name": "portC",
+        "value": [
+            10,
+            17,
+            18
+        ]
+    },
+    {
+        "type": "HBridgeESP32",
+        "name": "portD",
+        "value": [
+            11,
+            26,
+            25
+        ]
+    },
+    {
+        "type": "pin",
+        "name": "inport1",
+        "value": 35
+    },
+    {
+        "type": "pin",
+        "name": "inport2",
+        "value": 34
+    },
+    {
+        "type": "pin",
+        "name": "inport3",
+        "value": 39
+    },
+    {
+        "type": "pin",
+        "name": "batMonitorPin",
+        "value": 36
+    }
+]
