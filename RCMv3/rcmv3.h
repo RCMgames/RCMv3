@@ -27,16 +27,18 @@ enum RCMv3DataType {
     RC_DATA_Bool,
     RC_DATA_Pin,
     RC_DATA_TMC7300IC,
-    RC_DATA_Servo_Port,
+    RC_DATA_Servo_Port, // TODO:
+    RC_DATA_TMCChipAddress,
     RC_DATA_COUNT
 };
 const char* RCMv3DataTypeNames[] = {
     "int",
     "float",
     "bool",
-    "int",
+    "pin",
     "TMC7300IC",
-    "int"
+    "int",
+    "TMCChipAddress"
 };
 
 typedef struct {
@@ -86,7 +88,7 @@ public:
         case RC_TYPE_TMC7300IC:
             return {
                 { "pin", RC_DATA_Pin },
-                { "chipAddress", RC_DATA_Int }
+                { "chipAddress", RC_DATA_TMCChipAddress }
             };
         case RC_TYPE_JMotorDriverTMC7300:
             return {
@@ -302,6 +304,11 @@ public:
                 }
             } break;
             case RC_DATA_Servo_Port: {
+                if (!data[i].is<int>()) {
+                    return false;
+                }
+            } break;
+            case RC_DATA_TMCChipAddress: {
                 if (!data[i].is<int>()) {
                     return false;
                 }

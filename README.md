@@ -13,16 +13,18 @@ https://rcmgames.github.io/RCMv3/ds/
 
 ## Compatibility
 ### RCM Boards
-* RCM_BYTE
+* [RCM_BYTE](https://github.com/RCMgames/RCM-Hardware-BYTE) (testing in progress)
+* [RCM_Nibble](https://github.com/RCMgames/RCM-Hardware-Nibble) (testing in progress)
+* [RCM_V4](https://github.com/RCMgames/RCM-Hardware-V4) (testing in progress)
 
 ### ESP32 Boards
 * ESP32 DevKitC with 38 pins
-* Adafruit ESP32s3 QT Py with no psram  (#5426)
+* Adafruit ESP32s3 QT Py with no psram (#5426)
 * Adafruit ESP32s3 QT Py with 2MB psram (#5700)
 
 ## References
-[Information about all hardware and software for Robot Control Modules](https://github.com/rcmgames?view_as=public)
-[JMotor library documentation](https://joshua-8.github.io/JMotor/md_readme.html)
+* [Information about all hardware and software for Robot Control Modules](https://github.com/rcmgames?view_as=public)
+* [JMotor library documentation](https://joshua-8.github.io/JMotor/md_readme.html)
 
 ## Acknowledgements
 * [PlatformIO](https://registry.platformio.org/platforms/platformio/espressif32) for compiling

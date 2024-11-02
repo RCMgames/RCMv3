@@ -4,6 +4,8 @@ let txdata = [];
 
 let rxdata = [];
 
+var loadedParameterPreset = [];
+
 document.addEventListener("DOMContentLoaded", () => {
     if (window.location.hostname == "rcmgames.github.io") {
         errorConnecting();
@@ -270,9 +272,6 @@ class DSItem {
                 this.activeTouchId = touch.identifier;
                 this.onMove(touch.clientX, touch.clientY);
                 this.draw();
-                if (this.type == "number indicator") {
-                    console.log(this.vars[0]);
-                }
             }
         }
     }
@@ -1065,7 +1064,7 @@ function connect() {
     lastPingTime = Date.now();
     webs.onmessage = function (event) {
         eventData = event;
-        event.data.bytes().then(function (data) {
+        event.data.bytes.then(function (data) {
             var rxByteArray = new Uint8Array(data);
             var newrxdata = new Float32Array(rxByteArray.buffer);
             for (var i = 0; i < newrxdata.length; i++) {
@@ -1226,6 +1225,8 @@ class ActiveComponent {
             this.parameters = [];
             for (let i = 0; i < boardInfo.potential_components[this.typeid]["parameters"].length; i++) {
                 switch (boardInfo.potential_components[this.typeid]["parameters"][i].type) {
+                    case "pin":
+                        this.parameters.push(null);
                     case "int":
                         this.parameters.push(0);
                         break;
@@ -1282,6 +1283,65 @@ class ActiveComponent {
             let constructorParameter = boardInfo.potential_components[this.typeid]["parameters"][i];
             let element = document.createElement("div");
             switch (constructorParameter.type) {
+                case "TMCChipAddress":
+                    {
+                        let label = document.createElement("label");
+                        let input = document.createElement("input");
+                        label.innerHTML = constructorParameter.name;
+                        input.type = "number";
+                        input.step = "1";
+                        input.min = "0";
+                        input.max = "3";
+                        input.value = this.parameters[i];
+                        input.onchange = (event) => {
+                            this.parameters[i] = parseInt(event.target.value);
+                        }
+                        element.appendChild(label);
+                        element.appendChild(input);
+                        let helper = document.createElement("option");
+                        //TODO: FINISH
+
+                        element.appendChild(helper);
+                    }
+                    break;
+                case "pin":
+                    {
+                        let label = document.createElement("label");
+                        let input = document.createElement("input");
+                        label.innerHTML = constructorParameter.name;
+                        input.type = "number";
+                        input.step = "1";
+                        input.min = "0";
+                        input.value = this.parameters[i];
+                        input.onchange = (event) => {
+                            this.parameters[i] = parseInt(event.target.value);
+                        }
+                        element.appendChild(label);
+                        element.appendChild(input);
+
+                        let helper = document.createElement("select");
+                        let defaultOption = document.createElement("option");
+                        defaultOption.value = null;
+                        defaultOption.textContent = "select pin";
+                        helper.appendChild(defaultOption);
+                        for (let j = 0; j < loadedParameterPreset.length; j++) {
+                            if (loadedParameterPreset[j].type == "pin") {
+                                let option = document.createElement("option");
+                                option.value = loadedParameterPreset[j].value;
+                                option.textContent = loadedParameterPreset[j].name;
+                                helper.appendChild(option);
+                            }
+                        }
+                        helper.value = this.parameters[i];
+                        helper.onchange = (event) => {
+                            if (event.target.value) {
+                                this.parameters[i] = parseInt(event.target.value);
+                                input.value = this.parameters[i];
+                            }
+                        }
+                        element.appendChild(helper);
+                    }
+                    break;
                 case "TMC7300IC":
                 case "int":
                     {
@@ -1397,11 +1457,9 @@ function updateBoardInfoUI() {
     document.getElementById("component-properties").replaceChildren();
 
     document.getElementById("potential-components").replaceChildren();
-    console.log(boardInfo);
     for (let i = 0; i < boardInfo.potential_components.length; i++) {
         let component = boardInfo.potential_components[i];
         let element = document.createElement("div");
-        console.log(component);
         element.innerHTML = component.name;
         element.onclick = () => {
             document.getElementById("component-properties").replaceChildren();
@@ -1465,7 +1523,6 @@ function loadBoardInfo(errorCallback) {
     fetch('/loadBoardInfo.json')
         .then(response => response.json())
         .then(data => {
-            console.log(data);
             boardInfo = data;
             activeComponentList = [];
             updateBoardInfoUI()
@@ -1497,11 +1554,9 @@ function saveConfig() {
 
     let componentDataToSend = [];
     for (let i = 0; i < activeComponentList.length; i++) {
-        console.log(activeComponentList[i].jsonify());
         componentDataToSend.push(activeComponentList[i].jsonify());
     }
     componentDataToSend = JSON.stringify(componentDataToSend);
-    console.log(componentDataToSend);
     const robotDataToSendEncoded = new URLSearchParams({ components: componentDataToSend });
 
     fetch('/saveConfig', {
@@ -1526,28 +1581,51 @@ function saveConfig() {
 
 async function loadPresets() {
     fetch('/presets/presets.json').then(response => response.json()).then(presets => {
-        config_presets = presets.presets.config_presets;
+
         document.getElementById("config-presets-list").replaceChildren();
+
+        config_presets = presets.presets.config_presets;
         for (let i = 0; i < config_presets.length; i++) {
             let element = document.createElement("div");
-            console.log(config_presets[i]);
             element.innerHTML = config_presets[i].substring(0, config_presets[i].length - 5);// remove .json
 
             element.onclick = () => {
                 document.getElementById("config-status").innerHTML = "Loading...";
                 document.getElementById("config-status").style.backgroundColor = "yellow"; //TODO: CLEAN UP CONFIG-STATUS WINDOW SETTING CODE
-                activeComponentList = []; //TODO: ADD OPTION TO NOT CLEAR
-                document.getElementById("active-components").replaceChildren();
-                document.getElementById("component-properties").replaceChildren();
                 fetch('/presets/config_presets/' + config_presets[i]).then(response => response.json()).then(configComponents => {
                     for (let j = 0; j < configComponents.length; j++) {
-                        activeComponentList.push(new ActiveComponent(configComponents[j], j, true));
+                        activeComponentList.push(new ActiveComponent(configComponents[j], j + activeComponentList.length, true));
                     }
                     document.getElementById("config-status").innerHTML = "Loaded Preset";
-                    document.getElementById("config-status").style.backgroundColor = "lightgreen"; //TODO: CLEAN UP CONFIG-STATUS WINDOW SETTING CODE    
+                    document.getElementById("config-status").style.backgroundColor = "lightgreen";
                 });
             }
             document.getElementById("config-presets-list").appendChild(element);
+        }
+
+        document.getElementById("board-type-selector").replaceChildren();
+        let parameter_presets = presets.presets.parameter_presets;
+        let option = document.createElement("option");
+        option.textContent = "select RCM Board";
+        option.value = null;
+        document.getElementById("board-type-selector").appendChild(option);
+        for (let i = 0; i < parameter_presets.length; i++) {
+            let option = document.createElement("option");
+            option.textContent = parameter_presets[i].substring(0, parameter_presets[i].length - 5);
+            option.value = parameter_presets[i];
+            document.getElementById("board-type-selector").appendChild(option);
+        }
+        document.getElementById("board-type-selector").onchange = (event) => {
+            let preset = event.target.value;
+            if (preset && preset != "null") {
+                fetch('/presets/parameter_presets/' + preset).then(response => response.json()).then(data => {
+                    loadedParameterPreset = data;
+                    document.getElementById("component-properties").replaceChildren();
+                    //TODO: remember what board was selected
+                });
+            } else {
+                loadedParameterPreset = [];
+            }
         }
     });
 }
