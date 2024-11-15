@@ -53,7 +53,7 @@ void connectToWifi()
             WiFi.begin(prefs.getString("ssid").c_str(), prefs.getString("password").c_str());
             unsigned long startConnectionMillis = millis();
             while (WiFi.status() != WL_CONNECTED && (millis() - startConnectionMillis) <= wifiConnectionTimeout) {
-                delay(10);
+                delay(10); // TODO: SHOW MORE CONNECTION INFO USING RSL
             }
 
             if (WiFi.status() == WL_CONNECTED) {
@@ -200,6 +200,35 @@ void startWebServer()
             size_t len = prefs.getBytesLength("uidata"); // Preferences library allows long byte arrays but limits strings
             char buf[len];
             prefs.getBytes("uidata", buf, len);
+            request->send(200, "application/json", buf);
+        } else {
+            request->send(200, "application/json", "{}");
+        }
+        prefs.end();
+    });
+
+    server.on("/saveMiscConfigInfo", HTTP_POST, [](AsyncWebServerRequest* request) {
+        if (request->hasParam("miscConfigInfo", true)) {
+            AsyncWebParameter* p = request->getParam("miscConfigInfo", true);
+            prefs.begin("miscConfigInfo", false, nvsPartition);
+            boolean success = prefs.putBytes("miscConfigInfo", p->value().c_str(), p->value().length());
+            prefs.end();
+            if (success) {
+                request->send(200, "text/plain", "OK");
+            } else {
+                request->send(200, "text/plain", "FAIL to save data");
+            }
+        } else {
+            request->send(200, "text/plain", "FAIL to receive data");
+        }
+    });
+
+    server.on("/loadMiscConfigInfo.json", HTTP_GET, [](AsyncWebServerRequest* request) {
+        prefs.begin("miscConfigInfo", true, nvsPartition);
+        if (prefs.isKey("miscConfigInfo")) {
+            size_t len = prefs.getBytesLength("miscConfigInfo"); // Preferences library allows long byte arrays but limits strings
+            char buf[len];
+            prefs.getBytes("miscConfigInfo", buf, len);
             request->send(200, "application/json", buf);
         } else {
             request->send(200, "application/json", "{}");

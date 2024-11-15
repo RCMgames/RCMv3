@@ -1,1 +1,149 @@
-[]
+[
+    {
+        "type": 3,
+        "name": "Motor Driver HBridge ESP32",
+        "username": "motor A",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            8,
+            4,
+            16
+        ]
+    },
+    {
+        "type": 3,
+        "name": "Motor Driver HBridge ESP32",
+        "username": "motor B",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            9,
+            13,
+            12
+        ]
+    },
+    {
+        "type": 3,
+        "name": "Motor Driver HBridge ESP32",
+        "username": "motor C",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            10,
+            17,
+            18
+        ]
+    },
+    {
+        "type": 3,
+        "name": "Motor Driver HBridge ESP32",
+        "username": "motor D",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            11,
+            26,
+            25
+        ]
+    },
+    {
+        "type": 2,
+        "name": "Motor Driver Servo ESP32",
+        "username": "servo 1",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            0,
+            14
+        ]
+    },
+    {
+        "type": 2,
+        "name": "Motor Driver Servo ESP32",
+        "username": "servo 2",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            1,
+            27
+        ]
+    },
+    {
+        "type": 2,
+        "name": "Motor Driver Servo ESP32",
+        "username": "servo 3",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            2,
+            5
+        ]
+    },
+    {
+        "type": 2,
+        "name": "Motor Driver Servo ESP32",
+        "username": "servo 4",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            3,
+            19
+        ]
+    },
+    {
+        "type": 2,
+        "name": "Motor Driver Servo ESP32",
+        "username": "servo 5",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            4,
+            33
+        ]
+    },
+    {
+        "type": 2,
+        "name": "Motor Driver Servo ESP32",
+        "username": "servo 6",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            5,
+            32
+        ]
+    },
+    {
+        "type": 2,
+        "name": "Motor Driver Servo ESP32",
+        "username": "servo 7",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            6,
+            23
+        ]
+    }
+]

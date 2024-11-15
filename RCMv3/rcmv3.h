@@ -27,7 +27,6 @@ enum RCMv3DataType {
     RC_DATA_Bool,
     RC_DATA_Pin,
     RC_DATA_TMC7300IC,
-    RC_DATA_Servo_Port, // TODO:
     RC_DATA_TMCChipAddress,
     RC_DATA_COUNT
 };
@@ -49,35 +48,67 @@ typedef struct {
 const char* RCMv3ComponentTypeNames[] = {
     "TMC7300 IC",
     "Motor Driver TMC7300",
-    "Motor Driver Servo ESP32"
+    "Motor Driver Servo ESP32",
+    "Motor Driver HBridge ESP32",
 };
 
 enum RCMv3ComponentType {
     RC_TYPE_TMC7300IC,
     RC_TYPE_JMotorDriverTMC7300,
     RC_TYPE_JMotorDriverEsp32Servo,
+    RC_Type_JMotorDriverEsp32HBridge,
     RC_TYPE_COUNT
 };
 
 int RCMv3ComponentNumInputs[] = {
     0,
     1,
+    1,
     1
 };
-const char* RCMv3ComponentInputNames[] = { // TODO: it needs to be a 2d array (type, input number), or a function in the class
-    "",
-    "power",
-    "power"
+
+/**
+ * @brief
+ * @note
+ * @param  type:
+ * @param  input: should be less than RCMv3ComponentNumInputs[type]
+ * @retval
+ */
+const char* RCMv3ComponentInputNames(RCMv3ComponentType type, uint8_t input)
+{
+    switch (type) {
+    case RC_TYPE_TMC7300IC:
+        return "";
+    case RC_TYPE_JMotorDriverTMC7300:
+        return "power";
+    case RC_TYPE_JMotorDriverEsp32Servo:
+        return "power";
+    case RC_Type_JMotorDriverEsp32HBridge:
+        return "power";
+    }
+    return "";
 };
+
 int RCMv3ComponentNumOutputs[] = {
+    0,
     0,
     0,
     0
 };
-const char* RCMv3ComponentOutputNames[] = { // TODO: FIX
-    "",
-    "",
-    ""
+
+const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
+{
+    switch (type) {
+    case RC_TYPE_TMC7300IC:
+        return "";
+    case RC_TYPE_JMotorDriverTMC7300:
+        return "";
+    case RC_TYPE_JMotorDriverEsp32Servo:
+        return "";
+    case RC_Type_JMotorDriverEsp32HBridge:
+        return "";
+    }
+    return "";
 };
 
 class RCMv3ParameterHelper {
@@ -100,6 +131,12 @@ public:
             return {
                 { "pwmChannel", RC_DATA_Int },
                 { "servoPin", RC_DATA_Pin }
+            };
+        case RC_Type_JMotorDriverEsp32HBridge:
+            return {
+                { "pwmChannel", RC_DATA_Int },
+                { "in1", RC_DATA_Int },
+                { "in2", RC_DATA_Int }
             };
         }
         return {};
@@ -248,6 +285,19 @@ public:
     }
 };
 
+class RCMv3ComponentJMotorDriverEsp32HBridge : public RCMv3ComponentJMotorDriver {
+public:
+    RCMv3ComponentJMotorDriverEsp32HBridge(int pwmChannel, int in1, int in2)
+        : RCMv3ComponentJMotorDriver(RC_Type_JMotorDriverEsp32HBridge)
+    {
+        internalInstance = new JMotorDriverEsp32HBridge(pwmChannel, in1, in2);
+    }
+    ~RCMv3ComponentJMotorDriverEsp32HBridge()
+    {
+        delete (JMotorDriverEsp32HBridge*)internalInstance;
+    }
+};
+
 std::vector<RCMv3Component*> components;
 
 boolean refreshOutputListSize = true;
@@ -303,11 +353,6 @@ public:
                     return false;
                 }
             } break;
-            case RC_DATA_Servo_Port: {
-                if (!data[i].is<int>()) {
-                    return false;
-                }
-            } break;
             case RC_DATA_TMCChipAddress: {
                 if (!data[i].is<int>()) {
                     return false;
@@ -339,7 +384,11 @@ public:
             Serial.printf("creating JMotorDriverEsp32Servo with pwmChannel %d and servoPin %d\n", (int)data[0], (int)data[1]);
             components.push_back(new RCMv3ComponentJMotorDriverEsp32Servo((int)data[0], (int)data[1]));
         } break;
-        }
+        case RC_Type_JMotorDriverEsp32HBridge: {
+            Serial.printf("creating JMotorDriverEsp32HBridge with pwmChannel %d and in1 %d and in2 %d\n", (int)data[0], (int)data[1], (int)data[2]);
+            components.push_back(new RCMv3ComponentJMotorDriverEsp32HBridge((int)data[0], (int)data[1], (int)data[2]));
+        } break;
+        } // end switch
 
         // validate inputs and outputs
         if (inputs.size() == RCMv3ComponentNumInputs[type]) {
@@ -505,10 +554,14 @@ boolean RCMv3_Board_Info_To_JSON_String(String& output)
         JsonArray jsonInputList = jsonComponent["inputs"].to<JsonArray>();
         for (int j = 0; j < RCMv3ComponentNumInputs[i]; j++) {
             JsonObject jsonInput = jsonInputList.add<JsonObject>();
-            jsonInput["name"] = RCMv3ComponentInputNames[j];
+            jsonInput["name"] = RCMv3ComponentInputNames((RCMv3ComponentType)i, j);
         }
 
         JsonArray jsonOutputList = jsonComponent["outputs"].to<JsonArray>();
+        for (int j = 0; j < RCMv3ComponentNumOutputs[i]; j++) {
+            JsonObject jsonOutput = jsonOutputList.add<JsonObject>();
+            jsonOutput["name"] = RCMv3ComponentOutputNames((RCMv3ComponentType)i, j);
+        }
 
         JsonArray jsonParameterList = jsonComponent["parameters"].to<JsonArray>();
         for (RCMv3Parameter& param : RCMv3ParameterHelper::getParameterInfo((RCMv3ComponentType)i)) {
@@ -517,7 +570,6 @@ boolean RCMv3_Board_Info_To_JSON_String(String& output)
             jsonParameter["type"] = RCMv3DataTypeNames[param.type];
         }
     }
-    // JsonArray jsonPresetList = json["component_presets"].to<JsonArray>();
     serializeJson(json, output);
     return true;
 }

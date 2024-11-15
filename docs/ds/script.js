@@ -4,7 +4,9 @@ let txdata = [];
 
 let rxdata = [];
 
-var loadedParameterPreset = [];
+let loadedParameterPreset = [];
+
+let miscConfigInfo = {};
 
 document.addEventListener("DOMContentLoaded", () => {
     if (window.location.hostname == "rcmgames.github.io") {
@@ -1064,7 +1066,7 @@ function connect() {
     lastPingTime = Date.now();
     webs.onmessage = function (event) {
         eventData = event;
-        event.data.bytes.then(function (data) {
+        event.data.bytes().then(function (data) {
             var rxByteArray = new Uint8Array(data);
             var newrxdata = new Float32Array(rxByteArray.buffer);
             for (var i = 0; i < newrxdata.length; i++) {
@@ -1145,7 +1147,7 @@ function loadUI() {
             }
         })
         .then(data => {
-            return JSON.parse(data.substring(0, data.length - 1));// trim null character from end of string
+            return JSON.parse(data.substring(0, data.lastIndexOf('}') + 1));
         })
         .then(data => {
             if (data.UIdata != undefined) {
@@ -1227,6 +1229,7 @@ class ActiveComponent {
                 switch (boardInfo.potential_components[this.typeid]["parameters"][i].type) {
                     case "pin":
                         this.parameters.push(null);
+                        break;
                     case "int":
                         this.parameters.push(0);
                         break;
@@ -1242,6 +1245,7 @@ class ActiveComponent {
                     default:
                         console.log("unknown parameter type");
                         this.parameters.push(null);
+                        break;
                 }
             }
         } else {
@@ -1251,20 +1255,41 @@ class ActiveComponent {
         }
 
         this.element = document.createElement("div");
-        this.element.innerHTML = this.index + " " + this.typename + " " + this.username;
+
+        this.updateHTMLElement();
+
+        document.getElementById("active-components").appendChild(this.element);
+    }
+    updateHTMLElement() {
+        this.element.replaceChildren();
+
+        this.element.className = "component-element";
+
+        let indexSpan = document.createElement("span");
+        indexSpan.innerHTML = this.index;
+        this.element.appendChild(indexSpan);
+
         this.element.onclick = () => { this.openProperties(); };
 
         let deleteButton = document.createElement("button");
+        deleteButton.className = "component-delete-button";
         deleteButton.innerHTML = "X";
         deleteButton.onclick = (event) => {
             event.stopPropagation();
             this.element.remove();
             activeComponentList.splice(activeComponentList.indexOf(this), 1);
-            propertiesElement.replaceChildren();
+            document.getElementById("component-properties").replaceChildren();
         }
         this.element.appendChild(deleteButton);
 
-        document.getElementById("active-components").appendChild(this.element);
+        let nameSpan = document.createElement("span");
+        nameSpan.style = "float: right";
+        nameSpan.innerHTML = this.username;
+        this.element.appendChild(nameSpan);
+
+        let typeSpan = document.createElement("div");
+        typeSpan.innerHTML = this.typename;
+        this.element.appendChild(typeSpan);
     }
     openProperties() {
         document.getElementById("component-properties").replaceChildren();
@@ -1274,7 +1299,7 @@ class ActiveComponent {
         usernameInputElement.value = this.username;
         usernameInputElement.onchange = (event) => {
             this.username = event.target.value;
-            this.element.innerHTML = this.index + " " + this.typename + " " + this.username;
+            this.updateHTMLElement();
         }
         document.getElementById("component-properties").appendChild(usernameInputElement);
 
@@ -1298,10 +1323,6 @@ class ActiveComponent {
                         }
                         element.appendChild(label);
                         element.appendChild(input);
-                        let helper = document.createElement("option");
-                        //TODO: FINISH
-
-                        element.appendChild(helper);
                     }
                     break;
                 case "pin":
@@ -1390,6 +1411,32 @@ class ActiveComponent {
             }
             document.getElementById("component-properties").appendChild(element);
         }
+        if (this.typename == "Motor Driver HBridge ESP32") {
+            let helper = document.createElement("select");
+            let defaultOption = document.createElement("option");
+            defaultOption.value = null;
+            defaultOption.textContent = "select port";
+            helper.appendChild(defaultOption);
+            for (let j = 0; j < loadedParameterPreset.length; j++) {
+                if (loadedParameterPreset[j].type == "HBridgeESP32") {
+                    let option = document.createElement("option");
+                    option.value = loadedParameterPreset[j].value;
+                    option.textContent = loadedParameterPreset[j].name;
+                    helper.appendChild(option);
+                }
+            }
+            helper.onchange = (event) => {
+                if (event.target.value) {
+                    let params = event.target.value.split(",");
+                    this.parameters = [];
+                    for (let i = 0; i < params.length; i++) {
+                        this.parameters.push(parseInt(params[i]));
+                    }
+                    this.openProperties();
+                }
+            }
+            document.getElementById("component-properties").appendChild(helper);
+        }
 
         // display all inputs
         let inputsElement = document.createElement("div");
@@ -1399,7 +1446,7 @@ class ActiveComponent {
         for (let i = 0; i < this.inputs.length; i++) {
             let element = document.createElement("div");
             let label = document.createElement("label");
-            label.innerHTML = i + ": ";
+            label.innerHTML = boardInfo.potential_components[this.typeid]["inputs"][i].name + ": ";
             element.appendChild(label);
             let input = document.createElement("input");
             input.type = "number";
@@ -1421,7 +1468,7 @@ class ActiveComponent {
         for (let i = 0; i < this.outputs.length; i++) {
             let element = document.createElement("div");
             let label = document.createElement("label");
-            label.innerHTML = i + ": ";
+            label.innerHTML = boardInfo.potential_components[this.typeid]["outputs"][i].name + ": ";
             element.appendChild(label);
             let input = document.createElement("input");
             input.type = "number";
@@ -1492,11 +1539,8 @@ function loadConfigFromFile() {
         const reader = new FileReader();
         reader.onload = e => {
             const data = JSON.parse(e.target.result);
-            activeComponentList = [];
-            document.getElementById("active-components").replaceChildren();
-            document.getElementById("component-properties").replaceChildren();
             for (let i = 0; i < data.length; i++) {
-                activeComponentList.push(new ActiveComponent(data[i], i, true));
+                activeComponentList.push(new ActiveComponent(data[i], activeComponentList.length, true));
             }
         }
         reader.readAsText(file);
@@ -1539,11 +1583,11 @@ function loadConfig() {
         .then(data => {
             document.getElementById("config-status").innerHTML = "reloaded";
             document.getElementById("config-status").style.backgroundColor = "lightgreen";
-            activeComponentList = [];
             document.getElementById("active-components").replaceChildren();
             document.getElementById("component-properties").replaceChildren();
+            activeComponentList = [];
             for (let i = 0; i < data.components.length; i++) {
-                activeComponentList.push(new ActiveComponent(data.components[i], i, true));
+                activeComponentList.push(new ActiveComponent(data.components[i], activeComponentList.length, true));
             }
         }).catch((error) => {
         });
@@ -1594,7 +1638,7 @@ async function loadPresets() {
                 document.getElementById("config-status").style.backgroundColor = "yellow"; //TODO: CLEAN UP CONFIG-STATUS WINDOW SETTING CODE
                 fetch('/presets/config_presets/' + config_presets[i]).then(response => response.json()).then(configComponents => {
                     for (let j = 0; j < configComponents.length; j++) {
-                        activeComponentList.push(new ActiveComponent(configComponents[j], j + activeComponentList.length, true));
+                        activeComponentList.push(new ActiveComponent(configComponents[j], activeComponentList.length, true));
                     }
                     document.getElementById("config-status").innerHTML = "Loaded Preset";
                     document.getElementById("config-status").style.backgroundColor = "lightgreen";
@@ -1621,11 +1665,54 @@ async function loadPresets() {
                 fetch('/presets/parameter_presets/' + preset).then(response => response.json()).then(data => {
                     loadedParameterPreset = data;
                     document.getElementById("component-properties").replaceChildren();
-                    //TODO: remember what board was selected
+                    miscConfigInfo["board"] = preset;
+                    saveMiscConfigInfo();
                 });
             } else {
                 loadedParameterPreset = [];
             }
         }
+    });
+
+    fetch('/loadMiscConfigInfo.json')
+        .then(response => response.text())
+        .then(data => {
+            data = data.substring(0, data.lastIndexOf('}') + 1);
+            return JSON.parse(data);// trim null character from end of string
+        }
+        ).then(data => {
+            miscConfigInfo = data;
+            if (miscConfigInfo["board"] != undefined) {
+                document.getElementById("board-type-selector").value = miscConfigInfo["board"];
+                document.getElementById("board-type-selector").dispatchEvent(new Event('change'));
+            }
+        });
+
+}
+
+function saveMiscConfigInfo() {
+    document.getElementById("config-status").innerHTML = "saving misc config info...";
+    document.getElementById("config-status").style.backgroundColor = "yellow";
+
+    dataToSend = JSON.stringify(miscConfigInfo);
+    const dataToSendEncoded = new URLSearchParams({ miscConfigInfo: dataToSend });
+
+    fetch('/saveMiscConfigInfo', {
+        method: "post",
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: dataToSendEncoded
+    }).then(response => {
+        response.text().then((text) => {
+            if (text == "OK") {
+                robotSaveConfig();
+                document.getElementById("config-status").innerHTML = "Sent config info";
+                document.getElementById("config-status").style.backgroundColor = "lightgreen";
+            } else {
+                document.getElementById("config-status").style.backgroundColor = "#ff9999";
+                document.getElementById("config-status").innerHTML = text;
+            }
+        });
     });
 }
