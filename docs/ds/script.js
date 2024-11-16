@@ -1295,6 +1295,44 @@ class ActiveComponent {
         typeSpan.innerHTML = this.typename;
         this.element.appendChild(typeSpan);
     }
+    // componentType is an array of strings that the component needs to be compatible with, or [true] if it can be compatible with any component
+    createHelperForComponentThatNeedsComponent(componentType, element, constructorParameter, i) {
+        let label = document.createElement("label");
+        let input = document.createElement("input");
+        input.style.width = "50px";
+        label.innerHTML = constructorParameter.name;
+        input.type = "number";
+        input.step = "1";
+        input.value = this.parameters[i];
+        input.onchange = (event) => {
+            this.parameters[i] = parseInt(event.target.value);
+        }
+        element.appendChild(label);
+        element.appendChild(document.createElement("br"));
+        element.appendChild(input);
+
+        let helper = document.createElement("select");
+        let defaultOption = document.createElement("option");
+        defaultOption.value = null;
+        defaultOption.textContent = "select";
+        helper.appendChild(defaultOption);
+        for (let j = 0; j < activeComponentList.length; j++) {
+            if (componentType.includes(activeComponentList[j].typename) || componentType.includes(true)) {
+                let option = document.createElement("option");
+                option.value = j;
+                option.textContent = activeComponentList[j].username;
+                helper.appendChild(option);
+            }
+        }
+        helper.value = this.parameters[i];
+        helper.onchange = (event) => {
+            if (event.target.value) {
+                this.parameters[i] = parseInt(event.target.value);
+                input.value = this.parameters[i];
+            }
+        }
+        element.appendChild(helper);
+    }
     openProperties() {
         document.getElementById("component-properties").replaceChildren();
         // user name
@@ -1316,6 +1354,7 @@ class ActiveComponent {
                     {
                         let label = document.createElement("label");
                         let input = document.createElement("input");
+                        input.style.width = "50px";
                         label.innerHTML = constructorParameter.name;
                         input.type = "number";
                         input.step = "1";
@@ -1368,6 +1407,10 @@ class ActiveComponent {
                     }
                     break;
                 case "TMC7300IC":
+                    {
+                        this.createHelperForComponentThatNeedsComponent(["TMC7300 IC"], element, constructorParameter, i);
+                    }
+                    break;
                 case "int":
                     {
                         let label = document.createElement("label");
