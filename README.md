@@ -13,9 +13,9 @@ https://rcmgames.github.io/RCMv3/ds/
 
 ## Compatibility
 ### RCM Boards
-* [RCM_BYTE](https://github.com/RCMgames/RCM-Hardware-BYTE) (testing in progress)
-* [RCM_Nibble](https://github.com/RCMgames/RCM-Hardware-Nibble) (testing in progress)
-* [RCM_V4](https://github.com/RCMgames/RCM-Hardware-V4) (testing in progress)
+* [RCM_BYTE](https://github.com/RCMgames/RCM-Hardware-BYTE)
+* [RCM_Nibble](https://github.com/RCMgames/RCM-Hardware-Nibble)
+* [RCM_V4](https://github.com/RCMgames/RCM-Hardware-V4)
 
 ### ESP32 Boards
 * ESP32 DevKitC with 38 pins
