@@ -1,5 +1,18 @@
 [
     {
+        "type": 4,
+        "name": "JVoltageCompMeasure",
+        "username": "battery monitor",
+        "inputs": [],
+        "outputs": [
+            0
+        ],
+        "parameters": [
+            16,
+            310
+        ]
+    },
+    {
         "type": 0,
         "name": "TMC7300 IC",
         "username": "TMC7300_AB",

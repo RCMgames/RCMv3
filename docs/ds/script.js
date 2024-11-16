@@ -8,6 +8,8 @@ let loadedParameterPreset = [];
 
 let miscConfigInfo = {};
 
+//TODO: add way to load projects (UI and/or robot config) from github
+
 document.addEventListener("DOMContentLoaded", () => {
     if (window.location.hostname == "rcmgames.github.io") {
         errorConnecting();
@@ -1069,6 +1071,7 @@ function connect() {
         event.data.bytes().then(function (data) {
             var rxByteArray = new Uint8Array(data);
             var newrxdata = new Float32Array(rxByteArray.buffer);
+            rxdata = [];
             for (var i = 0; i < newrxdata.length; i++) {
                 rxdata[i] = newrxdata[i];
             }
@@ -1233,6 +1236,7 @@ class ActiveComponent {
                     case "int":
                         this.parameters.push(0);
                         break;
+                    case "VoltageMonitorCalibrationVal":
                     case "float":
                         this.parameters.push(0.0);
                         break;
@@ -1391,6 +1395,42 @@ class ActiveComponent {
                         }
                         element.appendChild(label);
                         element.appendChild(input);
+                    }
+                    break;
+                case "VoltageMonitorCalibrationVal":
+                    {
+                        let label = document.createElement("label");
+                        let input = document.createElement("input");
+                        label.innerHTML = constructorParameter.name;
+                        input.type = "number";
+                        input.value = this.parameters[i];
+                        input.onchange = (event) => {
+                            this.parameters[i] = parseFloat(event.target.value);
+                        }
+                        element.appendChild(label);
+                        element.appendChild(input);
+
+                        let helper = document.createElement("select");
+                        let defaultOption = document.createElement("option");
+                        defaultOption.value = null;
+                        defaultOption.textContent = "select";
+                        helper.appendChild(defaultOption);
+                        for (let j = 0; j < loadedParameterPreset.length; j++) {
+                            if (loadedParameterPreset[j].type == "VoltageMonitorCalibrationVal") {
+                                let option = document.createElement("option");
+                                option.value = loadedParameterPreset[j].value;
+                                option.textContent = loadedParameterPreset[j].name;
+                                helper.appendChild(option);
+                            }
+                        }
+                        helper.value = this.parameters[i];
+                        helper.onchange = (event) => {
+                            if (event.target.value) {
+                                this.parameters[i] = parseInt(event.target.value);
+                                input.value = this.parameters[i];
+                            }
+                        }
+                        element.appendChild(helper);
                     }
                     break;
                 case "bool":

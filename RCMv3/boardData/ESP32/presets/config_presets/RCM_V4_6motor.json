@@ -1,5 +1,18 @@
 [
     {
+        "type": 4,
+        "name": "JVoltageCompMeasure",
+        "username": "battery monitor",
+        "inputs": [],
+        "outputs": [
+            0
+        ],
+        "parameters": [
+            36,
+            310
+        ]
+    },
+    {
         "type": 3,
         "name": "Motor Driver HBridge ESP32",
         "username": "motor A",

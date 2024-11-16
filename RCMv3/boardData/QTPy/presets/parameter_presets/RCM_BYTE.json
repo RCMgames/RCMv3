@@ -1,5 +1,10 @@
 [
     {
+        "type": "VoltageMonitorCalibrationVal",
+        "name": "default",
+        "value": 310.0
+    },
+    {
         "type": "pin",
         "name": "port1Pin (A0)",
         "value": 18

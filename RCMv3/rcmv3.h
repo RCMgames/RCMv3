@@ -28,6 +28,7 @@ enum RCMv3DataType {
     RC_DATA_Pin,
     RC_DATA_TMC7300IC,
     RC_DATA_TMCChipAddress,
+    RC_DATA_VoltageMonitorCalibrationVal,
     RC_DATA_COUNT
 };
 const char* RCMv3DataTypeNames[] = {
@@ -37,6 +38,7 @@ const char* RCMv3DataTypeNames[] = {
     "pin",
     "TMC7300IC",
     "int",
+    "VoltageMonitorCalibrationVal",
     "TMCChipAddress"
 };
 
@@ -50,6 +52,7 @@ const char* RCMv3ComponentTypeNames[] = {
     "Motor Driver TMC7300",
     "Motor Driver Servo ESP32",
     "Motor Driver HBridge ESP32",
+    "JVoltageCompMeasure"
 };
 
 enum RCMv3ComponentType {
@@ -57,6 +60,7 @@ enum RCMv3ComponentType {
     RC_TYPE_JMotorDriverTMC7300,
     RC_TYPE_JMotorDriverEsp32Servo,
     RC_Type_JMotorDriverEsp32HBridge,
+    RC_TYPE_JVoltageCompMeasure,
     RC_TYPE_COUNT
 };
 
@@ -64,7 +68,8 @@ int RCMv3ComponentNumInputs[] = {
     0,
     1,
     1,
-    1
+    1,
+    0
 };
 
 /**
@@ -85,6 +90,8 @@ const char* RCMv3ComponentInputNames(RCMv3ComponentType type, uint8_t input)
         return "power";
     case RC_Type_JMotorDriverEsp32HBridge:
         return "power";
+    case RC_TYPE_JVoltageCompMeasure:
+        return "";
     }
     return "";
 };
@@ -93,7 +100,8 @@ int RCMv3ComponentNumOutputs[] = {
     0,
     0,
     0,
-    0
+    0,
+    1
 };
 
 const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
@@ -107,6 +115,8 @@ const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
         return "";
     case RC_Type_JMotorDriverEsp32HBridge:
         return "";
+    case RC_TYPE_JVoltageCompMeasure:
+        return "voltage";
     }
     return "";
 };
@@ -137,6 +147,11 @@ public:
                 { "pwmChannel", RC_DATA_Int },
                 { "in1", RC_DATA_Int },
                 { "in2", RC_DATA_Int }
+            };
+        case RC_TYPE_JVoltageCompMeasure:
+            return {
+                { "measurePin", RC_DATA_Pin },
+                { "adcUnitsPerVolt", RC_DATA_VoltageMonitorCalibrationVal }
             };
         }
         return {};
@@ -188,6 +203,39 @@ public:
         jsonData.clear();
         delete inputs;
         delete outputs;
+    }
+};
+
+#define RCMV3_COMPONENT_J_VOLTAGE_COMP_MEASURE_N 10
+class RCMv3ComponentJVoltageCompMeasure : public RCMv3Component {
+public:
+    RCMv3ComponentJVoltageCompMeasure(uint8_t _measurePin, float _DACUnitsPerVolt)
+        : RCMv3Component(RC_TYPE_JVoltageCompMeasure)
+    {
+        internalInstance = new JVoltageCompMeasure<RCMV3_COMPONENT_J_VOLTAGE_COMP_MEASURE_N>(_measurePin, _DACUnitsPerVolt);
+    }
+    void begin()
+    {
+    }
+    void enable()
+    {
+    }
+    void disable()
+    {
+    }
+    void run()
+    {
+    }
+    void write(int index, float value)
+    {
+    }
+    float read(int index)
+    {
+        return ((JVoltageCompMeasure<RCMV3_COMPONENT_J_VOLTAGE_COMP_MEASURE_N>*)internalInstance)->getSupplyVoltage();
+    }
+    ~RCMv3ComponentJVoltageCompMeasure()
+    {
+        delete (JVoltageCompMeasure<RCMV3_COMPONENT_J_VOLTAGE_COMP_MEASURE_N>*)internalInstance;
     }
 };
 
@@ -324,6 +372,7 @@ public:
                     return false;
                 }
             } break;
+            case RC_DATA_VoltageMonitorCalibrationVal:
             case RC_DATA_Float: {
                 if (!data[i].is<float>()) {
                     return false;
@@ -366,6 +415,10 @@ public:
         // parameters validated
         // create component!
         switch (type) {
+        case RC_TYPE_JVoltageCompMeasure: {
+            Serial.printf("creating JVoltageCompMeasure with pin %d and DACUnitsPerVolt %f\n", (int)data[0], (float)data[1]);
+            components.push_back(new RCMv3ComponentJVoltageCompMeasure((int)data[0], (float)data[1]));
+        } break;
         case RC_TYPE_TMC7300IC: {
             Serial.printf("creating TMC7300IC with pin %d and chipAddress %d\n", (int)data[0], (int)data[1]);
             if ((int)data[1] < 0 || (int)data[1] > 3) { // invalid chip address
@@ -450,9 +503,7 @@ void RCMV3_run(const std::vector<float>& inputVars, std::vector<float>& outputVa
         int maxOutputIndex = -1;
         for (int i = 0; i < components.size(); i++) {
             for (int j = 0; j < RCMv3ComponentNumOutputs[components[i]->getType()]; j++) {
-                if (components[i]->outputs[j] >= outputVars.size()) {
-                    maxOutputIndex = max(maxOutputIndex, components[i]->outputs[j]);
-                }
+                maxOutputIndex = max(maxOutputIndex, components[i]->outputs[j]);
             }
         }
         outputVars.resize(min(maxOutputIndex, 255) + 1, 0);

@@ -57,8 +57,6 @@ void WifiDataToParse()
 }
 void WifiDataToSend()
 {
-    WSC::sendFl(25.21); // voltageComp.getSupplyVoltage());
-    // add data to send here: (EWD::sendBl(), EWD::sendBy(), EWD::sendIn(), EWD::sendFl())(boolean, byte, int, float)
     for (int i = 0; i < outputs.size(); i++) {
         WSC::sendFl(outputs[i]);
     }
