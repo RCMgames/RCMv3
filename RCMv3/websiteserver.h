@@ -14,14 +14,17 @@ Preferences prefs;
 
 const unsigned long wifiConnectionTimeout = 5000;
 enum WifiMethod {
-    FALLBACK_AP,
     STA,
-    AP
+    AP,
+    FALLBACK_AP
 };
 WifiMethod wifiMethod = FALLBACK_AP;
 boolean hasWifiConnected = false;
 
 boolean hasWebsiteLoaded = false;
+
+extern void rslOn();
+extern void rslOff();
 
 void connectToWifi()
 {
@@ -53,7 +56,10 @@ void connectToWifi()
             WiFi.begin(prefs.getString("ssid").c_str(), prefs.getString("password").c_str());
             unsigned long startConnectionMillis = millis();
             while (WiFi.status() != WL_CONNECTED && (millis() - startConnectionMillis) <= wifiConnectionTimeout) {
-                delay(10); // TODO: SHOW MORE CONNECTION INFO USING RSL
+                rslOn();
+                delay(34);
+                rslOff();
+                delay(66);
             }
 
             if (WiFi.status() == WL_CONNECTED) {

@@ -26,6 +26,15 @@ https://rcmgames.github.io/RCMv3/ds/
 * [Information about all hardware and software for Robot Control Modules](https://github.com/rcmgames?view_as=public)
 * [JMotor library documentation](https://joshua-8.github.io/JMotor/md_readme.html)
 
+## LED blink codes
+* 2Hz 50% on: enabled
+* solid on: disabled
+* flashes 1 time per 1.5 seconds: connected to wifi router with previously saved name and password
+* flashes 2 times per 1.5 seconds: RCM has created a wifi network with previously saved name and password
+* flashes 3 times per 1.5 seconds: RCM has created a wifi network named "http://rcmv3.local" with no password
+    * pressing then releasing the reset/en button then immediately pressing then holding the IO0 button will force the RCM into this mode (if you forgot the wifi password)
+* 10Hz: searching for wifi router on boot
+
 ## Acknowledgements
 * [PlatformIO](https://registry.platformio.org/platforms/platformio/espressif32) for compiling
 * [arduino-esp32](https://github.com/espressif/arduino-esp32)

@@ -7,9 +7,6 @@
 
 #include <vector>
 
-std::vector<float> inputs;
-std::vector<float> outputs;
-
 void Enabled()
 {
     // code to run while enabled, put your main code here

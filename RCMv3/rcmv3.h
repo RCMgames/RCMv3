@@ -21,6 +21,9 @@ String create_component_error_msg = "";
 
 std::mutex componentMutex;
 
+std::vector<float> inputs;
+std::vector<float> outputs;
+
 enum RCMv3DataType {
     RC_DATA_Int,
     RC_DATA_Float,
@@ -206,6 +209,8 @@ public:
     }
 };
 
+std::vector<RCMv3Component*> components;
+
 #define RCMV3_COMPONENT_J_VOLTAGE_COMP_MEASURE_N 10
 class RCMv3ComponentJVoltageCompMeasure : public RCMv3Component {
 public:
@@ -345,8 +350,6 @@ public:
         delete (JMotorDriverEsp32HBridge*)internalInstance;
     }
 };
-
-std::vector<RCMv3Component*> components;
 
 boolean refreshOutputListSize = true;
 

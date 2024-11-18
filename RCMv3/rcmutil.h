@@ -51,32 +51,22 @@ void enabledRSL()
     }
 #endif
 }
-void wifiFailRSL()
+void rslOn()
 {
 #ifndef PIN_NEOPIXEL
-    digitalWrite(ONBOARD_LED, millis() % 1000 <= 100); // short flash, wifi connection fail
+    digitalWrite(ONBOARD_LED, HIGH);
 #else
-    if (millis() % 1000 <= 100) {
-        RSL_LED = RSL_COLOR;
-        FastLED.show();
-    } else {
-        RSL_LED = RSL_OFF;
-        FastLED.show();
-    }
+    RSL_LED = RSL_COLOR;
+    FastLED.show();
 #endif
 }
-void wifiDisconnectedRSL()
+void rslOff()
 {
 #ifndef PIN_NEOPIXEL
-    digitalWrite(ONBOARD_LED, millis() % 1000 >= 100); // long flash, no driver station connected
+    digitalWrite(ONBOARD_LED, LOW);
 #else
-    if (millis() % 1000 >= 100) {
-        RSL_LED = RSL_COLOR;
-        FastLED.show();
-    } else {
-        RSL_LED = RSL_OFF;
-        FastLED.show();
-    }
+    RSL_LED = RSL_OFF;
+    FastLED.show();
 #endif
 }
 void disabledRSL()
@@ -87,15 +77,6 @@ void disabledRSL()
     RSL_LED = RSL_COLOR;
     FastLED.show();
 #endif
-}
-
-boolean connectedToWifi()
-{
-    return !WSC::timedOut() || hasWebsiteLoaded;
-}
-boolean connectionTimedOut()
-{
-    return WSC::timedOut();
 }
 
 void setup()
@@ -115,7 +96,7 @@ void setup()
 void loop()
 {
     WSC::runWebSocketComms();
-    if (!connectedToWifi() || connectionTimedOut()) {
+    if (WSC::notTimedOut()) {
         enabled = false;
     }
     Always();
@@ -127,15 +108,21 @@ void loop()
         Disable();
     }
     if (enabled) {
-        Enabled();
         enabledRSL();
+        Enabled();
     } else {
-        if (!connectedToWifi())
-            wifiFailRSL();
-        else if (connectionTimedOut())
-            wifiDisconnectedRSL();
-        else
+        if (WSC::timedOut()) {
+            boolean rslOffVal = true;
+            int blinkTime = millis() % 1500;
+            for (byte i = 0; i < wifiMethod + 1; i++) {
+                if (blinkTime > i * 300 && blinkTime <= i * 300 + 100) {
+                    rslOffVal = false;
+                }
+            }
+            rslOffVal ? rslOff() : rslOn();
+        } else {
             disabledRSL();
+        }
     }
     wasEnabled = enabled;
 }
