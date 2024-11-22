@@ -45,9 +45,9 @@ const char* RCMv3DataTypeNames[] = {
     "pin",
     "TMC7300IC",
     "BSED",
-    "int",
+    "TMCChipAddress",
     "WhichWire",
-    "VoltageMonitorCalibrationVal",
+    "VoltageMonitorCalibrationVal", // TODO: ADD METHOD FOR ADDING HELPERS THAT GIVE DEFAULT VALUES WIHTOUT CREATING A NEW DATA TYPE
     "ComponentIndex",
     "ComponentInputIndex"
 };
@@ -58,37 +58,37 @@ typedef struct {
 } RCMv3Parameter;
 
 const char* RCMv3ComponentTypeNames[] = {
-    "Mixer",
+    "JVoltageCompMeasure",
     "TMC7300 IC",
     "Motor Driver TMC7300",
     "Motor Driver Servo ESP32",
     "Motor Driver HBridge ESP32",
     "ByteSizedEncoderDecoder",
     "Encoder BSED",
-    "JVoltageCompMeasure"
+    "Mixer"
 };
 
 enum RCMv3ComponentType {
-    RC_TYPE_MIXER,
+    RC_TYPE_JVoltageCompMeasure,
     RC_TYPE_TMC7300IC,
     RC_TYPE_JMotorDriverTMC7300,
     RC_TYPE_JMotorDriverEsp32Servo,
     RC_Type_JMotorDriverEsp32HBridge,
-    RC_TYPE_JVoltageCompMeasure,
     RC_TYPE_BSED,
     RC_TYPE_JEncoderBSED,
+    RC_TYPE_MIXER,
     RC_TYPE_COUNT
 };
 
 int RCMv3ComponentNumInputs[] = {
-    3,
+    0,
     0,
     1,
     1,
     1,
     0,
     0,
-    0
+    3
 };
 
 /**
@@ -135,9 +135,9 @@ int RCMv3ComponentNumOutputs[] = {
     0,
     0,
     0,
-    1,
     0,
-    2
+    2,
+    1
 };
 
 const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
@@ -717,6 +717,10 @@ public:
             components.push_back(new RCMv3ComponentBSED(selectedWire, (int)data[1]));
         } break;
         case RC_TYPE_JEncoderBSED: {
+            if (data[1] < 1 || data[1] > 8) {
+                create_component_error_msg += " encoderChannel must be between 1 and 8";
+                return false;
+            }
             Serial.printf("creating JEncoderBSED with bsed %d and encoderChannel %d and reverse %d and distPerCountFactor %f and slowestInterval %d and enoughCounts %d\n", (int)data[0], (int)data[1], (int)data[2], (float)data[3], (int)data[4], (int)data[5]);
             ByteSizedEncoderDecoder* bsed = (ByteSizedEncoderDecoder*)components[(int)data[0]]->getInternalInstance();
             components.push_back(new RCMv3ComponentJEncoderBSED(bsed, (int)data[1], (int)data[2], (float)data[3], (int)data[4], (int)data[5]));
@@ -733,6 +737,7 @@ public:
         } else {
             return false;
         }
+
         if (outputs.size() == RCMv3ComponentNumOutputs[type]) {
             for (int i = 0; i < outputs.size(); i++) {
                 if (!outputs[i].is<int>()) {
@@ -751,8 +756,6 @@ public:
         for (int i = 0; i < outputs.size(); i++) {
             components[components.size() - 1]->outputs[i] = outputs[i].as<int>();
         }
-
-        components[components.size() - 1]->begin();
 
         return true;
     }
@@ -856,6 +859,7 @@ boolean RCMV3_parse_config(const String& str)
         for (RCMv3Component* component : tempComponents) {
             components.push_back(component);
         }
+        RCMV3_begin();
         refreshOutputListSize = true;
         componentMutex.unlock();
     }
