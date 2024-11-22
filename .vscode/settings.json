@@ -1,9 +1,11 @@
 {
   "cSpell.words": [
+    "adafruit",
     "APIP",
     "baudrate",
     "Benoit",
     "Blanchon",
+    "BSED",
     "colspan",
     "Comms",
     "darkgrey",
@@ -31,6 +33,8 @@
     "msgin",
     "NEOPIXEL",
     "newrxdata",
+    "nopsram",
+    "qtpy",
     "RCCHECK",
     "rclc",
     "rcmgames",

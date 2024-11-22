@@ -159,7 +159,7 @@ async function upload() {
 
             const flashOptionsMain = {
                 transport,
-                baudrate: 460800,
+                baudrate: 115200,
                 enableTracing: false,
                 debugLogging: false,
                 terminal: espLoaderTerminal
@@ -186,9 +186,9 @@ async function upload() {
                 flashMode: "keep",
                 compress: true,
                 eraseAll: true,
-                baudrate: 460800,
+                baudrate: 115200,
                 reportProgress: (fileIndex, written, total) => {
-                    console.log("PROGRESS:" + fileIndex + "," + written + "," + total);
+                    // console.log("PROGRESS:" + fileIndex + "," + written + "," + total);
                     document.getElementById("upload-progress").innerHTML = Math.floor(1 + (fileIndex * 10) + ((fileIndex < 4) ? 9 * (written / total) : 58 * (written / total))) + "%";
                 },
                 calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image))
