@@ -30,8 +30,12 @@ enum RCMv3DataType {
     RC_DATA_Bool,
     RC_DATA_Pin,
     RC_DATA_TMC7300IC,
+    RC_DATA_BSED,
     RC_DATA_TMCChipAddress,
+    RC_DATA_WhichWire,
     RC_DATA_VoltageMonitorCalibrationVal,
+    RC_DATA_ComponentIndex,
+    RC_DATA_ComponentInputIndex, /*which input of a component should be accessed*/
     RC_DATA_COUNT
 };
 const char* RCMv3DataTypeNames[] = {
@@ -40,9 +44,12 @@ const char* RCMv3DataTypeNames[] = {
     "bool",
     "pin",
     "TMC7300IC",
+    "BSED",
     "int",
+    "WhichWire",
     "VoltageMonitorCalibrationVal",
-    "TMCChipAddress"
+    "ComponentIndex",
+    "ComponentInputIndex"
 };
 
 typedef struct {
@@ -51,27 +58,36 @@ typedef struct {
 } RCMv3Parameter;
 
 const char* RCMv3ComponentTypeNames[] = {
+    "Mixer",
     "TMC7300 IC",
     "Motor Driver TMC7300",
     "Motor Driver Servo ESP32",
     "Motor Driver HBridge ESP32",
+    "ByteSizedEncoderDecoder",
+    "Encoder BSED",
     "JVoltageCompMeasure"
 };
 
 enum RCMv3ComponentType {
+    RC_TYPE_MIXER,
     RC_TYPE_TMC7300IC,
     RC_TYPE_JMotorDriverTMC7300,
     RC_TYPE_JMotorDriverEsp32Servo,
     RC_Type_JMotorDriverEsp32HBridge,
     RC_TYPE_JVoltageCompMeasure,
+    RC_TYPE_BSED,
+    RC_TYPE_JEncoderBSED,
     RC_TYPE_COUNT
 };
 
 int RCMv3ComponentNumInputs[] = {
+    3,
     0,
     1,
     1,
     1,
+    0,
+    0,
     0
 };
 
@@ -85,6 +101,16 @@ int RCMv3ComponentNumInputs[] = {
 const char* RCMv3ComponentInputNames(RCMv3ComponentType type, uint8_t input)
 {
     switch (type) {
+    case RC_TYPE_MIXER:
+        switch (input) {
+        case 0:
+            return "x";
+        case 1:
+            return "y";
+        case 2:
+            return "z";
+        }
+        break;
     case RC_TYPE_TMC7300IC:
         return "";
     case RC_TYPE_JMotorDriverTMC7300:
@@ -95,21 +121,30 @@ const char* RCMv3ComponentInputNames(RCMv3ComponentType type, uint8_t input)
         return "power";
     case RC_TYPE_JVoltageCompMeasure:
         return "";
+    case RC_TYPE_BSED:
+        return "";
+    case RC_TYPE_JEncoderBSED:
+        return "";
     }
     return "";
 };
 
 int RCMv3ComponentNumOutputs[] = {
+    1,
     0,
     0,
     0,
     0,
-    1
+    1,
+    0,
+    2
 };
 
 const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
 {
     switch (type) {
+    case RC_TYPE_MIXER:
+        return "output";
     case RC_TYPE_TMC7300IC:
         return "";
     case RC_TYPE_JMotorDriverTMC7300:
@@ -120,6 +155,16 @@ const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
         return "";
     case RC_TYPE_JVoltageCompMeasure:
         return "voltage";
+    case RC_TYPE_BSED:
+        return "";
+    case RC_TYPE_JEncoderBSED:
+        switch (output) {
+        case 0:
+            return "position";
+        case 1:
+            return "velocity";
+        }
+        return "";
     }
     return "";
 };
@@ -129,6 +174,14 @@ public:
     static std::vector<RCMv3Parameter> getParameterInfo(RCMv3ComponentType type)
     {
         switch (type) {
+        case RC_TYPE_MIXER:
+            return {
+                { "A", RC_DATA_Float },
+                { "B", RC_DATA_Float },
+                { "C", RC_DATA_Float },
+                { "component to send value to", RC_DATA_ComponentIndex },
+                { "input index to send value to", RC_DATA_ComponentInputIndex }
+            };
         case RC_TYPE_TMC7300IC:
             return {
                 { "pin", RC_DATA_Pin },
@@ -155,6 +208,22 @@ public:
             return {
                 { "measurePin", RC_DATA_Pin },
                 { "adcUnitsPerVolt", RC_DATA_VoltageMonitorCalibrationVal }
+            };
+        case RC_TYPE_BSED:
+            return {
+                { "wire", RC_DATA_WhichWire },
+                { "address", RC_DATA_Int },
+                { "encoderSlowestInterval", RC_DATA_Int },
+                { "encoderEnoughCounts", RC_DATA_Int }
+            };
+        case RC_TYPE_JEncoderBSED:
+            return {
+                { "BSED index", RC_DATA_BSED },
+                { "encoderChannel", RC_DATA_Int },
+                { "reverse", RC_DATA_Bool },
+                { "distPerCountFactor", RC_DATA_Float },
+                { "slowestIntervalMicros", RC_DATA_Int },
+                { "encoderEnoughCounts", RC_DATA_Int }
             };
         }
         return {};
@@ -210,6 +279,77 @@ public:
 };
 
 std::vector<RCMv3Component*> components;
+
+// class RCMv3ComponentMixer : public RCMv3Component
+// performs A*x + B*y + C*z and sets the value into the specified component and input index
+
+class RCMv3ComponentMixer : public RCMv3Component {
+protected:
+    float A;
+    float B;
+    float C;
+    int componentIndex;
+    int inputIndex;
+
+    float value;
+
+    float X;
+    float Y;
+    float Z;
+
+public:
+    RCMv3ComponentMixer(float A_, float B_, float C_, int componentIndex_, int inputIndex_)
+        : RCMv3Component(RC_TYPE_MIXER)
+    {
+        X = 0;
+        Y = 0;
+        Z = 0;
+        value = 0;
+        A = A_;
+        B = B_;
+        C = C_;
+        componentIndex = componentIndex_;
+        inputIndex = inputIndex_;
+    }
+    void begin()
+    {
+    }
+    void enable()
+    {
+    }
+    void disable()
+    {
+    }
+    void run()
+    {
+        value = A * X + B * Y + C * Z;
+
+        if (componentIndex >= 0 && componentIndex < components.size()) {
+            components[componentIndex]->write(inputIndex, value);
+        }
+    }
+    void write(int index, float value)
+    {
+        switch (index) {
+        case 0:
+            X = value;
+            break;
+        case 1:
+            Y = value;
+            break;
+        case 2:
+            Z = value;
+            break;
+        }
+    }
+    float read(int index)
+    {
+        return value;
+    }
+    ~RCMv3ComponentMixer()
+    {
+    }
+};
 
 #define RCMV3_COMPONENT_J_VOLTAGE_COMP_MEASURE_N 10
 class RCMv3ComponentJVoltageCompMeasure : public RCMv3Component {
@@ -351,6 +491,84 @@ public:
     }
 };
 
+class RCMv3ComponentBSED : public RCMv3Component {
+protected:
+    TwoWire* wire;
+
+public:
+    RCMv3ComponentBSED(TwoWire* _wire, int address)
+        : RCMv3Component(RC_TYPE_BSED)
+    {
+        wire = _wire;
+        internalInstance = new ByteSizedEncoderDecoder(wire, address);
+    }
+    void begin()
+    {
+        wire->begin();
+        ((ByteSizedEncoderDecoder*)internalInstance)->begin();
+    }
+    void enable()
+    {
+    }
+    void disable()
+    {
+    }
+    void run()
+    {
+        ((ByteSizedEncoderDecoder*)internalInstance)->run();
+    }
+    void write(int index, float value)
+    {
+    }
+    float read(int index)
+    {
+        return 0;
+    }
+    ~RCMv3ComponentBSED()
+    {
+        delete (ByteSizedEncoderDecoder*)internalInstance;
+    }
+};
+
+class RCMv3ComponentJEncoderBSED : public RCMv3Component {
+public:
+    RCMv3ComponentJEncoderBSED(ByteSizedEncoderDecoder* _bsed, byte _encoderChannel, bool _reverse, float _distPerCountFactor, int16_t _slowestIntervalMicros, int16_t _encoderEnoughCounts)
+        : RCMv3Component(RC_TYPE_JEncoderBSED)
+    {
+        internalInstance = new JEncoderBSED(*_bsed, _encoderChannel, _reverse, _distPerCountFactor, _slowestIntervalMicros, _encoderEnoughCounts);
+    }
+    void begin()
+    {
+        ((JEncoderBSED*)internalInstance)->zeroCounter();
+    }
+    void enable()
+    {
+    }
+    void disable()
+    {
+    }
+    void run()
+    {
+    }
+    void write(int index, float value)
+    {
+    }
+    float read(int index)
+    {
+        switch (index) {
+        case 0:
+            return ((JEncoderBSED*)internalInstance)->getPos();
+        case 1:
+            return ((JEncoderBSED*)internalInstance)->getVel();
+        }
+        return 0;
+    }
+    ~RCMv3ComponentJEncoderBSED()
+    {
+        delete (JEncoderBSED*)internalInstance;
+    }
+};
+
 boolean refreshOutputListSize = true;
 
 class RCMv3ComponentFactory {
@@ -410,6 +628,40 @@ public:
                     return false;
                 }
             } break;
+            case RC_DATA_ComponentIndex: {
+                if (!data[i].is<int>()) {
+                    return false;
+                }
+                int componentIndex = data[i];
+                if (componentIndex < 0 || componentIndex >= components.size()) {
+                    create_component_error_msg += " invalid component index (" + String(componentIndex) + ") ";
+                    return false;
+                }
+            } break;
+            case RC_DATA_ComponentInputIndex: {
+                if (!data[i].is<int>()) {
+                    return false;
+                }
+            } break;
+            case RC_DATA_WhichWire: {
+                if (!data[i].is<int>()) {
+                    return false;
+                }
+            } break;
+            case RC_DATA_BSED: {
+                if (!data[i].is<int>()) {
+                    return false;
+                }
+                int icIndex = data[i];
+                if (icIndex < 0 || icIndex >= components.size()) {
+                    create_component_error_msg += " invalid BSED index (" + String(icIndex) + ") ";
+                    return false;
+                }
+                if (components[icIndex]->getType() != RC_TYPE_BSED) {
+                    create_component_error_msg += " component specified with the BSED index parameter (" + String(icIndex) + ") is not a ByteSizedEncoderDecoder";
+                    return false;
+                }
+            } break;
             default:
                 return false;
                 break;
@@ -418,6 +670,10 @@ public:
         // parameters validated
         // create component!
         switch (type) {
+        case RC_TYPE_MIXER: {
+            Serial.printf("creating Mixer with A %f, B %f, C %f, componentIndex %d, and inputIndex %d\n", (float)data[0], (float)data[1], (float)data[2], (int)data[3], (int)data[4]);
+            components.push_back(new RCMv3ComponentMixer((float)data[0], (float)data[1], (float)data[2], (int)data[3], (int)data[4]));
+        } break;
         case RC_TYPE_JVoltageCompMeasure: {
             Serial.printf("creating JVoltageCompMeasure with pin %d and DACUnitsPerVolt %f\n", (int)data[0], (float)data[1]);
             components.push_back(new RCMv3ComponentJVoltageCompMeasure((int)data[0], (float)data[1]));
@@ -443,6 +699,27 @@ public:
         case RC_Type_JMotorDriverEsp32HBridge: {
             Serial.printf("creating JMotorDriverEsp32HBridge with pwmChannel %d and in1 %d and in2 %d\n", (int)data[0], (int)data[1], (int)data[2]);
             components.push_back(new RCMv3ComponentJMotorDriverEsp32HBridge((int)data[0], (int)data[1], (int)data[2]));
+        } break;
+        case RC_TYPE_BSED: {
+            Serial.printf("creating BSED with wire %d and address %d\n", (int)data[0], (int)data[1]);
+            TwoWire* selectedWire = nullptr;
+            switch ((int)data[0]) {
+            case 0:
+                selectedWire = &Wire;
+                break;
+            case 1:
+                selectedWire = &Wire1;
+                break;
+            default:
+                create_component_error_msg += " invalid wire selection (0=Wire, 1=Wire1)";
+                return false;
+            }
+            components.push_back(new RCMv3ComponentBSED(selectedWire, (int)data[1]));
+        } break;
+        case RC_TYPE_JEncoderBSED: {
+            Serial.printf("creating JEncoderBSED with bsed %d and encoderChannel %d and reverse %d and distPerCountFactor %f and slowestInterval %d and enoughCounts %d\n", (int)data[0], (int)data[1], (int)data[2], (float)data[3], (int)data[4], (int)data[5]);
+            ByteSizedEncoderDecoder* bsed = (ByteSizedEncoderDecoder*)components[(int)data[0]]->getInternalInstance();
+            components.push_back(new RCMv3ComponentJEncoderBSED(bsed, (int)data[1], (int)data[2], (float)data[3], (int)data[4], (int)data[5]));
         } break;
         } // end switch
 
@@ -474,6 +751,8 @@ public:
         for (int i = 0; i < outputs.size(); i++) {
             components[components.size() - 1]->outputs[i] = outputs[i].as<int>();
         }
+
+        components[components.size() - 1]->begin();
 
         return true;
     }

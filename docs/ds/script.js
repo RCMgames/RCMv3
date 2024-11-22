@@ -1233,6 +1233,15 @@ class ActiveComponent {
                     case "pin":
                         this.parameters.push(null);
                         break;
+                    case "ComponentIndex":
+                        this.parameters.push(0);
+                        break;
+                    case "ComponentInputIndex":
+                        this.parameters.push(0);
+                        break;
+                    case "WhichWire":
+                        this.parameters.push(0);
+                        break;
                     case "int":
                         this.parameters.push(0);
                         break;
@@ -1409,6 +1418,40 @@ class ActiveComponent {
                 case "TMC7300IC":
                     {
                         this.createHelperForComponentThatNeedsComponent(["TMC7300 IC"], element, constructorParameter, i);
+                    }
+                    break;
+                case "ComponentIndex":
+                    {
+                        let label = document.createElement("label");
+                        let input = document.createElement("input");
+                        label.innerHTML = constructorParameter.name;
+                        input.type = "number";
+                        input.step = "1";
+                        input.value = this.parameters[i];
+                        input.onchange = (event) => {
+                            this.parameters[i] = parseInt(event.target.value);
+                        }
+                        element.appendChild(label);
+                        element.appendChild(input);
+
+                        //TODO add helper
+                    }
+                    break;
+                case "ComponentInputIndex":
+                    {
+                        let label = document.createElement("label");
+                        let input = document.createElement("input");
+                        label.innerHTML = constructorParameter.name;
+                        input.type = "number";
+                        input.step = "1";
+                        input.value = this.parameters[i];
+                        input.onchange = (event) => {
+                            this.parameters[i] = parseInt(event.target.value);
+                        }
+                        element.appendChild(label);
+                        element.appendChild(input);
+
+                        //TODO add helper
                     }
                     break;
                 case "int":
