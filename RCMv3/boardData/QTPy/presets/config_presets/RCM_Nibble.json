@@ -1,6 +1,6 @@
 [
     {
-        "type": 4,
+        "type": 0,
         "name": "JVoltageCompMeasure",
         "username": "battery monitor",
         "inputs": [],

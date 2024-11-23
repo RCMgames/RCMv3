@@ -1,6 +1,6 @@
 [
     {
-        "type": 4,
+        "type": 0,
         "name": "JVoltageCompMeasure",
         "username": "battery monitor",
         "inputs": [],
@@ -13,7 +13,7 @@
         ]
     },
     {
-        "type": 3,
+        "type": 4,
         "name": "Motor Driver HBridge ESP32",
         "username": "motor A",
         "inputs": [
@@ -27,7 +27,7 @@
         ]
     },
     {
-        "type": 3,
+        "type": 4,
         "name": "Motor Driver HBridge ESP32",
         "username": "motor B",
         "inputs": [
@@ -41,7 +41,7 @@
         ]
     },
     {
-        "type": 3,
+        "type": 4,
         "name": "Motor Driver HBridge ESP32",
         "username": "motor C",
         "inputs": [
@@ -55,7 +55,7 @@
         ]
     },
     {
-        "type": 3,
+        "type": 4,
         "name": "Motor Driver HBridge ESP32",
         "username": "motor D",
         "inputs": [
@@ -69,7 +69,7 @@
         ]
     },
     {
-        "type": 3,
+        "type": 4,
         "name": "Motor Driver HBridge ESP32",
         "username": "motor E",
         "inputs": [
@@ -83,7 +83,7 @@
         ]
     },
     {
-        "type": 3,
+        "type": 4,
         "name": "Motor Driver HBridge ESP32",
         "username": "motor F",
         "inputs": [
@@ -97,7 +97,7 @@
         ]
     },
     {
-        "type": 2,
+        "type": 3,
         "name": "Motor Driver Servo ESP32",
         "username": "servo 1",
         "inputs": [
@@ -110,7 +110,7 @@
         ]
     },
     {
-        "type": 2,
+        "type": 3,
         "name": "Motor Driver Servo ESP32",
         "username": "servo 2",
         "inputs": [
@@ -123,7 +123,7 @@
         ]
     },
     {
-        "type": 2,
+        "type": 3,
         "name": "Motor Driver Servo ESP32",
         "username": "servo 3",
         "inputs": [

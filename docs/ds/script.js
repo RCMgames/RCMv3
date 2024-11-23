@@ -1234,10 +1234,10 @@ class ActiveComponent {
                         this.parameters.push(null);
                         break;
                     case "ComponentIndex":
-                        this.parameters.push(0);
+                        this.parameters.push(-1);
                         break;
                     case "ComponentInputIndex":
-                        this.parameters.push(0);
+                        this.parameters.push(-1);
                         break;
                     case "WhichWire":
                         this.parameters.push(0);
@@ -1440,7 +1440,7 @@ class ActiveComponent {
                         element.appendChild(label);
                         element.appendChild(input);
 
-                        //TODO add helper
+                        this.createHelperForComponentThatNeedsComponent([true], element, constructorParameter, i);
                     }
                     break;
                 case "ComponentInputIndex":
@@ -1457,7 +1457,7 @@ class ActiveComponent {
                         element.appendChild(label);
                         element.appendChild(input);
 
-                        //TODO add helper
+                        //TODO add helper, how can it get the component index?
                     }
                     break;
                 case "int":
@@ -1526,16 +1526,18 @@ class ActiveComponent {
                     }
                     break;
                 case "bool":
-                    let label = document.createElement("label");
-                    let input = document.createElement("input");
-                    label.innerHTML = constructorParameter.name;
-                    input.type = "checkbox";
-                    input.checked = this.parameters[i];
-                    input.onchange = (event) => {
-                        this.parameters[i] = event.target.checked;
+                    {
+                        let label = document.createElement("label");
+                        let input = document.createElement("input");
+                        label.innerHTML = constructorParameter.name;
+                        input.type = "checkbox";
+                        input.checked = this.parameters[i];
+                        input.onchange = (event) => {
+                            this.parameters[i] = event.target.checked;
+                        }
+                        element.appendChild(label);
+                        element.appendChild(input);
                     }
-                    element.appendChild(label);
-                    element.appendChild(input);
                     break;
                 case "BSED":
                     {

@@ -24,6 +24,7 @@ std::mutex componentMutex;
 std::vector<float> inputs;
 std::vector<float> outputs;
 
+// DO NOT REARRANGE arrays, it breaks old config files
 enum RCMv3DataType {
     RC_DATA_Int,
     RC_DATA_Float,
@@ -633,7 +634,7 @@ public:
                     return false;
                 }
                 int componentIndex = data[i];
-                if (componentIndex < 0 || componentIndex >= components.size()) {
+                if ((componentIndex < 0 && (type != RC_TYPE_MIXER)) || componentIndex >= components.size()) { // mixer only optionally needs a component to send the value to
                     create_component_error_msg += " invalid component index (" + String(componentIndex) + ") ";
                     return false;
                 }

@@ -1,6 +1,6 @@
 [
     {
-        "type": 4,
+        "type": 0,
         "name": "JVoltageCompMeasure",
         "username": "battery monitor",
         "inputs": [],
@@ -13,7 +13,7 @@
         ]
     },
     {
-        "type": 0,
+        "type": 1,
         "name": "TMC7300 IC",
         "username": "TMC7300_AB",
         "inputs": [],
@@ -24,7 +24,7 @@
         ]
     },
     {
-        "type": 0,
+        "type": 1,
         "name": "TMC7300 IC",
         "username": "TMC7300_CD",
         "inputs": [],
@@ -35,7 +35,7 @@
         ]
     },
     {
-        "type": 0,
+        "type": 1,
         "name": "TMC7300 IC",
         "username": "TMC7300_EF",
         "inputs": [],
@@ -46,7 +46,7 @@
         ]
     },
     {
-        "type": 0,
+        "type": 1,
         "name": "TMC7300 IC",
         "username": "TMC7300_GH",
         "inputs": [],
@@ -57,7 +57,7 @@
         ]
     },
     {
-        "type": 1,
+        "type": 2,
         "name": "Motor Driver TMC7300",
         "username": "portA",
         "inputs": [
@@ -71,7 +71,7 @@
         ]
     },
     {
-        "type": 1,
+        "type": 2,
         "name": "Motor Driver TMC7300",
         "username": "portB",
         "inputs": [
@@ -85,7 +85,7 @@
         ]
     },
     {
-        "type": 1,
+        "type": 2,
         "name": "Motor Driver TMC7300",
         "username": "portC",
         "inputs": [
@@ -99,7 +99,7 @@
         ]
     },
     {
-        "type": 1,
+        "type": 2,
         "name": "Motor Driver TMC7300",
         "username": "portD",
         "inputs": [
@@ -113,7 +113,7 @@
         ]
     },
     {
-        "type": 1,
+        "type": 2,
         "name": "Motor Driver TMC7300",
         "username": "portE",
         "inputs": [
@@ -127,7 +127,7 @@
         ]
     },
     {
-        "type": 1,
+        "type": 2,
         "name": "Motor Driver TMC7300",
         "username": "portF",
         "inputs": [
@@ -141,7 +141,7 @@
         ]
     },
     {
-        "type": 1,
+        "type": 2,
         "name": "Motor Driver TMC7300",
         "username": "portG",
         "inputs": [
@@ -155,7 +155,7 @@
         ]
     },
     {
-        "type": 1,
+        "type": 2,
         "name": "Motor Driver TMC7300",
         "username": "portH",
         "inputs": [
@@ -169,7 +169,7 @@
         ]
     },
     {
-        "type": 2,
+        "type": 3,
         "name": "Motor Driver Servo ESP32",
         "username": "port1",
         "inputs": [
@@ -182,7 +182,7 @@
         ]
     },
     {
-        "type": 2,
+        "type": 3,
         "name": "Motor Driver Servo ESP32",
         "username": "port2",
         "inputs": [
@@ -195,7 +195,7 @@
         ]
     },
     {
-        "type": 2,
+        "type": 3,
         "name": "Motor Driver Servo ESP32",
         "username": "port3",
         "inputs": [
@@ -208,7 +208,7 @@
         ]
     },
     {
-        "type": 2,
+        "type": 3,
         "name": "Motor Driver Servo ESP32",
         "username": "port4",
         "inputs": [
@@ -221,7 +221,7 @@
         ]
     },
     {
-        "type": 2,
+        "type": 3,
         "name": "Motor Driver Servo ESP32",
         "username": "port5",
         "inputs": [
@@ -234,7 +234,7 @@
         ]
     },
     {
-        "type": 2,
+        "type": 3,
         "name": "Motor Driver Servo ESP32",
         "username": "port6",
         "inputs": [
@@ -247,7 +247,7 @@
         ]
     },
     {
-        "type": 2,
+        "type": 3,
         "name": "Motor Driver Servo ESP32",
         "username": "port7",
         "inputs": [
@@ -260,7 +260,7 @@
         ]
     },
     {
-        "type": 2,
+        "type": 3,
         "name": "Motor Driver Servo ESP32",
         "username": "port8",
         "inputs": [
