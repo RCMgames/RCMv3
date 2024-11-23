@@ -1290,6 +1290,43 @@ class ActiveComponent {
 
         this.element.onclick = () => { this.openProperties(); };
 
+        let upButton = document.createElement("button");
+        upButton.innerHTML = "&#9650;";
+        upButton.onclick = (event) => {
+            event.stopPropagation();
+            document.getElementById("component-properties").replaceChildren();
+            if (this.index > 0) {
+                // swap this.element with the one above it in activeComponentList and this.element.parentElement update the indices
+                let above = activeComponentList[this.index - 1];
+                activeComponentList[this.index - 1] = this;
+                activeComponentList[this.index] = above;
+                this.index--;
+                above.index++;
+                this.updateHTMLElement();
+                above.updateHTMLElement();
+                this.element.parentElement.insertBefore(this.element, above.element);
+            }
+        }
+        this.element.appendChild(upButton);
+
+        let downButton = document.createElement("button");
+        downButton.innerHTML = "&#9660;";
+        downButton.onclick = (event) => {
+            event.stopPropagation();
+            document.getElementById("component-properties").replaceChildren();
+            if (this.index < activeComponentList.length - 1) {
+                let below = activeComponentList[this.index + 1];
+                activeComponentList[this.index + 1] = this;
+                activeComponentList[this.index] = below;
+                this.index++;
+                below.index--;
+                this.updateHTMLElement();
+                below.updateHTMLElement();
+                this.element.parentElement.insertBefore(this.element, below.element.nextSibling);
+            }
+        }
+        this.element.appendChild(downButton);
+
         let deleteButton = document.createElement("button");
         deleteButton.className = "component-delete-button";
         deleteButton.innerHTML = "X";
@@ -1358,6 +1395,14 @@ class ActiveComponent {
             this.username = event.target.value;
             this.updateHTMLElement();
         }
+
+        // add div that says "Ax+By+Cz" if this.username is "Mixer"
+        if (this.typename == "Mixer") {
+            let mixerLabel = document.createElement("div");
+            mixerLabel.innerHTML = "Ax + By + Cz";
+            document.getElementById("component-properties").appendChild(mixerLabel);
+        }
+
         document.getElementById("component-properties").appendChild(usernameInputElement);
 
         // display all constructor parameters
@@ -1428,18 +1473,6 @@ class ActiveComponent {
                     break;
                 case "ComponentIndex":
                     {
-                        let label = document.createElement("label");
-                        let input = document.createElement("input");
-                        label.innerHTML = constructorParameter.name;
-                        input.type = "number";
-                        input.step = "1";
-                        input.value = this.parameters[i];
-                        input.onchange = (event) => {
-                            this.parameters[i] = parseInt(event.target.value);
-                        }
-                        element.appendChild(label);
-                        element.appendChild(input);
-
                         this.createHelperForComponentThatNeedsComponent([true], element, constructorParameter, i);
                     }
                     break;
@@ -1596,7 +1629,7 @@ class ActiveComponent {
         // display all inputs
         let inputsElement = document.createElement("div");
         let inputsTitle = document.createElement("label");
-        inputsTitle.innerHTML = "inputs: ";
+        inputsTitle.innerHTML = "control variables: ";
         inputsElement.appendChild(inputsTitle);
         for (let i = 0; i < this.inputs.length; i++) {
             let element = document.createElement("div");
@@ -1618,7 +1651,7 @@ class ActiveComponent {
         // display all outputs
         let outputsElement = document.createElement("div");
         let outputsTitle = document.createElement("label");
-        outputsTitle.innerHTML = "outputs: ";
+        outputsTitle.innerHTML = "telemetry variables: ";
         outputsElement.appendChild(outputsTitle);
         for (let i = 0; i < this.outputs.length; i++) {
             let element = document.createElement("div");
