@@ -1358,6 +1358,10 @@ class ActiveComponent {
         input.value = this.parameters[i];
         input.onchange = (event) => {
             this.parameters[i] = parseInt(event.target.value);
+            let ComponentInputIndexHelperRefreshButton = document.getElementById("ComponentInputIndexHelperRefreshButton");
+            if (ComponentInputIndexHelperRefreshButton) {
+                ComponentInputIndexHelperRefreshButton.click();
+            }
         }
         element.appendChild(label);
         element.appendChild(document.createElement("br"));
@@ -1381,6 +1385,10 @@ class ActiveComponent {
             if (event.target.value) {
                 this.parameters[i] = parseInt(event.target.value);
                 input.value = this.parameters[i];
+                let ComponentInputIndexHelperRefreshButton = document.getElementById("ComponentInputIndexHelperRefreshButton");
+                if (ComponentInputIndexHelperRefreshButton) {
+                    ComponentInputIndexHelperRefreshButton.click();
+                }
             }
         }
         element.appendChild(helper);
@@ -1396,14 +1404,15 @@ class ActiveComponent {
             this.updateHTMLElement();
         }
 
-        // add div that says "Ax+By+Cz" if this.username is "Mixer"
+        document.getElementById("component-properties").appendChild(usernameInputElement);
+
+
         if (this.typename == "Mixer") {
             let mixerLabel = document.createElement("div");
             mixerLabel.innerHTML = "Ax + By + Cz";
             document.getElementById("component-properties").appendChild(mixerLabel);
         }
 
-        document.getElementById("component-properties").appendChild(usernameInputElement);
 
         // display all constructor parameters
         for (let i = 0; i < boardInfo.potential_components[this.typeid]["parameters"].length; i++) {
@@ -1483,14 +1492,51 @@ class ActiveComponent {
                         label.innerHTML = constructorParameter.name;
                         input.type = "number";
                         input.step = "1";
+                        input.style.width = "50px";
                         input.value = this.parameters[i];
                         input.onchange = (event) => {
                             this.parameters[i] = parseInt(event.target.value);
+                            let ComponentInputIndexHelperRefreshButton = document.getElementById("ComponentInputIndexHelperRefreshButton");
+                            if (ComponentInputIndexHelperRefreshButton) {
+                                ComponentInputIndexHelperRefreshButton.click();
+                            }
                         }
                         element.appendChild(label);
+                        element.appendChild(document.createElement("br"));
                         element.appendChild(input);
 
-                        //TODO add helper, how can it get the component index?
+                        let refreshHelperButton = document.createElement("button");
+                        let helper = document.createElement("select");
+                        refreshHelperButton.hidden = true;
+                        refreshHelperButton.id = "ComponentInputIndexHelperRefreshButton";
+                        refreshHelperButton.innerHTML = "refresh helper";
+                        refreshHelperButton.onclick = () => {
+                            if (boardInfo.potential_components[this.typeid]["parameters"][i - 1].type === "ComponentIndex") {
+                                let componentIndex = this.parameters[i - 1];
+                                if (activeComponentList[componentIndex] != undefined) {
+                                    helper.replaceChildren();
+                                    let defaultOption = document.createElement("option");
+                                    defaultOption.value = -1;
+                                    defaultOption.textContent = "select input";
+                                    helper.appendChild(defaultOption);
+                                    for (let j = 0; j < boardInfo.potential_components[activeComponentList[componentIndex].typeid]["inputs"].length; j++) {
+                                        let option = document.createElement("option");
+                                        option.value = j;
+                                        option.textContent = boardInfo.potential_components[activeComponentList[componentIndex].typeid]["inputs"][j].name;
+                                        helper.appendChild(option);
+                                    }
+                                    helper.value = this.parameters[i];
+                                    helper.onchange = (event) => {
+                                        if (event.target.value) {
+                                            this.parameters[i] = event.target.value;
+                                            input.value = this.parameters[i];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        element.appendChild(helper);
+                        element.appendChild(refreshHelperButton);
                     }
                     break;
                 case "int":

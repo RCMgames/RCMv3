@@ -48,7 +48,7 @@ const char* RCMv3DataTypeNames[] = {
     "BSED",
     "TMCChipAddress",
     "WhichWire",
-    "VoltageMonitorCalibrationVal", // TODO: ADD METHOD FOR ADDING HELPERS THAT GIVE DEFAULT VALUES WIHTOUT CREATING A NEW DATA TYPE
+    "VoltageMonitorCalibrationVal", // TODO: ADD METHOD FOR ADDING HELPERS THAT GIVE DEFAULT VALUES WITHOUT CREATING A NEW DATA TYPE?
     "ComponentIndex",
     "ComponentInputIndex"
 };
@@ -117,7 +117,7 @@ const char* RCMv3ComponentInputNames(RCMv3ComponentType type, uint8_t input)
     case RC_TYPE_JMotorDriverTMC7300:
         return "power";
     case RC_TYPE_JMotorDriverEsp32Servo:
-        return "power";
+        return "position";
     case RC_Type_JMotorDriverEsp32HBridge:
         return "power";
     case RC_TYPE_JVoltageCompMeasure:
