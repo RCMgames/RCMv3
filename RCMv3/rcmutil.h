@@ -96,7 +96,7 @@ void setup()
 void loop()
 {
     WSC::runWebSocketComms();
-    if (WSC::notTimedOut()) {
+    if (WSC::timedOut()) {
         enabled = false;
     }
     Always();
