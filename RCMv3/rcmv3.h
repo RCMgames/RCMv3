@@ -37,6 +37,7 @@ enum RCMv3DataType {
     RC_DATA_VoltageMonitorCalibrationVal,
     RC_DATA_ComponentIndex,
     RC_DATA_ComponentInputIndex, /*which input of a component should be accessed*/
+    RC_DATA_ServoDriver,
     RC_DATA_COUNT
 };
 const char* RCMv3DataTypeNames[] = {
@@ -50,7 +51,8 @@ const char* RCMv3DataTypeNames[] = {
     "WhichWire",
     "VoltageMonitorCalibrationVal", // TODO: ADD METHOD FOR ADDING HELPERS THAT GIVE DEFAULT VALUES WITHOUT CREATING A NEW DATA TYPE?
     "ComponentIndex",
-    "ComponentInputIndex"
+    "ComponentInputIndex",
+    "Servo Driver"
 };
 
 typedef struct {
@@ -66,7 +68,8 @@ const char* RCMv3ComponentTypeNames[] = {
     "Motor Driver HBridge ESP32",
     "ByteSizedEncoderDecoder",
     "Encoder BSED",
-    "Mixer"
+    "Mixer",
+    "Servo Controller"
 };
 
 enum RCMv3ComponentType {
@@ -78,6 +81,7 @@ enum RCMv3ComponentType {
     RC_TYPE_BSED,
     RC_TYPE_JEncoderBSED,
     RC_TYPE_MIXER,
+    RC_TYPE_JServoController,
     RC_TYPE_COUNT
 };
 
@@ -89,6 +93,7 @@ int RCMv3ComponentNumInputs[] = {
     1,
     0,
     0,
+    3,
     3
 };
 
@@ -126,6 +131,16 @@ const char* RCMv3ComponentInputNames(RCMv3ComponentType type, uint8_t input)
         return "";
     case RC_TYPE_JEncoderBSED:
         return "";
+    case RC_TYPE_JServoController:
+        switch (input) {
+        case 0:
+            return "angle immediate";
+        case 1:
+            return "angle smoothed";
+        case 2:
+            return "angle increment";
+        }
+        return "";
     }
     return "";
 };
@@ -138,7 +153,8 @@ int RCMv3ComponentNumOutputs[] = {
     0,
     0,
     2,
-    1
+    1,
+    2
 };
 
 const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
@@ -159,6 +175,14 @@ const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
     case RC_TYPE_BSED:
         return "";
     case RC_TYPE_JEncoderBSED:
+        switch (output) {
+        case 0:
+            return "position";
+        case 1:
+            return "velocity";
+        }
+        return "";
+    case RC_TYPE_JServoController:
         switch (output) {
         case 0:
             return "position";
@@ -225,6 +249,25 @@ public:
                 { "distPerCountFactor", RC_DATA_Float },
                 { "slowestIntervalMicros", RC_DATA_Int },
                 { "encoderEnoughCounts", RC_DATA_Int }
+            };
+        case RC_TYPE_JServoController:
+            return {
+                { "servo", RC_DATA_ServoDriver },
+                { "reverse", RC_DATA_Bool },
+                { "velLimit", RC_DATA_Float },
+                { "accelLimit", RC_DATA_Float },
+                { "decelLimit", RC_DATA_Float },
+                { "disableTimeout", RC_DATA_Int },
+                { "minAngleLimit", RC_DATA_Float },
+                { "maxAngleLimit", RC_DATA_Float },
+                { "pos", RC_DATA_Float },
+                { "minSetAngle", RC_DATA_Float },
+                { "maxSetAngle", RC_DATA_Float },
+                { "minServoVal", RC_DATA_Int },
+                { "maxServoVal", RC_DATA_Int },
+                { "preventGoingWrongWay", RC_DATA_Bool },
+                { "preventGoingTooFast", RC_DATA_Bool },
+                { "stoppingDecelLimit", RC_DATA_Float }
             };
         }
         return {};
@@ -570,6 +613,54 @@ public:
     }
 };
 
+class RCMv3ComponentJServoController : public RCMv3Component {
+public:
+    RCMv3ComponentJServoController(JMotorDriverServo& servo, boolean reverse, float velLimit, float accelLimit, float decelLimit, float minAngleLimit, float maxAngleLimit, float defaultAngle, float minSetAngle, float maxSetAngle, int minServoVal, int maxServoVal)
+        : RCMv3Component(RC_TYPE_JServoController)
+    {
+        internalInstance = new JServoController(servo, reverse, velLimit, accelLimit, decelLimit, 0, minAngleLimit, maxAngleLimit, defaultAngle, minSetAngle, maxSetAngle, minServoVal, maxServoVal);
+    }
+    void begin()
+    {
+    }
+    void enable()
+    {
+        ((JServoController*)internalInstance)->enable();
+    }
+    void disable()
+    {
+        ((JServoController*)internalInstance)->disable();
+    }
+    void run()
+    {
+        ((JServoController*)internalInstance)->run();
+    }
+    void write(int index, float value)
+    {
+        switch (index) {
+        case 0: {
+            ((JServoController*)internalInstance)->setAngleImmediate(value);
+        } break;
+        case 1: {
+            ((JServoController*)internalInstance)->setAngleSmoothed(value);
+        } break;
+        case 2: {
+            ((JServoController*)internalInstance)->setAngleImmediateInc(value);
+        } break;
+        }
+    }
+    float read(int index)
+    {
+        switch (index) {
+        case 0:
+            return ((JServoController*)internalInstance)->getPos();
+        case 1:
+            return ((JServoController*)internalInstance)->getVelocity();
+        }
+        return 0;
+    }
+};
+
 boolean refreshOutputListSize = true;
 
 class RCMv3ComponentFactory {
@@ -663,6 +754,20 @@ public:
                     return false;
                 }
             } break;
+            case RC_DATA_ServoDriver: {
+                if (!data[i].is<int>()) {
+                    return false;
+                }
+                int icIndex = data[i];
+                if (icIndex < 0 || icIndex >= components.size()) {
+                    create_component_error_msg += " invalid Servo Driver index (" + String(icIndex) + ") ";
+                    return false;
+                }
+                if (!(components[icIndex]->getType() == RC_TYPE_JMotorDriverEsp32Servo)) {
+                    create_component_error_msg += " component specified with the Servo Driver index parameter (" + String(icIndex) + ") is not a Servo Driver";
+                    return false;
+                }
+            } break;
             default:
                 return false;
                 break;
@@ -725,6 +830,11 @@ public:
             Serial.printf("creating JEncoderBSED with bsed %d and encoderChannel %d and reverse %d and distPerCountFactor %f and slowestInterval %d and enoughCounts %d\n", (int)data[0], (int)data[1], (int)data[2], (float)data[3], (int)data[4], (int)data[5]);
             ByteSizedEncoderDecoder* bsed = (ByteSizedEncoderDecoder*)components[(int)data[0]]->getInternalInstance();
             components.push_back(new RCMv3ComponentJEncoderBSED(bsed, (int)data[1], (int)data[2], (float)data[3], (int)data[4], (int)data[5]));
+        } break;
+        case RC_TYPE_JServoController: {
+            JMotorDriverServo* servo = (JMotorDriverServo*)components[(int)data[0]]->getInternalInstance();
+            Serial.printf("creating JServoController with servo %d and reverse %d and velLimit %f and accelLimit %f and decelLimit %f and minAngleLimit %f and maxAngleLimit %f and defaultAngle %f and minSetAngle %f and maxSetAngle %f and minServoVal %d and maxServoVal %d\n", (int)data[0], (int)data[1], (float)data[2], (float)data[3], (float)data[4], (float)data[6], (float)data[7], (float)data[8], (float)data[9], (float)data[10], (int)data[11], (int)data[12]);
+            components.push_back(new RCMv3ComponentJServoController(*servo, (int)data[1], (float)data[2], (float)data[3], (float)data[4], (float)data[6], (float)data[7], (float)data[8], (float)data[9], (float)data[10], (int)data[11], (int)data[12]));
         } break;
         } // end switch
 

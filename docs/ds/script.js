@@ -1407,12 +1407,22 @@ class ActiveComponent {
         document.getElementById("component-properties").appendChild(usernameInputElement);
 
 
-        if (this.typename == "Mixer") {
-            let mixerLabel = document.createElement("div");
-            mixerLabel.innerHTML = "Ax + By + Cz";
-            document.getElementById("component-properties").appendChild(mixerLabel);
+        let componentHelperText = document.createElement("div");
+        switch (this.typename) {
+            case "Mixer": {
+                componentHelperText.innerHTML = "output = Ax + By + Cz";
+            } break;
+            case "Servo Controller": {
+                // add link to https://joshua-8.github.io/JMotor/class_j_servo_controller.html to the componentHelperText and open in a new tab
+                let link = document.createElement("a");
+                link.href = "https://joshua-8.github.io/JMotor/class_j_servo_controller.html";
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                link.innerHTML = "Servo Controller Documentation";
+                componentHelperText.appendChild(link);
+            } break;
         }
-
+        document.getElementById("component-properties").appendChild(componentHelperText);
 
         // display all constructor parameters
         for (let i = 0; i < boardInfo.potential_components[this.typeid]["parameters"].length; i++) {
