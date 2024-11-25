@@ -748,7 +748,7 @@ public:
                     return false;
                 }
                 int componentIndex = data[i];
-                if ((componentIndex < 0 && (type != RC_TYPE_MIXER)) || componentIndex >= components.size()) { // mixer only optionally needs a component to send the value to
+                if ((componentIndex < 0 || componentIndex >= components.size()) && !(type == RC_TYPE_MIXER)) { // mixer only optionally needs a component to send the value to
                     create_component_error_msg += " invalid component index (" + String(componentIndex) + ") ";
                     return false;
                 }

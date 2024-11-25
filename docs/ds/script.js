@@ -459,10 +459,27 @@ class DSItem {
                     const r2 = parseInt(this.colorHigh.substring(1, 3), 16);
                     const g2 = parseInt(this.colorHigh.substring(3, 5), 16);
                     const b2 = parseInt(this.colorHigh.substring(5, 7), 16);
+                    const percent = (this.vars[0] - this.colorLowVal) / (this.colorHighVal - this.colorLowVal);
                     const r = Math.round(r1 + (r2 - r1) * percent);
                     const g = Math.round(g1 + (g2 - g1) * percent);
                     const b = Math.round(b1 + (b2 - b1) * percent);
-                    ctx.fillStyle = "#" + r.toString(16) + g.toString(16) + b.toString(16);
+                    let colorString = "#";
+                    if (r < 16) {
+                        colorString += "0" + r.toString(16);
+                    } else {
+                        colorString += r.toString(16);
+                    }
+                    if (g < 16) {
+                        colorString += "0" + g.toString(16);
+                    } else {
+                        colorString += g.toString(16);
+                    }
+                    if (b < 16) {
+                        colorString += "0" + b.toString(16);
+                    } else {
+                        colorString += b.toString(16);
+                    }
+                    ctx.fillStyle = colorString;
                 }
             } else {
                 ctx.fillStyle = this.color;
