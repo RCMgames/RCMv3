@@ -36,6 +36,7 @@ void Always()
     // always runs if void loop is running, JMotor run() functions should be put here
     // (but only the "top level", for example if you call drivetrainController.run() you shouldn't also call leftMotorController.run())
     componentMutex.lock();
+    disableEnabled = false;
     RCMV3_run(inputs, outputs);
     componentMutex.unlock();
 

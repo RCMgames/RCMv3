@@ -16,6 +16,8 @@
 boolean enabled = false;
 boolean wasEnabled = false;
 
+boolean disableEnabled = false;
+
 String parse_config_error_msg = "";
 String create_component_error_msg = "";
 
@@ -232,7 +234,9 @@ public:
         case RC_TYPE_JVoltageCompMeasure:
             return {
                 { "measurePin", RC_DATA_Pin },
-                { "adcUnitsPerVolt", RC_DATA_VoltageMonitorCalibrationVal }
+                { "adcUnitsPerVolt", RC_DATA_VoltageMonitorCalibrationVal },
+                { "batteryDisableVoltage", RC_DATA_Float },
+                { "hysteresis", RC_DATA_Float }
             };
         case RC_TYPE_BSED:
             return {
@@ -257,17 +261,13 @@ public:
                 { "velLimit", RC_DATA_Float },
                 { "accelLimit", RC_DATA_Float },
                 { "decelLimit", RC_DATA_Float },
-                { "disableTimeout", RC_DATA_Int },
                 { "minAngleLimit", RC_DATA_Float },
                 { "maxAngleLimit", RC_DATA_Float },
-                { "pos", RC_DATA_Float },
+                { "defaultAngle", RC_DATA_Float },
                 { "minSetAngle", RC_DATA_Float },
                 { "maxSetAngle", RC_DATA_Float },
                 { "minServoVal", RC_DATA_Int },
-                { "maxServoVal", RC_DATA_Int },
-                { "preventGoingWrongWay", RC_DATA_Bool },
-                { "preventGoingTooFast", RC_DATA_Bool },
-                { "stoppingDecelLimit", RC_DATA_Float }
+                { "maxServoVal", RC_DATA_Int }
             };
         }
         return {};
@@ -395,13 +395,21 @@ public:
     }
 };
 
-#define RCMV3_COMPONENT_J_VOLTAGE_COMP_MEASURE_N 10
+#define RCMV3_COMPONENT_J_VOLTAGE_COMP_MEASURE_N 50
 class RCMv3ComponentJVoltageCompMeasure : public RCMv3Component {
+protected:
+    float batteryDisableVoltage;
+    float hysteresis;
+    boolean allowEnabled;
+
 public:
-    RCMv3ComponentJVoltageCompMeasure(uint8_t _measurePin, float _DACUnitsPerVolt)
+    RCMv3ComponentJVoltageCompMeasure(uint8_t _measurePin, float _DACUnitsPerVolt, float _batteryDisableVoltage, float _hysteresis = 0.25)
         : RCMv3Component(RC_TYPE_JVoltageCompMeasure)
     {
         internalInstance = new JVoltageCompMeasure<RCMV3_COMPONENT_J_VOLTAGE_COMP_MEASURE_N>(_measurePin, _DACUnitsPerVolt);
+        batteryDisableVoltage = _batteryDisableVoltage;
+        hysteresis = _hysteresis;
+        allowEnabled = true;
     }
     void begin()
     {
@@ -414,6 +422,19 @@ public:
     }
     void run()
     {
+        float batteryVoltage = ((JVoltageCompMeasure<RCMV3_COMPONENT_J_VOLTAGE_COMP_MEASURE_N>*)internalInstance)->getSupplyVoltage();
+        if (allowEnabled) {
+            if (batteryVoltage < batteryDisableVoltage) {
+                allowEnabled = false;
+            }
+        } else {
+            if (batteryVoltage > batteryDisableVoltage + hysteresis) {
+                allowEnabled = true;
+            }
+        }
+        if (allowEnabled == false) {
+            disableEnabled = true;
+        }
     }
     void write(int index, float value)
     {
@@ -673,6 +694,7 @@ public:
         std::vector<RCMv3Parameter> params = RCMv3ParameterHelper::getParameterInfo(type);
         // for each RCMv3Parameter this type should have, check that it is in data and valid
         if (params.size() != data.size()) {
+            create_component_error_msg += " invalid number of parameters ";
             return false;
         }
         for (int i = 0; i < params.size(); i++) {
@@ -688,6 +710,7 @@ public:
             case RC_DATA_VoltageMonitorCalibrationVal:
             case RC_DATA_Float: {
                 if (!data[i].is<float>()) {
+                    create_component_error_msg += " invalid float value for parameter " + String(i);
                     return false;
                 }
             } break;
@@ -756,6 +779,7 @@ public:
             } break;
             case RC_DATA_ServoDriver: {
                 if (!data[i].is<int>()) {
+                    create_component_error_msg += " invalid Servo Driver index (" + String(i) + ") ";
                     return false;
                 }
                 int icIndex = data[i];
@@ -769,6 +793,7 @@ public:
                 }
             } break;
             default:
+                create_component_error_msg += " invalid data type for parameter " + String(i);
                 return false;
                 break;
             }
@@ -781,8 +806,8 @@ public:
             components.push_back(new RCMv3ComponentMixer((float)data[0], (float)data[1], (float)data[2], (int)data[3], (int)data[4]));
         } break;
         case RC_TYPE_JVoltageCompMeasure: {
-            Serial.printf("creating JVoltageCompMeasure with pin %d and DACUnitsPerVolt %f\n", (int)data[0], (float)data[1]);
-            components.push_back(new RCMv3ComponentJVoltageCompMeasure((int)data[0], (float)data[1]));
+            Serial.printf("creating JVoltageCompMeasure with pin %d and DACUnitsPerVolt %f and batteryDisableVoltage %f and hysteresis %f\n", (int)data[0], (float)data[1], (float)data[2], (float)data[3]);
+            components.push_back(new RCMv3ComponentJVoltageCompMeasure((int)data[0], (float)data[1], (float)data[2], (float)data[3]));
         } break;
         case RC_TYPE_TMC7300IC: {
             Serial.printf("creating TMC7300IC with pin %d and chipAddress %d\n", (int)data[0], (int)data[1]);
@@ -833,8 +858,8 @@ public:
         } break;
         case RC_TYPE_JServoController: {
             JMotorDriverServo* servo = (JMotorDriverServo*)components[(int)data[0]]->getInternalInstance();
-            Serial.printf("creating JServoController with servo %d and reverse %d and velLimit %f and accelLimit %f and decelLimit %f and minAngleLimit %f and maxAngleLimit %f and defaultAngle %f and minSetAngle %f and maxSetAngle %f and minServoVal %d and maxServoVal %d\n", (int)data[0], (int)data[1], (float)data[2], (float)data[3], (float)data[4], (float)data[6], (float)data[7], (float)data[8], (float)data[9], (float)data[10], (int)data[11], (int)data[12]);
-            components.push_back(new RCMv3ComponentJServoController(*servo, (int)data[1], (float)data[2], (float)data[3], (float)data[4], (float)data[6], (float)data[7], (float)data[8], (float)data[9], (float)data[10], (int)data[11], (int)data[12]));
+            Serial.printf("creating JServoController with servo %d and reverse %d and velLimit %f and accelLimit %f and decelLimit %f and minAngleLimit %f and maxAngleLimit %f and defaultAngle %f and minSetAngle %f and maxSetAngle %f and minServoVal %d and maxServoVal %d\n", (int)data[0], (int)data[1], (float)data[2], (float)data[3], (float)data[4], (float)data[5], (float)data[6], (float)data[7], (float)data[8], (float)data[9], (int)data[10], (int)data[11]);
+            components.push_back(new RCMv3ComponentJServoController(*servo, (int)data[1], (float)data[2], (float)data[3], (float)data[4], (float)data[5], (float)data[6], (float)data[7], (float)data[8], (float)data[9], (int)data[10], (int)data[11]));
         } break;
         } // end switch
 
@@ -971,6 +996,11 @@ boolean RCMV3_parse_config(const String& str)
             components.push_back(component);
         }
         RCMV3_begin();
+
+        if (enabled) {
+            RCMV3_enable();
+        }
+
         refreshOutputListSize = true;
         componentMutex.unlock();
     }

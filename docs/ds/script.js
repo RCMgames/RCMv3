@@ -91,12 +91,6 @@ class DSItem {
             }
         }
 
-        if (data["color"] != undefined) {
-            this.color = data["color"];
-        } else {
-            this.color = "#808080"; // must be hex code
-        }
-
         if (data["posX"] != undefined) {
             this.posX = data["posX"];
         } else {
@@ -133,12 +127,43 @@ class DSItem {
             } else {
                 this.labelText = "";
             }
+
+            if (data["colorHigh"] != undefined) {
+                this.colorHigh = data["colorHigh"];
+            } else {
+                this.colorHigh = "#808080";
+            }
+
+            if (data["colorLow"] != undefined) {
+                this.colorLow = data["colorLow"];
+            } else {
+                this.colorLow = "#808080";
+            }
+
+            if (data["colorHighVal"] != undefined) {
+                this.colorHighVal = data["colorHighVal"];
+            } else {
+                this.colorHighVal = 1;
+            }
+
+            if (data["colorLowVal"] != undefined) {
+                this.colorLowVal = data["colorLowVal"];
+            } else {
+                this.colorLowVal = 0;
+            }
+
             this.indicator = true;
         } else {
             this.indicator = false;
         }
 
         if (this.indicator == false) {
+            if (data["color"] != undefined) {
+                this.color = data["color"];
+            } else {
+                this.color = "#808080"; // must be hex code
+            }
+
             if (data["buttonPressedVal"] != undefined) {
                 this.buttonPressedVal = data["buttonPressedVal"];
             } else {
@@ -172,8 +197,6 @@ class DSItem {
             this.gamepadActivatedButton = false;
             this.joyx = 0;
             this.joyy = 0;
-        } else { // indicator
-
         }
 
         this.mousePressed = false;
@@ -226,14 +249,17 @@ class DSItem {
             const obj = {
                 type: this.type,
                 size: this.size,
-                color: this.color,
+                colorHigh: this.colorHigh,
+                colorLow: this.colorLow,
+                colorHighVal: this.colorHighVal,
+                colorLowVal: this.colorLowVal,
                 posX: this.posX,
                 posY: this.posY,
                 labelText: this.labelText,
                 dataIndices: this.dataIndices
             };
             return obj;
-        } else {
+        } else { // control
             const obj = {
                 type: this.type,
                 size: this.size,
@@ -420,7 +446,27 @@ class DSItem {
                 }
             }
         } else {
-            ctx.fillStyle = this.color;
+            if (this.indicator) {
+                if (this.vars[0] > this.colorHighVal) {
+                    ctx.fillStyle = this.colorHigh;
+                } else if (this.vars[0] < this.colorLowVal) {
+                    ctx.fillStyle = this.colorLow;
+                } else {
+                    // interpolate color
+                    const r1 = parseInt(this.colorLow.substring(1, 3), 16);
+                    const g1 = parseInt(this.colorLow.substring(3, 5), 16);
+                    const b1 = parseInt(this.colorLow.substring(5, 7), 16);
+                    const r2 = parseInt(this.colorHigh.substring(1, 3), 16);
+                    const g2 = parseInt(this.colorHigh.substring(3, 5), 16);
+                    const b2 = parseInt(this.colorHigh.substring(5, 7), 16);
+                    const r = Math.round(r1 + (r2 - r1) * percent);
+                    const g = Math.round(g1 + (g2 - g1) * percent);
+                    const b = Math.round(b1 + (b2 - b1) * percent);
+                    ctx.fillStyle = "#" + r.toString(16) + g.toString(16) + b.toString(16);
+                }
+            } else {
+                ctx.fillStyle = this.color;
+            }
         }
 
         ctx.roundRect(this.posX, this.posY, this.width, this.height, [this.radius]);
@@ -773,22 +819,92 @@ class DSItem {
             element.appendChild(row_recenter);
         }
 
-        let row_color = document.createElement("tr");
-        let row_color_label = document.createElement("td");
-        row_color_label.innerHTML = "color";
-        row_color.appendChild(row_color_label);
-        let colorInput = document.createElement("input");
-        colorInput.type = "color";
-        colorInput.value = this.color;
-        colorInput.oninput = () => {
-            this.color = colorInput.value;
-            this.highlighted = false;
-            this.draw();
+        if (this.type == "number indicator") {
+            // make color pickers for high and low
+            let row_colorHigh = document.createElement("tr");
+            let row_colorHigh_label = document.createElement("td");
+            row_colorHigh_label.innerHTML = "color high";
+            row_colorHigh.appendChild(row_colorHigh_label);
+            let colorHighInput = document.createElement("input");
+            colorHighInput.type = "color";
+            colorHighInput.value = this.colorHigh;
+            colorHighInput.oninput = () => {
+                this.colorHigh = colorHighInput.value;
+                this.highlighted = false;
+                this.draw();
+            }
+            let cell_colorHigh = document.createElement("td");
+            cell_colorHigh.appendChild(colorHighInput);
+            row_colorHigh.appendChild(cell_colorHigh);
+            element.appendChild(row_colorHigh);
+
+            let row_colorHighVal = document.createElement("tr");
+            let row_colorHighVal_label = document.createElement("td");
+            row_colorHighVal_label.innerHTML = "color high value";
+            row_colorHighVal.appendChild(row_colorHighVal_label);
+            let colorHighValInput = document.createElement("input");
+            colorHighValInput.type = "number";
+            colorHighValInput.value = this.colorHighVal;
+            colorHighValInput.onchange = () => {
+                this.colorHighVal = parseFloat(colorHighValInput.value);
+                this.draw();
+            }
+            let cell_colorHighVal = document.createElement("td");
+            cell_colorHighVal.appendChild(colorHighValInput);
+            row_colorHighVal.appendChild(cell_colorHighVal);
+            element.appendChild(row_colorHighVal);
+
+            let row_colorLow = document.createElement("tr");
+            let row_colorLow_label = document.createElement("td");
+            row_colorLow_label.innerHTML = "color low";
+            row_colorLow.appendChild(row_colorLow_label);
+            let colorLowInput = document.createElement("input");
+            colorLowInput.type = "color";
+            colorLowInput.value = this.colorLow;
+            colorLowInput.oninput = () => {
+                this.colorLow = colorLowInput.value;
+                this.highlighted = false;
+                this.draw();
+            }
+            let cell_colorLow = document.createElement("td");
+            cell_colorLow.appendChild(colorLowInput);
+            row_colorLow.appendChild(cell_colorLow);
+            element.appendChild(row_colorLow);
+
+            let row_colorLowVal = document.createElement("tr");
+            let row_colorLowVal_label = document.createElement("td");
+            row_colorLowVal_label.innerHTML = "color low value";
+            row_colorLowVal.appendChild(row_colorLowVal_label);
+            let colorLowValInput = document.createElement("input");
+            colorLowValInput.type = "number";
+            colorLowValInput.value = this.colorLowVal;
+            colorLowValInput.onchange = () => {
+                this.colorLowVal = parseFloat(colorLowValInput.value);
+                this.draw();
+            }
+            let cell_colorLowVal = document.createElement("td");
+            cell_colorLowVal.appendChild(colorLowValInput);
+            row_colorLowVal.appendChild(cell_colorLowVal);
+            element.appendChild(row_colorLowVal);
+
+        } else {
+            let row_color = document.createElement("tr");
+            let row_color_label = document.createElement("td");
+            row_color_label.innerHTML = "color";
+            row_color.appendChild(row_color_label);
+            let colorInput = document.createElement("input");
+            colorInput.type = "color";
+            colorInput.value = this.color;
+            colorInput.oninput = () => {
+                this.color = colorInput.value;
+                this.highlighted = false;
+                this.draw();
+            }
+            let cell_color = document.createElement("td");
+            cell_color.appendChild(colorInput);
+            row_color.appendChild(cell_color);
+            element.appendChild(row_color);
         }
-        let cell_color = document.createElement("td");
-        cell_color.appendChild(colorInput);
-        row_color.appendChild(cell_color);
-        element.appendChild(row_color);
 
         return element;
 
@@ -1549,6 +1665,20 @@ class ActiveComponent {
                         element.appendChild(refreshHelperButton);
                     }
                     break;
+                case "bool":
+                    {
+                        let label = document.createElement("label");
+                        let input = document.createElement("input");
+                        label.innerHTML = constructorParameter.name;
+                        input.type = "checkbox";
+                        input.checked = this.parameters[i];
+                        input.onchange = (event) => {
+                            this.parameters[i] = event.target.checked;
+                        }
+                        element.appendChild(label);
+                        element.appendChild(input);
+                    }
+                    break;
                 case "int":
                     {
                         let label = document.createElement("label");
@@ -1556,37 +1686,10 @@ class ActiveComponent {
                         label.innerHTML = constructorParameter.name;
                         input.type = "number";
                         input.step = "1";
+                        input.style.width = "50px";
                         input.value = this.parameters[i];
                         input.onchange = (event) => {
                             this.parameters[i] = parseInt(event.target.value);
-                        }
-                        element.appendChild(label);
-                        element.appendChild(input);
-                    }
-                    break;
-                case "float":
-                    {
-                        let label = document.createElement("label");
-                        let input = document.createElement("input");
-                        label.innerHTML = constructorParameter.name;
-                        input.type = "number";
-                        input.value = this.parameters[i];
-                        input.onchange = (event) => {
-                            this.parameters[i] = parseFloat(event.target.value);
-                        }
-                        element.appendChild(label);
-                        element.appendChild(input);
-                    }
-                    break;
-                case "VoltageMonitorCalibrationVal":
-                    {
-                        let label = document.createElement("label");
-                        let input = document.createElement("input");
-                        label.innerHTML = constructorParameter.name;
-                        input.type = "number";
-                        input.value = this.parameters[i];
-                        input.onchange = (event) => {
-                            this.parameters[i] = parseFloat(event.target.value);
                         }
                         element.appendChild(label);
                         element.appendChild(input);
@@ -1597,7 +1700,7 @@ class ActiveComponent {
                         defaultOption.textContent = "select";
                         helper.appendChild(defaultOption);
                         for (let j = 0; j < loadedParameterPreset.length; j++) {
-                            if (loadedParameterPreset[j].type == "VoltageMonitorCalibrationVal") {
+                            if (loadedParameterPreset[j].type == "int" && loadedParameterPreset[j].mask.includes(constructorParameter.name)) {
                                 let option = document.createElement("option");
                                 option.value = loadedParameterPreset[j].value;
                                 option.textContent = loadedParameterPreset[j].name;
@@ -1612,17 +1715,19 @@ class ActiveComponent {
                             }
                         }
                         element.appendChild(helper);
+
                     }
                     break;
-                case "bool":
+                case "float":
                     {
                         let label = document.createElement("label");
                         let input = document.createElement("input");
                         label.innerHTML = constructorParameter.name;
-                        input.type = "checkbox";
-                        input.checked = this.parameters[i];
+                        input.type = "number";
+                        input.style.width = "50px";
+                        input.value = this.parameters[i];
                         input.onchange = (event) => {
-                            this.parameters[i] = event.target.checked;
+                            this.parameters[i] = parseFloat(event.target.value);
                         }
                         element.appendChild(label);
                         element.appendChild(input);
@@ -1646,6 +1751,11 @@ class ActiveComponent {
                         }
                         element.appendChild(label);
                         element.appendChild(input);
+                    }
+                    break;
+                case "Servo Driver":
+                    {
+                        this.createHelperForComponentThatNeedsComponent(["Motor Driver Servo ESP32"], element, constructorParameter, i);
                     }
                     break;
                 default:
