@@ -8,8 +8,6 @@ let loadedParameterPreset = [];
 
 let miscConfigInfo = {};
 
-//TODO: add way to load projects (UI and/or robot config) from github
-
 document.addEventListener("DOMContentLoaded", () => {
     if (window.location.hostname == "rcmgames.github.io") {
         errorConnecting();
@@ -2119,8 +2117,9 @@ function saveMiscConfigInfo() {
 
 function loadProject() {
     let projectName = document.getElementById("project-name").value;
-    // TODO: load from any URL, just default to RCMv3-examples
-    let projectURL = "https://raw.githubusercontent.com/RCMgames/RCMv3-examples/refs/heads/main/" + projectName;
-    loadUI(projectURL + "/UIdata.json");
-    loadConfig(projectURL + "/config.json");
+    // TODO: option to append instead of replace
+    let projectUrl = document.getElementById("projecturl").value;
+    let projectFullURL = projectUrl + projectName;
+    loadUI(projectFullURL + "/UIdata.json");
+    loadConfig(projectFullURL + "/config.json");
 }

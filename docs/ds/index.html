@@ -34,6 +34,18 @@
   <button onclick="saveWifiSettings();">save wifi settings and reboot</button>
   <button onclick="loadWifiSettings();">load wifi settings from robot</button>
   <br>
+  <div id="load-projects-div">
+    load example project from <a target="_blank" rel="noopener noreferrer"
+      href="https://github.com/RCMgames/RCMv3-examples">here</a>:
+    <br>
+    <input id="projecturl" type="text"
+      value="https://raw.githubusercontent.com/RCMgames/RCMv3-examples/refs/heads/main/"></input>
+    <br>
+    <input id="project-name" type="text"></input>
+    <br>
+    <button onclick="loadProject();">load project</button>
+  </div>
+  <br>
   enable robot:
   <input id="robot-enabled" type="checkbox" style="width:30px;height:30px;"></input>
   <br>
@@ -88,13 +100,6 @@
         <div id="component-properties" class="component-properties"> </div>
       </div>
     </span>
-  </div>
-  <br>
-  <div id="load-projects-div">
-    load example project from <a target="_blank" rel="noopener noreferrer"
-      href="https://github.com/RCMgames/RCMv3-examples">here</a>:
-    <input id="project-name" type="text"></input>
-    <button onclick="loadProject();">load project</button>
   </div>
   <br>
   <div id="console"></div>
