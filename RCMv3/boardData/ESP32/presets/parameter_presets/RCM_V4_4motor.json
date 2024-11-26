@@ -1,8 +1,11 @@
 [
     {
-        "type": "VoltageMonitorCalibrationVal",
+        "type": "float",
         "name": "default",
-        "value": 310.0
+        "value": "310",
+        "mask": [
+            "adcUnitsPerVolt"
+        ]
     },
     {
         "type": "pin",

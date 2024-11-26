@@ -99,11 +99,11 @@ void loop()
     if (WSC::timedOut()) {
         enabled = false;
     }
+
+    Always();
     if (disableEnabled) {
         enabled = false;
     }
-
-    Always();
 
     if (enabled && !wasEnabled) {
         Enable();

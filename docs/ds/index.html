@@ -35,7 +35,7 @@
   <button onclick="loadWifiSettings();">load wifi settings from robot</button>
   <br>
   enable robot:
-  <input id="robot-enabled" type="checkbox"></input>
+  <input id="robot-enabled" type="checkbox" style="width:30px;height:30px;"></input>
   <br>
   <div class="outer-flex-box">
     <canvas class="ds" id="ds" width="600" height="1000"></canvas>
@@ -89,6 +89,14 @@
       </div>
     </span>
   </div>
+  <br>
+  <div id="load-projects-div">
+    load example project from <a target="_blank" rel="noopener noreferrer"
+      href="https://github.com/RCMgames/RCMv3-examples">here</a>:
+    <input id="project-name" type="text"></input>
+    <button onclick="loadProject();">load project</button>
+  </div>
+  <br>
   <div id="console"></div>
   <br>
   <footer style="text-align: center;">

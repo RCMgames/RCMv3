@@ -36,7 +36,6 @@ enum RCMv3DataType {
     RC_DATA_BSED,
     RC_DATA_TMCChipAddress,
     RC_DATA_WhichWire,
-    RC_DATA_VoltageMonitorCalibrationVal,
     RC_DATA_ComponentIndex,
     RC_DATA_ComponentInputIndex, /*which input of a component should be accessed*/
     RC_DATA_ServoDriver,
@@ -51,12 +50,11 @@ const char* RCMv3DataTypeNames[] = {
     "BSED",
     "TMCChipAddress",
     "WhichWire",
-    "VoltageMonitorCalibrationVal", // TODO: ADD METHOD FOR ADDING HELPERS THAT GIVE DEFAULT VALUES WITHOUT CREATING A NEW DATA TYPE?
     "ComponentIndex",
     "ComponentInputIndex",
     "Servo Driver"
 };
-
+// TODO: ADD METHOD FOR ADDING HELPERS THAT GIVE DEFAULT VALUES WITHOUT CREATING A NEW DATA TYPE?
 typedef struct {
     const char* name;
     RCMv3DataType type;
@@ -234,7 +232,7 @@ public:
         case RC_TYPE_JVoltageCompMeasure:
             return {
                 { "measurePin", RC_DATA_Pin },
-                { "adcUnitsPerVolt", RC_DATA_VoltageMonitorCalibrationVal },
+                { "adcUnitsPerVolt", RC_DATA_Float },
                 { "batteryDisableVoltage", RC_DATA_Float },
                 { "hysteresis", RC_DATA_Float }
             };
@@ -395,7 +393,7 @@ public:
     }
 };
 
-#define RCMV3_COMPONENT_J_VOLTAGE_COMP_MEASURE_N 50
+#define RCMV3_COMPONENT_J_VOLTAGE_COMP_MEASURE_N 25
 class RCMv3ComponentJVoltageCompMeasure : public RCMv3Component {
 protected:
     float batteryDisableVoltage;
@@ -423,14 +421,11 @@ public:
     void run()
     {
         float batteryVoltage = ((JVoltageCompMeasure<RCMV3_COMPONENT_J_VOLTAGE_COMP_MEASURE_N>*)internalInstance)->getSupplyVoltage();
-        if (allowEnabled) {
-            if (batteryVoltage < batteryDisableVoltage) {
-                allowEnabled = false;
-            }
-        } else {
-            if (batteryVoltage > batteryDisableVoltage + hysteresis) {
-                allowEnabled = true;
-            }
+        if (batteryVoltage < batteryDisableVoltage) {
+            allowEnabled = false;
+        }
+        if (batteryVoltage > batteryDisableVoltage + hysteresis) {
+            allowEnabled = true;
         }
         if (allowEnabled == false) {
             disableEnabled = true;
@@ -707,7 +702,6 @@ public:
                     return false;
                 }
             } break;
-            case RC_DATA_VoltageMonitorCalibrationVal:
             case RC_DATA_Float: {
                 if (!data[i].is<float>()) {
                     create_component_error_msg += " invalid float value for parameter " + String(i);
@@ -755,6 +749,7 @@ public:
             } break;
             case RC_DATA_ComponentInputIndex: {
                 if (!data[i].is<int>()) {
+                    create_component_error_msg += " invalid input index type ";
                     return false;
                 }
             } break;

@@ -1142,9 +1142,9 @@ function refreshDSItems() {
 }
 
 function downloadUIData() {
-    let data = { controls: [] };
+    let data = { "UIdata": [] };
     for (let i = 0; i < DSItems.length; i++) {
-        data["controls"].push(DSItems[i].jsonify());
+        data["UIdata"].push(DSItems[i].jsonify());
     }
     downloadFile(JSON.stringify(data), 'UIdata.json');
 }
@@ -1162,8 +1162,8 @@ function uploadUIData() {
         reader.onload = e => {
             const data = JSON.parse(e.target.result);
             clearDSItems();
-            for (let i = 0; i < data.controls.length; i++) {
-                const item = new DSItem(document.getElementById("ds"), data.controls[i]);
+            for (let i = 0; i < data.UIdata.length; i++) {
+                const item = new DSItem(document.getElementById("ds"), data.UIdata[i]);
                 item.beingEdited = driverstationEditable;
                 DSItems.push(item);
                 document.getElementById("ds-list").appendChild(item.nameElement());
@@ -1273,8 +1273,8 @@ function saveUI() {
         console.log(response);
     });
 }
-function loadUI() {
-    fetch('/loadUI.json')
+function loadUI(fromURL = '/loadUI.json') {
+    fetch(fromURL)
         .then(response => {
             if (response.ok) {
                 return response.text();
@@ -1286,6 +1286,7 @@ function loadUI() {
             return JSON.parse(data.substring(0, data.lastIndexOf('}') + 1));
         })
         .then(data => {
+            console.log(data);
             if (data.UIdata != undefined) {
                 clearDSItems();
                 for (let i = 0; i < data.UIdata.length; i++) {
@@ -1363,6 +1364,7 @@ class ActiveComponent {
             this.parameters = [];
             for (let i = 0; i < boardInfo.potential_components[this.typeid]["parameters"].length; i++) {
                 switch (boardInfo.potential_components[this.typeid]["parameters"][i].type) {
+                    // TODO: if there is a parameter_preset with a matching mask maybe use it instead?
                     case "pin":
                         this.parameters.push(null);
                         break;
@@ -1378,7 +1380,6 @@ class ActiveComponent {
                     case "int":
                         this.parameters.push(0);
                         break;
-                    case "VoltageMonitorCalibrationVal":
                     case "float":
                         this.parameters.push(0.0);
                         break;
@@ -1671,7 +1672,7 @@ class ActiveComponent {
                                     helper.value = this.parameters[i];
                                     helper.onchange = (event) => {
                                         if (event.target.value) {
-                                            this.parameters[i] = event.target.value;
+                                            this.parameters[i] = parseInt(event.target.value);
                                             input.value = this.parameters[i];
                                         }
                                     }
@@ -1731,7 +1732,9 @@ class ActiveComponent {
                                 input.value = this.parameters[i];
                             }
                         }
-                        element.appendChild(helper);
+                        if (helper.children.length > 1) {
+                            element.appendChild(helper);
+                        }
 
                     }
                     break;
@@ -1748,7 +1751,33 @@ class ActiveComponent {
                         }
                         element.appendChild(label);
                         element.appendChild(input);
+
+
+                        let helper = document.createElement("select");
+                        let defaultOption = document.createElement("option");
+                        defaultOption.value = null;
+                        defaultOption.textContent = "select";
+                        helper.appendChild(defaultOption);
+                        for (let j = 0; j < loadedParameterPreset.length; j++) {
+                            if (loadedParameterPreset[j].type == "float" && loadedParameterPreset[j].mask.includes(constructorParameter.name)) {
+                                let option = document.createElement("option");
+                                option.value = loadedParameterPreset[j].value;
+                                option.textContent = loadedParameterPreset[j].name;
+                                helper.appendChild(option);
+                            }
+                        }
+                        helper.value = this.parameters[i];
+                        helper.onchange = (event) => {
+                            if (event.target.value) {
+                                this.parameters[i] = parseFloat(event.target.value);
+                                input.value = this.parameters[i];
+                            }
+                        }
+                        if (helper.children.length > 1) {
+                            element.appendChild(helper);
+                        }
                     }
+
                     break;
                 case "BSED":
                     {
@@ -1894,9 +1923,9 @@ function clearConfig() {
 }
 
 function saveConfigToFile() {
-    let componentDataToSend = [];
+    let componentDataToSend = { "components": [] };
     for (let i = 0; i < activeComponentList.length; i++) {
-        componentDataToSend.push(activeComponentList[i].jsonify());
+        componentDataToSend["components"].push(activeComponentList[i].jsonify());
     }
     componentDataToSend = JSON.stringify(componentDataToSend);
     downloadFile(componentDataToSend, 'config.json');
@@ -1909,7 +1938,8 @@ function loadConfigFromFile() {
         const file = e.target.files[0];
         const reader = new FileReader();
         reader.onload = e => {
-            const data = JSON.parse(e.target.result);
+            const dataFile = JSON.parse(e.target.result);
+            const data = dataFile["components"];
             for (let i = 0; i < data.length; i++) {
                 activeComponentList.push(new ActiveComponent(data[i], activeComponentList.length, true));
             }
@@ -1945,11 +1975,11 @@ function loadBoardInfo(errorCallback) {
             errorCallback();
         });
 }
-// TODO: SHOW saving... and loading... message
-function loadConfig() {
+
+function loadConfig(fromURL = '/loadConfig.json') {
     document.getElementById("config-status").innerHTML = "Loading...";
     document.getElementById("config-status").style.backgroundColor = "yellow";
-    fetch('/loadConfig.json')
+    fetch(fromURL)
         .then(response => response.json())
         .then(data => {
             document.getElementById("config-status").innerHTML = "reloaded";
@@ -2058,7 +2088,6 @@ async function loadPresets() {
                 document.getElementById("board-type-selector").dispatchEvent(new Event('change'));
             }
         });
-
 }
 
 function saveMiscConfigInfo() {
@@ -2086,4 +2115,12 @@ function saveMiscConfigInfo() {
             }
         });
     });
+}
+
+function loadProject() {
+    let projectName = document.getElementById("project-name").value;
+    // TODO: load from any URL, just default to RCMv3-examples
+    let projectURL = "https://raw.githubusercontent.com/RCMgames/RCMv3-examples/refs/heads/main/" + projectName;
+    loadUI(projectURL + "/UIdata.json");
+    loadConfig(projectURL + "/config.json");
 }
