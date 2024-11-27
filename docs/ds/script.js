@@ -1198,8 +1198,7 @@ function connect() {
     };
     lastPingTime = Date.now();
     webs.onmessage = function (event) {
-        eventData = event;
-        event.data.bytes().then(function (data) {
+        event.data.arrayBuffer().then(function (data) {
             var rxByteArray = new Uint8Array(data);
             var newrxdata = new Float32Array(rxByteArray.buffer);
             rxdata = [];
@@ -1284,7 +1283,6 @@ function loadUI(fromURL = '/loadUI.json') {
             return JSON.parse(data.substring(0, data.lastIndexOf('}') + 1));
         })
         .then(data => {
-            console.log(data);
             if (data.UIdata != undefined) {
                 clearDSItems();
                 for (let i = 0; i < data.UIdata.length; i++) {
