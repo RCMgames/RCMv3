@@ -31,7 +31,8 @@ jobs:
             pio pkg install -g -t platformio/tool-mkspiffs
       - name: saveBuildInfo
         run: |
-            echo ${{ github.event.repository.updated_at}} > ./docs/ds/presets/build_info.txt
+            pwd
+            echo ${{ github.event.repository.updated_at}} > docs/ds/presets/build_info.txt
       - name: compile
         run: |
             pio run
