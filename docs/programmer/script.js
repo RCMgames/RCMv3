@@ -1,6 +1,7 @@
 var configInfo = null;
 var code = null;
 var boardType = null;
+var retVal = null;
 
 document.addEventListener('DOMContentLoaded', async function () {
 
@@ -10,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             x[i].innerHTML = "Web Serial is not available, so this site won't be able to communicate with your RCM. Please use Google Chrome, Opera, or Edge, and make sure Web Serial is enabled.<br>";
         }
     } else {
-
+        await getConfigOptions();
         await getConfigInfo();
     }
     // watch the upload-progress span to get information about the program upload progress
@@ -241,39 +242,55 @@ async function getRequest(url, blob = false) {
         });
     return result;
 }
-/**
- * Gets configurations-info.txt from github, and returns it as a string.
- * returns null if there is an error
- * if fromMain is true, it pulls the data from the main branch, if false it pulls the data from the most recent release
- */
+
+async function getConfigOptions() {
+    try {
+        var json = JSON.parse(await getRequest("https://api.github.com/repos/rcmgames/rcmv3/releases"));
+
+        let versionSelector = document.getElementById("version-selector");
+        for (let i = 0; i < json.length; i++) {
+            let newOption = document.createElement("option");
+            newOption.value = json[i].tag_name;
+            newOption.innerHTML = json[i].tag_name;
+            versionSelector.appendChild(newOption);
+        }
+        versionSelector.selectedIndex = 1;
+
+    } catch (e) {
+        console.log(e);
+        retVal = null;
+    }
+}
+
 async function getConfigInfo() {
-    fromMain = document.getElementById("pull-from-main").checked;
-    let retVal;
-    if (fromMain === true) {
+    let versionSelector = document.getElementById("version-selector");
+    if (versionSelector.options[versionSelector.selectedIndex].value == "main") {
         try {
             result = await getRequest("https://raw.githubusercontent.com/RCMgames/RCMv3/refs/heads/main/docs/programmer/firmware/configurations_info.txt");
             retVal = "unreleased\n" + "main" + "\n" + result;
         } catch (e) {
+            console.log(e);
             retVal = null;
         }
     } else {
         try {
             var json = JSON.parse(await getRequest("https://api.github.com/repos/rcmgames/rcmv3/releases"));
-            var most_recent_release_tag = json[0].tag_name;
+            var release_tag = versionSelector.options[versionSelector.selectedIndex].value;
 
-            var configUrl = "https://raw.githubusercontent.com/RCMgames/RCMv3/refs/tags/" + most_recent_release_tag + "/docs/programmer/firmware/configurations_info.txt";
-            retVal = "release\n" + most_recent_release_tag + "\n" + await getRequest(configUrl);
+            var configUrl = "https://raw.githubusercontent.com/RCMgames/RCMv3/refs/tags/" + release_tag + "/docs/programmer/firmware/configurations_info.txt";
+            retVal = "release\n" + release_tag + "\n" + await getRequest(configUrl);
         } catch (e) {
+            console.log(e);
             retVal = null;
         }
+
     }
+
     let options;
     if (retVal == null) {
         options = null;
     } else {
         configInfo = retVal.split("\n");
-
-        document.getElementById("release").innerHTML = configInfo[1];
 
         options = configInfo.slice(2, -1); //get just the rows with data for an option
         //split rows and make 2d array

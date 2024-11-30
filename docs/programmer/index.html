@@ -18,11 +18,11 @@
     <h2>programmer</h2>
     <mark class="serial-alert"></mark>
     <br>
-    <label for="pull-from-main">
-        use untested code from main instead of the latest release:
-    </label>
-    <input id="pull-from-main" type="checkbox" onchange="getConfigInfo();">
-    <span id="release"></span>
+    <select id="version-selector" onchange="getConfigInfo();">
+        <option value="main">
+            newest, untested, code from main
+        </option>
+    </select>
     <br>
     <label for="board-selector">
         select the type of ESP32 board you are using:

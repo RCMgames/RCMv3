@@ -49,6 +49,7 @@ jobs:
                 echo "$folder" >> ../../docs/programmer/firmware/configurations_info.txt
             fi
             done
+            echo ${{ github.event.repository.updated_at}} > ../../docs/ds/presets/build_info.txt
       - name: git push
         run: |
             git config user.name "robot-control-modules"

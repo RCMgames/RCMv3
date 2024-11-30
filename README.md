@@ -1,9 +1,10 @@
 # RCMv3 - Program and Control RCM Robots through a Robot-Hosted Web Interface
 
 # work in progress
+expect breaking changes
 
 ## Questions?
-post [here](https://github.com/orgs/RCMgames/discussions/categories/rcmv3)
+post [here](https://github.com/orgs/RCMgames/discussions/categories/rcmv3) or email robot.control.modules@gmail.com
 
 ## Programmer Website (start here)
 https://rcmgames.github.io/RCMv3/programmer
@@ -24,11 +25,11 @@ https://rcmgames.github.io/RCMv3/ds/
 
 ## References
 * [Information about all hardware and software for Robot Control Modules](https://github.com/rcmgames?view_as=public)
-* [JMotor library documentation](https://joshua-8.github.io/JMotor/md_readme.html)
+* [JMotor library documentation](https://joshua-8.github.io/JMotor/md_readme.html) (documentation for many of the motor control components)
 
 ## LED blink codes
-* 2Hz 50% on: enabled
-* solid on: disabled
+* 2Hz: enabled
+* solid on: disabled but connected
 * flashes 1 time per 1.5 seconds: connected to wifi router with previously saved name and password
 * flashes 2 times per 1.5 seconds: RCM has created a wifi network with previously saved name and password
 * flashes 3 times per 1.5 seconds: RCM has created a wifi network named "http://rcmv3.local" with no password
