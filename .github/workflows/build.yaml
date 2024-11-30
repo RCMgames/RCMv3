@@ -29,12 +29,15 @@ jobs:
         run: | 
             pip install --upgrade platformio
             pio pkg install -g -t platformio/tool-mkspiffs
+      - name: saveBuildInfo
+        run: |
+            cd .pio/build
+            echo ${{ github.event.repository.updated_at}} > ../../docs/ds/presets/build_info.txt
       - name: compile
         run: |
             pio run
       - name: buildfs
         run: |
-            echo ${{ github.event.repository.updated_at}} > ../../docs/ds/presets/build_info.txt
             pio run --target buildfs
       - name: copy
         run: |
