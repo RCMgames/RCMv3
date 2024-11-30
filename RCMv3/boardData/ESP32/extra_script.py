@@ -35,5 +35,5 @@ with open(os.path.join(destination_dir, 'presets.json'), 'w') as f:
     f.write(json.dumps(directory_description, separators=(',', ':'), indent=None))
 
 import time
-with open(os.path.join(destination_dir, 'build_time.json'), 'w') as f:
+with open(os.path.join(destination_dir, 'build_info.json'), 'w') as f:
     f.write(json.dumps({'build_time':time.strftime('%Y-%m-%dT%H:%M:%S%z')}))
