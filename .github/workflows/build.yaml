@@ -32,7 +32,8 @@ jobs:
       - name: saveBuildInfo
         run: |
             pwd
-            echo ${{ github.event.repository.updated_at}} > docs/ds/presets/build_info.txt
+            ls
+            echo ${{ github.event.repository.updated_at}} > ../docs/ds/presets/build_info.txt
       - name: compile
         run: |
             pio run
