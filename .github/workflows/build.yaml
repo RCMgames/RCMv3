@@ -34,9 +34,7 @@ jobs:
             pio run
       - name: saveBuildInfo
         run: |
-            pwd
-            ls
-            echo ${{ github.event.repository.updated_at}} > docs/ds/presets/build_info.txt    
+            echo {"buildTime": "${{ github.event.repository.updated_at}}"} > docs/ds/presets/build_info.json    
       - name: buildfs
         run: |
             pio run --target buildfs
