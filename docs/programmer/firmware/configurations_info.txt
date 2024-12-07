@@ -1,4 +1,0 @@
-esp32dev/
-adafruit_qtpy_esp32s3_nopsram/
-adafruit_qtpy_esp32s3_n4r2/
-NoU3/

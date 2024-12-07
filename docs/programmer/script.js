@@ -145,7 +145,7 @@ async function upload() {
             var transport = new Transport(device, true);
 
             let bootloaderAddress = 0x1000;
-            if (boardType == "adafruit_qtpy_esp32s3_nopsram" || boardType == "adafruit_qtpy_esp32s3_n4r2") {
+            if (boardType == "adafruit_qtpy_esp32s3_nopsram" || boardType == "adafruit_qtpy_esp32s3_n4r2", boardType == "NoU3") {
                 bootloaderAddress = 0x0000;
             } else if (boardType == "esp32dev") {
                 bootloaderAddress = 0x1000;
