@@ -75,7 +75,7 @@ async function getCode() {
         document.getElementById("upload-button").innerHTML = "Upload";
         boardType = board.slice(0, -1);
 
-        if (boardType == "adafruit_qtpy_esp32s3_nopsram" || boardType == "adafruit_qtpy_esp32s3_n4r2") {
+        if (boardType == "adafruit_qtpy_esp32s3_nopsram" || boardType == "adafruit_qtpy_esp32s3_n4r2" || boardType == "NoU3") {
             document.getElementById("upload-instructions").innerHTML = "<ol><li>Plug in the ESP32.</li><li>Press and hold the IO0 button on the ESP32 then press and release the the reset button then release the IO0 button.</li><li>Press the Upload button when you have completed this.</li><li>Select your ESP32's serial port in the box that will pop up.</li><li>When the upload is finished press and release the reset button on the esp32 to start the program.</li></ol>";
         } else if (boardType == "esp32dev") {
             document.getElementById("upload-instructions").innerHTML = "<ol><li>Plug in the ESP32.</li><li>Press and hold the IO0 button on the ESP32</li><li>Press the Upload button when you have started to hold the button.</li><li>Select your ESP32's serial port in the box that will pop up.</li><li>When a green progress bar appears, let go of the IO0 button.</li></ol>";
