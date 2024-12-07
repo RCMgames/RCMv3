@@ -47,6 +47,7 @@ enum RCMv3DataType {
     RC_DATA_JEncoder,
     RC_DATA_JControlLoop,
     RC_DATA_JMotorController,
+    RC_DATA_PCA9685,
     RC_DATA_COUNT
 };
 // DO NOT RENAME without updating docs/ds/script.js and all presets
@@ -67,7 +68,8 @@ const char* RCMv3DataTypeNames[] = {
     "JMotorCompensator",
     "JEncoder",
     "JControlLoop",
-    "JMotorController"
+    "JMotorController",
+    "PCA9685",
 };
 typedef struct {
     const char* name;
@@ -89,9 +91,10 @@ const char* RCMv3ComponentTypeNames[] = {
     "ControlLoopBasic",
     "MotorControllerOpen",
     "MotorControllerClosed",
-    "VoltageCompConst"
+    "VoltageCompConst",
+    "PCA9685",
+    "MotorDriverPCA9685HBridge"
 };
-
 // DO NOT REARRANGE arrays, it breaks old config files
 enum RCMv3ComponentType {
     RC_TYPE_JVoltageCompMeasure,
@@ -108,6 +111,8 @@ enum RCMv3ComponentType {
     RC_TYPE_JMotorControllerOpen,
     RC_TYPE_JMotorControllerClosed,
     RC_TYPE_JVoltageCompConst,
+    RC_TYPE_PCA9685,
+    RC_TYPE_JMotorDriverPCA9685HBridge,
     RC_TYPE_COUNT
 };
 
@@ -125,7 +130,9 @@ int RCMv3ComponentNumInputs[] = {
     0, // JControlLoopBasic
     2, // JMotorControllerOpen
     2, // JMotorControllerClosed
-    0 // JVoltageCompConst
+    0, // JVoltageCompConst
+    0, // PCA9685
+    1 // Motor Driver PCA9685 HBridge
 };
 
 /**
@@ -190,7 +197,11 @@ const char* RCMv3ComponentInputNames(RCMv3ComponentType type, uint8_t input)
         }
     case RC_TYPE_JVoltageCompConst:
         return "";
-    }
+    case RC_TYPE_PCA9685:
+        return "";
+    case RC_TYPE_JMotorDriverPCA9685HBridge:
+        return "power";
+    } // end of switch
     return "";
 };
 
@@ -208,7 +219,9 @@ int RCMv3ComponentNumOutputs[] = {
     1, // JControlLoopBasic
     2, // JMotorControllerOpen
     2, // JMotorControllerClosed
-    1 // JVoltageCompConst
+    1, // JVoltageCompConst
+    0, // PCA9685
+    0 // Motor Driver PCA9685 HBridge
 };
 
 const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
@@ -264,7 +277,11 @@ const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
         }
     case RC_TYPE_JVoltageCompConst:
         return "voltage";
-    }
+    case RC_TYPE_PCA9685:
+        return "";
+    case RC_TYPE_JMotorDriverPCA9685HBridge:
+        return "";
+    } // end of switch
     return "";
 };
 
@@ -380,7 +397,25 @@ public:
             return {
                 { "voltage", RC_DATA_Float }
             };
-        }
+        case RC_TYPE_PCA9685:
+            return {
+                { "wire", RC_DATA_WhichWire },
+                { "address", RC_DATA_Int },
+                { "pinSDA", RC_DATA_Pin },
+                { "pinSCL", RC_DATA_Pin },
+                { "outputEnablePin", RC_DATA_Pin },
+                { "pwmFrequency", RC_DATA_Int }
+            };
+        case RC_TYPE_JMotorDriverPCA9685HBridge:
+            return {
+                { "PCA9685", RC_DATA_PCA9685 },
+                { "channelPos", RC_DATA_Int },
+                { "channelNeg", RC_DATA_Int },
+                { "reverse", RC_DATA_Bool },
+                { "breakWhenEnabled", RC_DATA_Bool },
+                { "breakWhenDisabled", RC_DATA_Bool }
+            };
+        } // end of switch
         return {};
     }
 };
@@ -609,6 +644,40 @@ public:
     ~RCMv3ComponentJMotorDriverEsp32HBridge()
     {
         delete (JMotorDriverEsp32HBridge*)internalInstance;
+    }
+};
+
+class RCMv3ComponentPCA9685 : public RCMv3Component {
+public:
+    RCMv3ComponentPCA9685(TwoWire* wire, int address, byte pinSDA, byte pinSCL, int outputEnablePin, int pwmFrequency)
+        : RCMv3Component(RC_TYPE_PCA9685)
+    {
+        internalInstance = new PCA9685();
+        ((PCA9685*)internalInstance)->setupOutputEnablePin(outputEnablePin);
+        wire->setPins(pinSDA, pinSCL);
+        ((PCA9685*)internalInstance)->setWire(*wire, false);
+        wire->setClock(400000);
+        ((PCA9685*)internalInstance)->addDevice(address);
+        ((PCA9685*)internalInstance)->resetAllDevices();
+        ((PCA9685*)internalInstance)->enableOutputs(outputEnablePin);
+        ((PCA9685*)internalInstance)->setToFrequency(pwmFrequency);
+
+        for (int i = 0; i < 16; i++) {
+            ((PCA9685*)internalInstance)->setChannelDutyCycle(i, 0);
+        }
+    }
+};
+
+class RCMv3ComponentJMotorDriverPCA9685HBridge : public RCMv3ComponentJMotorDriver {
+public:
+    RCMv3ComponentJMotorDriverPCA9685HBridge(PCA9685& pca9685, int channelPos, int channelNeg, bool reverse, bool breakWhenEnabled, bool breakWhenDisabled)
+        : RCMv3ComponentJMotorDriver(RC_TYPE_JMotorDriverPCA9685HBridge)
+    {
+        internalInstance = new JMotorDriverPCA9685HBridge(pca9685, channelPos, channelNeg, reverse, breakWhenEnabled, breakWhenDisabled);
+    }
+    ~RCMv3ComponentJMotorDriverPCA9685HBridge()
+    {
+        delete (JMotorDriverPCA9685HBridge*)internalInstance;
     }
 };
 
@@ -1030,6 +1099,11 @@ public:
                     return false;
                 }
             } break;
+            case RC_DATA_PCA9685: {
+                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_PCA9685 }) == false) {
+                    return false;
+                }
+            } break;
             default:
                 create_component_error_msg += " unknown data type for parameter " + String(i);
                 return false;
@@ -1125,6 +1199,27 @@ public:
         case RC_TYPE_JVoltageCompConst: {
             Serial.printf("creating JVoltageCompConst with voltage %f\n", (float)data[0]);
             components.push_back(new RCMv3ComponentJVoltageCompConst((float)data[0]));
+        } break;
+        case RC_TYPE_PCA9685: {
+            Serial.printf("creating PCA9685 with wire %d and address %d and pinSDA %d and pinSCL %d and outputEnablePin %d and pwmFrequency %d\n", (int)data[0], (int)data[1], (int)data[2], (int)data[3], (int)data[4], (int)data[5]);
+            TwoWire* selectedWire = nullptr;
+            switch ((int)data[0]) {
+            case 0:
+                selectedWire = &Wire;
+                break;
+            case 1:
+                selectedWire = &Wire1;
+                break;
+            default:
+                create_component_error_msg += " invalid wire selection (0=Wire, 1=Wire1)";
+                return false;
+            }
+            components.push_back(new RCMv3ComponentPCA9685(selectedWire, (int)data[1], (int)data[2], (int)data[3], (int)data[4], (int)data[5]));
+        } break;
+        case RC_TYPE_JMotorDriverPCA9685HBridge: {
+            PCA9685* pca9685 = (PCA9685*)components[(int)data[0]]->getInternalInstance();
+            Serial.printf("creating JMotorDriverPCA9685HBridge with pca9685 %d and channelPos %d and channelNeg %d and reverse %d and breakWhenEnabled %d and breakWhenDisabled %d\n", (int)data[0], (int)data[1], (int)data[2], (int)data[3], (int)data[4], (int)data[5]);
+            components.push_back(new RCMv3ComponentJMotorDriverPCA9685HBridge(*pca9685, (int)data[1], (int)data[2], (bool)data[3], (bool)data[4], (bool)data[5]));
         } break;
         } // end switch
 
