@@ -1081,12 +1081,6 @@ function toggleEditConfig() {
 
 }
 
-function getAndDownloadData(path) {
-    fetch(path)
-        .then(response => response.text())
-        .then(data => downloadFile(data, 'data.txt'));
-}
-
 function downloadFile(input, fileName) {
     const link = document.createElement('a');
     link.href = URL.createObjectURL(new Blob([input]));
@@ -1385,14 +1379,25 @@ class ActiveComponent {
                     case "TMC7300IC":
                         this.parameters.push(0);
                         break;
-                    case "BSED":
-                        this.parameters.push(0);
-                        break;
                     case "WhichWire":
                         this.parameters.push(0);
                         break;
+                    case "TMCChipAddress":
+                        this.parameters.push(0);
+                        break;
+                    case "BSED":
+                    case "Servo Driver":
+                    case "VoltageComp":
+                    case "JMotorDriver":
+                    case "JMotorCompensator":
+                    case "JEncoder":
+                    case "JControlLoop":
+                    case "JMotorController":
+                        this.parameters.push(-1);
+                        break;
+
                     default:
-                        console.log("unknown parameter type");
+                        console.log("unknown parameter type: " + boardInfo.potential_components[this.typeid]["parameters"][i].type);
                         this.parameters.push(null);
                         break;
                 }
@@ -1530,8 +1535,12 @@ class ActiveComponent {
         usernameInputElement.type = "text";
         usernameInputElement.value = this.username;
         usernameInputElement.onchange = (event) => {
-            this.username = event.target.value;
-            this.updateHTMLElement();
+            if (event.target.value.includes("Infinity") || event.target.value.includes("NaN")) {
+                event.target.value = this.username;
+            } else {
+                this.username = event.target.value;
+                this.updateHTMLElement();
+            }
         }
 
         document.getElementById("component-properties").appendChild(usernameInputElement);
@@ -1542,7 +1551,7 @@ class ActiveComponent {
             case "Mixer": {
                 componentHelperText.innerHTML = "output = Ax + By + Cz";
             } break;
-            case "Servo Controller": {
+            case "ServoController": {
                 // add link to https://joshua-8.github.io/JMotor/class_j_servo_controller.html to the componentHelperText and open in a new tab
                 let link = document.createElement("a");
                 link.href = "https://joshua-8.github.io/JMotor/class_j_servo_controller.html";
@@ -1617,7 +1626,7 @@ class ActiveComponent {
                     break;
                 case "TMC7300IC":
                     {
-                        this.createHelperForComponentThatNeedsComponent(["TMC7300 IC"], element, constructorParameter, i);
+                        this.createHelperForComponentThatNeedsComponent(["TMC7300IC"], element, constructorParameter, i);
                     }
                     break;
                 case "ComponentIndex":
@@ -1739,11 +1748,22 @@ class ActiveComponent {
                         let label = document.createElement("label");
                         let input = document.createElement("input");
                         label.innerHTML = constructorParameter.name;
-                        input.type = "number";
                         input.style.width = "50px";
                         input.value = this.parameters[i];
                         input.onchange = (event) => {
-                            this.parameters[i] = parseFloat(event.target.value);
+                            if (event.target.value.toLowerCase() === "infinity" || event.target.value.toLowerCase() === "inf") {
+                                this.parameters[i] = "Infinity";
+                            } else if (event.target.value.toLowerCase() === "-infinity" || event.target.value.toLowerCase() === "-inf") {
+                                this.parameters[i] = "-Infinity";
+                            } else if (event.target.value.toLowerCase() === "nan") {
+                                this.parameters[i] = "NaN";
+                            } else {
+                                if (!isNaN(parseFloat(event.target.value))) {
+                                    this.parameters[i] = parseFloat(event.target.value);
+                                } else {
+                                    this.parameters[i] = event.target.value;
+                                }
+                            }
                         }
                         element.appendChild(label);
                         element.appendChild(input);
@@ -1797,17 +1817,49 @@ class ActiveComponent {
                     break;
                 case "Servo Driver":
                     {
-                        this.createHelperForComponentThatNeedsComponent(["Motor Driver Servo ESP32"], element, constructorParameter, i);
+                        this.createHelperForComponentThatNeedsComponent(["MotorDriverEsp32Servo"], element, constructorParameter, i);
+                    }
+                    break;
+                case "VoltageComp":
+                    {
+                        this.createHelperForComponentThatNeedsComponent(["VoltageCompMeasure", "VoltageCompConst"], element, constructorParameter, i);
+                    }
+                    break;
+                case "JMotorDriver":
+                    {
+                        this.createHelperForComponentThatNeedsComponent(
+                            ["MotorDriverTMC7300", "MotorDriverEsp32Servo", "MotorDriverEsp32HBridge"],
+                            element, constructorParameter, i);
+                    }
+                    break;
+                case "JMotorCompensator":
+                    {
+                        this.createHelperForComponentThatNeedsComponent(["MotorCompBasic"], element, constructorParameter, i);
+                    }
+                    break;
+                case "JEncoder":
+                    {
+                        this.createHelperForComponentThatNeedsComponent(["EncoderBSED"], element, constructorParameter, i);
+                    }
+                    break;
+                case "JControlLoop":
+                    {
+                        this.createHelperForComponentThatNeedsComponent(["ControlLoopBasic"], element, constructorParameter, i);
+                    }
+                    break;
+                case "JMotorController":
+                    {
+                        this.createHelperForComponentThatNeedsComponent(["MotorControllerOpen", "MotorControllerClosed"], element, constructorParameter, i);
                     }
                     break;
                 default:
-                    console.log("unknown parameter input type");
+                    console.log("unknown parameter input type: " + constructorParameter.type);
                     break;
             }
             document.getElementById("component-properties").appendChild(element);
         }
 
-        if (this.typename == "Motor Driver HBridge ESP32") {
+        if (this.typename == "MotorDriverEsp32HBridge") {
             let helper = document.createElement("select");
             let defaultOption = document.createElement("option");
             defaultOption.value = null;
@@ -1899,6 +1951,8 @@ function updateBoardInfoUI() {
     document.getElementById("active-components").replaceChildren();
     document.getElementById("component-properties").replaceChildren();
 
+    // TODO: organize / rename / re-order the list of potential components
+
     document.getElementById("potential-components").replaceChildren();
     for (let i = 0; i < boardInfo.potential_components.length; i++) {
         let component = boardInfo.potential_components[i];
@@ -1976,7 +2030,15 @@ function loadConfig(fromURL = '/loadConfig.json') {
     document.getElementById("config-status").innerHTML = "Loading...";
     document.getElementById("config-status").style.backgroundColor = "yellow";
     fetch(fromURL)
-        .then(response => response.json())
+        .then(response => {
+            return response.text();
+        })
+        .then(data => {
+            let processedText = data.replace(/-Infinity/g, "\"-Infinity\"")
+                .replace(/(?<!-)Infinity/g, "\"Infinity\"")
+                .replace(/NaN/g, "\"NaN\"");
+            return JSON.parse(processedText);
+        })
         .then(data => {
             document.getElementById("config-status").innerHTML = "reloaded";
             document.getElementById("config-status").style.backgroundColor = "lightgreen";
@@ -1987,6 +2049,7 @@ function loadConfig(fromURL = '/loadConfig.json') {
                 activeComponentList.push(new ActiveComponent(data.components[i], activeComponentList.length, true));
             }
         }).catch((error) => {
+            console.log(error);
         });
 }
 function saveConfig() {
@@ -2056,6 +2119,7 @@ async function loadPresets() {
             option.value = parameter_presets[i];
             document.getElementById("board-type-selector").appendChild(option);
         }
+        // TODO: load non-board specific presets (parameter presets)
         document.getElementById("board-type-selector").onchange = (event) => {
             let preset = event.target.value;
             if (preset && preset != "null") {

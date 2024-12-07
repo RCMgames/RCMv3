@@ -1,7 +1,7 @@
 [
     {
         "type": 0,
-        "name": "JVoltageCompMeasure",
+        "name": "VoltageCompMeasure",
         "username": "battery monitor",
         "inputs": [],
         "outputs": [
@@ -9,7 +9,9 @@
         ],
         "parameters": [
             8,
-            310
+            310,
+            0,
+            0
         ]
     }
 ]

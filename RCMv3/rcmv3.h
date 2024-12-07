@@ -4,6 +4,8 @@
 // this file allows for runtime configuration of robots using ArduinoJson and a factory for JMotor components
 #include <Arduino.h>
 
+#define ARDUINOJSON_ENABLE_NAN 1
+#define ARDUINOJSON_ENABLE_INFINITY 1
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
 #include <JMotor.h>
@@ -39,8 +41,15 @@ enum RCMv3DataType {
     RC_DATA_ComponentIndex,
     RC_DATA_ComponentInputIndex, /*which input of a component should be accessed*/
     RC_DATA_ServoDriver,
+    RC_DATA_VoltageComp,
+    RC_DATA_JMotorDriver,
+    RC_DATA_JMotorCompensator,
+    RC_DATA_JEncoder,
+    RC_DATA_JControlLoop,
+    RC_DATA_JMotorController,
     RC_DATA_COUNT
 };
+// DO NOT RENAME without updating docs/ds/script.js and all presets
 const char* RCMv3DataTypeNames[] = {
     "int",
     "float",
@@ -52,26 +61,38 @@ const char* RCMv3DataTypeNames[] = {
     "WhichWire",
     "ComponentIndex",
     "ComponentInputIndex",
-    "Servo Driver"
+    "Servo Driver",
+    "VoltageComp",
+    "JMotorDriver",
+    "JMotorCompensator",
+    "JEncoder",
+    "JControlLoop",
+    "JMotorController"
 };
-// TODO: ADD METHOD FOR ADDING HELPERS THAT GIVE DEFAULT VALUES WITHOUT CREATING A NEW DATA TYPE?
 typedef struct {
     const char* name;
     RCMv3DataType type;
 } RCMv3Parameter;
 
+// DO NOT RENAME without updating docs/ds/script.js and all presets
 const char* RCMv3ComponentTypeNames[] = {
-    "JVoltageCompMeasure",
-    "TMC7300 IC",
-    "Motor Driver TMC7300",
-    "Motor Driver Servo ESP32",
-    "Motor Driver HBridge ESP32",
+    "VoltageCompMeasure",
+    "TMC7300IC",
+    "MotorDriverTMC7300",
+    "MotorDriverEsp32Servo",
+    "MotorDriverEsp32HBridge",
     "ByteSizedEncoderDecoder",
-    "Encoder BSED",
+    "EncoderBSED",
     "Mixer",
-    "Servo Controller"
+    "ServoController",
+    "MotorCompBasic",
+    "ControlLoopBasic",
+    "MotorControllerOpen",
+    "MotorControllerClosed",
+    "VoltageCompConst"
 };
 
+// DO NOT REARRANGE arrays, it breaks old config files
 enum RCMv3ComponentType {
     RC_TYPE_JVoltageCompMeasure,
     RC_TYPE_TMC7300IC,
@@ -82,19 +103,29 @@ enum RCMv3ComponentType {
     RC_TYPE_JEncoderBSED,
     RC_TYPE_MIXER,
     RC_TYPE_JServoController,
+    RC_TYPE_JMotorCompBasic,
+    RC_TYPE_JControlLoopBasic,
+    RC_TYPE_JMotorControllerOpen,
+    RC_TYPE_JMotorControllerClosed,
+    RC_TYPE_JVoltageCompConst,
     RC_TYPE_COUNT
 };
 
 int RCMv3ComponentNumInputs[] = {
-    0,
-    0,
-    1,
-    1,
-    1,
-    0,
-    0,
-    3,
-    3
+    0, // JVoltageCompMeasure
+    0, // TMC7300 IC
+    1, // Motor Driver TMC7300
+    1, // Motor Driver Servo ESP32
+    1, // Motor Driver HBridge ESP32
+    0, // ByteSizedEncoderDecoder
+    0, // Encoder BSED
+    3, // Mixer
+    2, // Servo Controller
+    0, // JMotorCompBasic
+    0, // JControlLoopBasic
+    2, // JMotorControllerOpen
+    2, // JMotorControllerClosed
+    0 // JVoltageCompConst
 };
 
 /**
@@ -134,27 +165,50 @@ const char* RCMv3ComponentInputNames(RCMv3ComponentType type, uint8_t input)
     case RC_TYPE_JServoController:
         switch (input) {
         case 0:
-            return "angle immediate";
+            return "servo controller mode";
         case 1:
-            return "angle smoothed";
-        case 2:
-            return "angle increment";
+            return "value";
         }
+        return "";
+    case RC_TYPE_JMotorCompBasic:
+        return "";
+    case RC_TYPE_JControlLoopBasic:
+        return "";
+    case RC_TYPE_JMotorControllerOpen:
+        switch (input) {
+        case 0:
+            return "motor controller mode";
+        case 1:
+            return "value";
+        }
+    case RC_TYPE_JMotorControllerClosed:
+        switch (input) {
+        case 0:
+            return "motor controller mode";
+        case 1:
+            return "value";
+        }
+    case RC_TYPE_JVoltageCompConst:
         return "";
     }
     return "";
 };
 
 int RCMv3ComponentNumOutputs[] = {
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    2,
-    1,
-    2
+    1, // JVoltageCompMeasure
+    0, // TMC7300 IC
+    0, // Motor Driver TMC7300
+    0, // Motor Driver Servo ESP32
+    0, // Motor Driver HBridge ESP32
+    0, // ByteSizedEncoderDecoder
+    2, // Encoder BSED
+    1, // Mixer
+    2, // Servo Controller
+    0, // JMotorCompBasic
+    1, // JControlLoopBasic
+    2, // JMotorControllerOpen
+    2, // JMotorControllerClosed
+    1 // JVoltageCompConst
 };
 
 const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
@@ -190,6 +244,26 @@ const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
             return "velocity";
         }
         return "";
+    case RC_TYPE_JMotorCompBasic:
+        return "";
+    case RC_TYPE_JControlLoopBasic:
+        return "control loop output";
+    case RC_TYPE_JMotorControllerOpen:
+        switch (output) {
+        case 0:
+            return "velocity";
+        case 1:
+            return "position";
+        }
+    case RC_TYPE_JMotorControllerClosed:
+        switch (output) {
+        case 0:
+            return "velocity";
+        case 1:
+            return "position";
+        }
+    case RC_TYPE_JVoltageCompConst:
+        return "voltage";
     }
     return "";
 };
@@ -245,7 +319,7 @@ public:
             };
         case RC_TYPE_JEncoderBSED:
             return {
-                { "BSED index", RC_DATA_BSED },
+                { "ByteSizedEncoderDecoder", RC_DATA_BSED },
                 { "encoderChannel", RC_DATA_Int },
                 { "reverse", RC_DATA_Bool },
                 { "distPerCountFactor", RC_DATA_Float },
@@ -254,6 +328,7 @@ public:
             };
         case RC_TYPE_JServoController:
             return {
+                { "defaultInputMode", RC_DATA_Int },
                 { "servo", RC_DATA_ServoDriver },
                 { "reverse", RC_DATA_Bool },
                 { "velLimit", RC_DATA_Float },
@@ -266,6 +341,44 @@ public:
                 { "maxSetAngle", RC_DATA_Float },
                 { "minServoVal", RC_DATA_Int },
                 { "maxServoVal", RC_DATA_Int }
+            };
+        case RC_TYPE_JMotorCompBasic:
+            return {
+                { "voltageComp", RC_DATA_VoltageComp },
+                { "volts per speed", RC_DATA_Float },
+                { "min speed", RC_DATA_Float }
+            };
+        case RC_TYPE_JControlLoopBasic:
+            return {
+                { "kP", RC_DATA_Float },
+                { "timeout", RC_DATA_Int },
+                { "noReverseVoltage", RC_DATA_Bool }
+            };
+        case RC_TYPE_JMotorControllerOpen:
+            return {
+                { "defaultInputMode", RC_DATA_Int },
+                { "driver", RC_DATA_JMotorDriver },
+                { "compensator", RC_DATA_JMotorCompensator },
+                { "velLimit", RC_DATA_Float },
+                { "accelLimit", RC_DATA_Float },
+                { "minMotorPulseTime", RC_DATA_Int }
+            };
+        case RC_TYPE_JMotorControllerClosed:
+            return {
+                { "defaultInputMode", RC_DATA_Int },
+                { "driver", RC_DATA_JMotorDriver },
+                { "compensator", RC_DATA_JMotorCompensator },
+                { "encoder", RC_DATA_JEncoder },
+                { "controlLoop", RC_DATA_JControlLoop },
+                { "velLimit", RC_DATA_Float },
+                { "accelLimit", RC_DATA_Float },
+                { "distFromSetpointLimit", RC_DATA_Float },
+                { "preventGoingWrongWay", RC_DATA_Bool },
+                { "maxStoppingDecel", RC_DATA_Float }
+            };
+        case RC_TYPE_JVoltageCompConst:
+            return {
+                { "voltage", RC_DATA_Float }
             };
         }
         return {};
@@ -290,11 +403,6 @@ public:
         outputs = new int[RCMv3ComponentNumOutputs[type]];
     }
 
-    virtual void begin() = 0;
-    virtual void enable() = 0;
-    virtual void disable() = 0;
-    virtual void run() = 0;
-
     void* getInternalInstance()
     {
         return internalInstance;
@@ -307,9 +415,12 @@ public:
     {
         return RCMv3ComponentTypeNames[type];
     }
-
-    virtual void write(int index, float value) = 0;
-    virtual float read(int index) = 0;
+    virtual void begin() { }
+    virtual void enable() { }
+    virtual void disable() { }
+    virtual void run() { }
+    virtual void write(int index, float value) { }
+    virtual float read(int index) { return 0; }
 
     virtual ~RCMv3Component()
     {
@@ -352,15 +463,6 @@ public:
         C = C_;
         componentIndex = componentIndex_;
         inputIndex = inputIndex_;
-    }
-    void begin()
-    {
-    }
-    void enable()
-    {
-    }
-    void disable()
-    {
     }
     void run()
     {
@@ -409,15 +511,6 @@ public:
         hysteresis = _hysteresis;
         allowEnabled = true;
     }
-    void begin()
-    {
-    }
-    void enable()
-    {
-    }
-    void disable()
-    {
-    }
     void run()
     {
         float batteryVoltage = ((JVoltageCompMeasure<RCMV3_COMPONENT_J_VOLTAGE_COMP_MEASURE_N>*)internalInstance)->getSupplyVoltage();
@@ -430,9 +523,6 @@ public:
         if (allowEnabled == false) {
             disableEnabled = true;
         }
-    }
-    void write(int index, float value)
-    {
     }
     float read(int index)
     {
@@ -451,25 +541,6 @@ public:
     {
         internalInstance = new TMC7300IC(pin, chipAddress);
     }
-    void begin()
-    {
-    }
-    void enable()
-    {
-    }
-    void disable()
-    {
-    }
-    void run()
-    {
-    }
-    void write(int index, float value)
-    {
-    }
-    float read(int index)
-    {
-        return 0;
-    }
     ~RCMv3ComponentTMC7300IC()
     {
         delete (TMC7300IC*)internalInstance;
@@ -482,9 +553,6 @@ public:
         : RCMv3Component(type)
     {
     }
-    void begin()
-    {
-    }
     void enable()
     {
         ((JMotorDriver*)internalInstance)->enable();
@@ -492,13 +560,6 @@ public:
     void disable()
     {
         ((JMotorDriver*)internalInstance)->disable();
-    }
-    void run()
-    {
-    }
-    float read(int index)
-    {
-        return 0;
     }
     void write(int index, float value)
     {
@@ -567,22 +628,9 @@ public:
         wire->begin();
         ((ByteSizedEncoderDecoder*)internalInstance)->begin();
     }
-    void enable()
-    {
-    }
-    void disable()
-    {
-    }
     void run()
     {
         ((ByteSizedEncoderDecoder*)internalInstance)->run();
-    }
-    void write(int index, float value)
-    {
-    }
-    float read(int index)
-    {
-        return 0;
     }
     ~RCMv3ComponentBSED()
     {
@@ -601,18 +649,6 @@ public:
     {
         ((JEncoderBSED*)internalInstance)->zeroCounter();
     }
-    void enable()
-    {
-    }
-    void disable()
-    {
-    }
-    void run()
-    {
-    }
-    void write(int index, float value)
-    {
-    }
     float read(int index)
     {
         switch (index) {
@@ -630,11 +666,15 @@ public:
 };
 
 class RCMv3ComponentJServoController : public RCMv3Component {
+protected:
+    int inputMode;
+
 public:
-    RCMv3ComponentJServoController(JMotorDriverServo& servo, boolean reverse, float velLimit, float accelLimit, float decelLimit, float minAngleLimit, float maxAngleLimit, float defaultAngle, float minSetAngle, float maxSetAngle, int minServoVal, int maxServoVal)
+    RCMv3ComponentJServoController(int defaultInputMode, JMotorDriverServo& servo, boolean reverse, float velLimit, float accelLimit, float decelLimit, float minAngleLimit, float maxAngleLimit, float defaultAngle, float minSetAngle, float maxSetAngle, int minServoVal, int maxServoVal)
         : RCMv3Component(RC_TYPE_JServoController)
     {
         internalInstance = new JServoController(servo, reverse, velLimit, accelLimit, decelLimit, 0, minAngleLimit, maxAngleLimit, defaultAngle, minSetAngle, maxSetAngle, minServoVal, maxServoVal);
+        inputMode = defaultInputMode;
     }
     void begin()
     {
@@ -653,16 +693,20 @@ public:
     }
     void write(int index, float value)
     {
-        switch (index) {
-        case 0: {
-            ((JServoController*)internalInstance)->setAngleImmediate(value);
-        } break;
-        case 1: {
-            ((JServoController*)internalInstance)->setAngleSmoothed(value);
-        } break;
-        case 2: {
-            ((JServoController*)internalInstance)->setAngleImmediateInc(value);
-        } break;
+        if (index == 0) {
+            inputMode = value;
+        } else if (index == 1) {
+            switch (inputMode) {
+            case 0: {
+                ((JServoController*)internalInstance)->setAngleSmoothed(value);
+            } break;
+            case 1: {
+                ((JServoController*)internalInstance)->setAngleImmediate(value);
+            } break;
+            case 2: {
+                ((JServoController*)internalInstance)->setAngleImmediateInc(value);
+            } break;
+            }
         }
     }
     float read(int index)
@@ -676,10 +720,190 @@ public:
         return 0;
     }
 };
+class RCMv3ComponentJMotorCompBasic : public RCMv3Component {
+public:
+    RCMv3ComponentJMotorCompBasic(JVoltageCompensator& voltageComp, float voltsPerSpeed, float minSpeed)
+        : RCMv3Component(RC_TYPE_JMotorCompBasic)
+    {
+        internalInstance = new JMotorCompBasic(voltageComp, voltsPerSpeed, minSpeed);
+    }
+    ~RCMv3ComponentJMotorCompBasic()
+    {
+        delete (JMotorCompBasic*)internalInstance;
+    }
+};
+
+class RCMv3ComponentJControlLoopBasic : public RCMv3Component {
+public:
+    RCMv3ComponentJControlLoopBasic(float kP, unsigned long timeout, bool noReverseVoltage)
+        : RCMv3Component(RC_TYPE_JControlLoopBasic)
+    {
+        internalInstance = new JControlLoopBasic(kP, timeout, noReverseVoltage);
+    }
+    float read(int index)
+    {
+        return ((JControlLoopBasic*)internalInstance)->getCtrlLoopOut();
+    }
+    ~RCMv3ComponentJControlLoopBasic()
+    {
+        delete (JControlLoopBasic*)internalInstance;
+    }
+};
+
+class RCMv3ComponentJMotorControllerOpen : public RCMv3Component {
+protected:
+    int inputMode;
+
+public:
+    RCMv3ComponentJMotorControllerOpen(int defaultInputMode, JMotorDriver& driver, JMotorCompensator& compensator, float velLimit, float accelLimit, int minMotorPulseTime)
+        : RCMv3Component(RC_TYPE_JMotorControllerOpen)
+    {
+        internalInstance = new JMotorControllerOpen(driver, compensator, velLimit, accelLimit, minMotorPulseTime);
+        inputMode = defaultInputMode;
+    }
+    void enable()
+    {
+        ((JMotorControllerOpen*)internalInstance)->enable();
+        ((JMotorControllerOpen*)internalInstance)->dL.setVelocity(0);
+    }
+    void disable()
+    {
+        ((JMotorControllerOpen*)internalInstance)->disable();
+    }
+    void run()
+    {
+        ((JMotorControllerOpen*)internalInstance)->run();
+    }
+    void write(int index, float value)
+    {
+        if (index == 0) {
+            inputMode = value;
+        } else if (index == 1) {
+            switch (inputMode) {
+            case 0:
+                ((JMotorControllerOpen*)internalInstance)->setVelTarget(value, false);
+                break;
+            case 1:
+                ((JMotorControllerOpen*)internalInstance)->setPosTarget(value, false);
+                break;
+            }
+        }
+    }
+    float read(int index)
+    {
+        switch (index) {
+        case 0:
+            return ((JMotorControllerOpen*)internalInstance)->getVel();
+        case 1:
+            return ((JMotorControllerOpen*)internalInstance)->getPos();
+        }
+        return 0;
+    }
+    ~RCMv3ComponentJMotorControllerOpen()
+    {
+        delete (JMotorControllerOpen*)internalInstance;
+    }
+};
+
+class RCMv3ComponentJMotorControllerClosed : public RCMv3Component {
+protected:
+    int inputMode;
+
+public:
+    RCMv3ComponentJMotorControllerClosed(int defaultInputMode, JMotorDriver& driver, JMotorCompensator& compensator, JEncoder& encoder, JControlLoop& controlLoop, float velLimit, float accelLimit, float distFromSetpointLimit, bool preventGoingWrongWay, float maxStoppingDecel)
+        : RCMv3Component(RC_TYPE_JMotorControllerClosed)
+    {
+        internalInstance = new JMotorControllerClosed(driver, compensator, encoder, controlLoop, velLimit, accelLimit, distFromSetpointLimit, preventGoingWrongWay, maxStoppingDecel);
+        inputMode = defaultInputMode;
+    }
+    void enable()
+    {
+        ((JMotorControllerClosed*)internalInstance)->enable();
+    }
+    void disable()
+    {
+        ((JMotorControllerClosed*)internalInstance)->disable();
+    }
+    void run()
+    {
+        ((JMotorControllerClosed*)internalInstance)->run();
+    }
+    void write(int index, float value)
+    {
+        if (index == 0) {
+            inputMode = value;
+        } else if (index == 1) {
+            switch (inputMode) {
+            case 0:
+                ((JMotorControllerClosed*)internalInstance)->setAccelPosDelta(value, false, true);
+                break;
+            case 1:
+                ((JMotorControllerClosed*)internalInstance)->setPosTarget(value, false);
+                break;
+            }
+        }
+    }
+    float read(int index)
+    {
+        switch (index) {
+        case 0:
+            return ((JMotorControllerClosed*)internalInstance)->getVel();
+        case 1:
+            return ((JMotorControllerClosed*)internalInstance)->getPos();
+        }
+        return 0;
+    }
+    ~RCMv3ComponentJMotorControllerClosed()
+    {
+        delete (JMotorControllerClosed*)internalInstance;
+    }
+};
+
+class RCMv3ComponentJVoltageCompConst : public RCMv3Component {
+public:
+    RCMv3ComponentJVoltageCompConst(float voltage)
+        : RCMv3Component(RC_TYPE_JVoltageCompConst)
+    {
+        internalInstance = new JVoltageCompConst(voltage);
+    }
+    float read(int index)
+    {
+        return ((JVoltageCompConst*)internalInstance)->getSupplyVoltage();
+    }
+    ~RCMv3ComponentJVoltageCompConst()
+    {
+        delete (JVoltageCompConst*)internalInstance;
+    }
+};
 
 boolean refreshOutputListSize = true;
 
 class RCMv3ComponentFactory {
+protected:
+    static boolean verifyThatDataIsComponent(std::vector<RCMv3Component*>& components, JsonVariant data, const std::vector<RCMv3ComponentType>& allowedComponentType)
+    {
+        if (!data.is<int>()) {
+            return false;
+        }
+        int componentIndex = data;
+        if (componentIndex < 0 || componentIndex >= components.size()) {
+            create_component_error_msg += " there is no component #" + String(componentIndex) + " ";
+            return false;
+        }
+        boolean validType = false;
+        for (int i = 0; i < allowedComponentType.size(); i++) {
+            if (components[componentIndex]->getType() == allowedComponentType[i]) {
+                validType = true;
+                break;
+            }
+        }
+        if (validType == false) {
+            create_component_error_msg += " component #" + String(componentIndex) + " is not an allowed component type";
+            return false;
+        }
+        return true;
+    }
+
 public:
     /**
      * @note data, inputs, and outputs must be JsonArrays (check before calling this function)
@@ -699,13 +923,28 @@ public:
             switch (params[i].type) {
             case RC_DATA_Int: {
                 if (!data[i].is<int>()) {
+                    create_component_error_msg += " invalid int value for parameter " + String(i);
                     return false;
                 }
             } break;
             case RC_DATA_Float: {
                 if (!data[i].is<float>()) {
-                    create_component_error_msg += " invalid float value for parameter " + String(i);
-                    return false;
+                    if (data[i].is<String>()) { // JSON can't handle Infinity, -Infinity, or NaN, so they are sent as strings and handled in special cases
+                        String str = data[i].as<String>();
+                        if (str == "Infinity") {
+                            data[i].set((float)INFINITY);
+                        } else if (str == "-Infinity") {
+                            data[i].set((float)-INFINITY);
+                        } else if (str == "NaN") {
+                            data[i].set((float)NAN);
+                        } else {
+                            create_component_error_msg += " invalid 'float' value for parameter " + String(i);
+                            return false;
+                        }
+                    } else {
+                        create_component_error_msg += " invalid float value for parameter " + String(i);
+                        return false;
+                    }
                 }
             } break;
             case RC_DATA_Bool: {
@@ -719,16 +958,49 @@ public:
                 }
             } break;
             case RC_DATA_TMC7300IC: {
-                if (!data[i].is<int>()) {
+                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_TMC7300IC }) == false) {
                     return false;
                 }
-                int icIndex = data[i];
-                if (icIndex < 0 || icIndex >= components.size()) {
-                    create_component_error_msg += " invalid TMC7300IC index (" + String(icIndex) + ") ";
+            } break;
+            case RC_DATA_BSED: {
+                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_BSED }) == false) {
                     return false;
                 }
-                if (components[icIndex]->getType() != RC_TYPE_TMC7300IC) {
-                    create_component_error_msg += " component specified with the TMC7300IC index parameter (" + String(icIndex) + ") is not a TMC7300IC";
+            } break;
+            case RC_DATA_ServoDriver: {
+                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_JMotorDriverEsp32Servo }) == false) {
+                    return false;
+                }
+            } break;
+            case RC_DATA_VoltageComp: {
+                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_JVoltageCompMeasure }) == false) {
+                    return false;
+                }
+            } break;
+            case RC_DATA_JMotorDriver: {
+                if (verifyThatDataIsComponent(components, data[i],
+                        { RC_TYPE_JMotorDriverTMC7300, RC_TYPE_JMotorDriverEsp32Servo, RC_Type_JMotorDriverEsp32HBridge })
+                    == false) {
+                    return false;
+                }
+            } break;
+            case RC_DATA_JMotorCompensator: {
+                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_JMotorCompBasic }) == false) {
+                    return false;
+                }
+            } break;
+            case RC_DATA_JEncoder: {
+                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_JEncoderBSED }) == false) {
+                    return false;
+                }
+            } break;
+            case RC_DATA_JControlLoop: {
+                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_JControlLoopBasic }) == false) {
+                    return false;
+                }
+            } break;
+            case RC_DATA_JMotorController: {
+                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_JMotorControllerOpen, RC_TYPE_JMotorControllerClosed }) == false) {
                     return false;
                 }
             } break;
@@ -758,37 +1030,8 @@ public:
                     return false;
                 }
             } break;
-            case RC_DATA_BSED: {
-                if (!data[i].is<int>()) {
-                    return false;
-                }
-                int icIndex = data[i];
-                if (icIndex < 0 || icIndex >= components.size()) {
-                    create_component_error_msg += " invalid BSED index (" + String(icIndex) + ") ";
-                    return false;
-                }
-                if (components[icIndex]->getType() != RC_TYPE_BSED) {
-                    create_component_error_msg += " component specified with the BSED index parameter (" + String(icIndex) + ") is not a ByteSizedEncoderDecoder";
-                    return false;
-                }
-            } break;
-            case RC_DATA_ServoDriver: {
-                if (!data[i].is<int>()) {
-                    create_component_error_msg += " invalid Servo Driver index (" + String(i) + ") ";
-                    return false;
-                }
-                int icIndex = data[i];
-                if (icIndex < 0 || icIndex >= components.size()) {
-                    create_component_error_msg += " invalid Servo Driver index (" + String(icIndex) + ") ";
-                    return false;
-                }
-                if (!(components[icIndex]->getType() == RC_TYPE_JMotorDriverEsp32Servo)) {
-                    create_component_error_msg += " component specified with the Servo Driver index parameter (" + String(icIndex) + ") is not a Servo Driver";
-                    return false;
-                }
-            } break;
             default:
-                create_component_error_msg += " invalid data type for parameter " + String(i);
+                create_component_error_msg += " unknown data type for parameter " + String(i);
                 return false;
                 break;
             }
@@ -852,9 +1095,36 @@ public:
             components.push_back(new RCMv3ComponentJEncoderBSED(bsed, (int)data[1], (int)data[2], (float)data[3], (int)data[4], (int)data[5]));
         } break;
         case RC_TYPE_JServoController: {
-            JMotorDriverServo* servo = (JMotorDriverServo*)components[(int)data[0]]->getInternalInstance();
-            Serial.printf("creating JServoController with servo %d and reverse %d and velLimit %f and accelLimit %f and decelLimit %f and minAngleLimit %f and maxAngleLimit %f and defaultAngle %f and minSetAngle %f and maxSetAngle %f and minServoVal %d and maxServoVal %d\n", (int)data[0], (int)data[1], (float)data[2], (float)data[3], (float)data[4], (float)data[5], (float)data[6], (float)data[7], (float)data[8], (float)data[9], (int)data[10], (int)data[11]);
-            components.push_back(new RCMv3ComponentJServoController(*servo, (int)data[1], (float)data[2], (float)data[3], (float)data[4], (float)data[5], (float)data[6], (float)data[7], (float)data[8], (float)data[9], (int)data[10], (int)data[11]));
+            JMotorDriverServo* servo = (JMotorDriverServo*)components[(int)data[1]]->getInternalInstance();
+            Serial.printf("creating JServoController with defaultInputMode %d and servo %d and reverse %d and velLimit %f and accelLimit %f and decelLimit %f and minAngleLimit %f and maxAngleLimit %f and defaultAngle %f and minSetAngle %f and maxSetAngle %f and minServoVal %d and maxServoVal %d\n", (int)data[0], (int)data[1], (int)data[2], (float)data[3], (float)data[4], (float)data[5], (float)data[6], (float)data[7], (float)data[8], (float)data[9], (int)data[10], (int)data[11], (int)data[12]);
+            components.push_back(new RCMv3ComponentJServoController((int)data[0], *servo, (boolean)data[2], (float)data[3], (float)data[4], (float)data[5], (float)data[6], (float)data[7], (float)data[8], (float)data[9], (float)data[10], (int)data[11], (int)data[12]));
+        } break;
+        case RC_TYPE_JMotorCompBasic: {
+            JVoltageCompensator* voltageComp = (JVoltageCompensator*)components[(int)data[0]]->getInternalInstance();
+            Serial.printf("creating JMotorCompBasic with voltageComp %d and volts per speed %f and min speed %f\n", (int)data[0], (float)data[1], (float)data[2]);
+            components.push_back(new RCMv3ComponentJMotorCompBasic(*voltageComp, (float)data[1], (float)data[2]));
+        } break;
+        case RC_TYPE_JControlLoopBasic: {
+            Serial.printf("creating JControlLoopBasic with kP %f and timeout %lu and noReverseVoltage %d\n", (float)data[0], (unsigned long)max(0, (int)data[1]), (int)data[2]);
+            components.push_back(new RCMv3ComponentJControlLoopBasic((float)data[0], (unsigned long)data[1], (boolean)data[2]));
+        } break;
+        case RC_TYPE_JMotorControllerOpen: {
+            JMotorDriver* driver = (JMotorDriver*)components[(int)data[1]]->getInternalInstance();
+            JMotorCompensator* compensator = (JMotorCompensator*)components[(int)data[2]]->getInternalInstance();
+            Serial.printf("creating JMotorControllerOpen with defaultInputMode %d and driver %d and compensator %d and velLimit %f and accelLimit %f and minMotorPulseTime %d\n", (int)data[0], (int)data[1], (int)data[2], (float)data[3], (float)data[4], (int)data[5]);
+            components.push_back(new RCMv3ComponentJMotorControllerOpen((int)data[0], *driver, *compensator, (float)data[3], (float)data[4], (int)data[5]));
+        } break;
+        case RC_TYPE_JMotorControllerClosed: {
+            JMotorDriver* driver = (JMotorDriver*)components[(int)data[1]]->getInternalInstance();
+            JMotorCompensator* compensator = (JMotorCompensator*)components[(int)data[2]]->getInternalInstance();
+            JEncoder* encoder = (JEncoder*)components[(int)data[3]]->getInternalInstance();
+            JControlLoop* controlLoop = (JControlLoop*)components[(int)data[4]]->getInternalInstance();
+            Serial.printf("creating JMotorControllerClosed with defaultInputMode %d, driver %d, compensator %d, encoder %d, controlLoop %d, velLimit %f, accelLimit %f, distFromSetpointLimit %f, preventGoingWrongWay %d, maxStoppingDecel %f\n", (int)data[0], (int)data[1], (int)data[2], (int)data[3], (int)data[4], (float)data[5], (float)data[6], (float)data[7], (int)data[8], (float)data[9]);
+            components.push_back(new RCMv3ComponentJMotorControllerClosed((int)data[0], *driver, *compensator, *encoder, *controlLoop, (float)data[5], (float)data[6], (float)data[7], (bool)data[8], (float)data[9]));
+        } break;
+        case RC_TYPE_JVoltageCompConst: {
+            Serial.printf("creating JVoltageCompConst with voltage %f\n", (float)data[0]);
+            components.push_back(new RCMv3ComponentJVoltageCompConst((float)data[0]));
         } break;
         } // end switch
 
