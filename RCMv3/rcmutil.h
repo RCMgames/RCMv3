@@ -33,7 +33,11 @@ void setupRSL()
     RSL_LED = CRGB(0, 0, 0);
     FastLED.show();
 #else
+#if defined(RCM_MCU_NOU3)
+#define ONBOARD_LED 45
+#else
 #define ONBOARD_LED 2
+#endif
     pinMode(ONBOARD_LED, OUTPUT);
 #endif
 }

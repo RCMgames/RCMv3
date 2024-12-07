@@ -54,6 +54,9 @@ void connectToWifi()
         case STA: {
             WiFi.mode(WIFI_STA);
             WiFi.begin(prefs.getString("ssid").c_str(), prefs.getString("password").c_str());
+#ifdef RCM_MCU_NOU3
+            WiFi.setTxPower(WIFI_POWER_8_5dBm); // fix for wifi on nou3 thanks @torchtopher from mini FRC
+#endif
             unsigned long startConnectionMillis = millis();
             while (WiFi.status() != WL_CONNECTED && (millis() - startConnectionMillis) <= wifiConnectionTimeout) {
                 rslOn();
@@ -78,6 +81,9 @@ void connectToWifi()
         case AP: {
             WiFi.mode(WIFI_AP);
             WiFi.softAP(prefs.getString("ssid").c_str(), prefs.getString("password").c_str());
+#ifdef RCM_MCU_NOU3
+            WiFi.setTxPower(WIFI_POWER_8_5dBm); // fix for wifi on nou3 thanks @torchtopher from mini FRC
+#endif
             hasWifiConnected = true;
             Serial.print("\nCreated AP with SSID ");
             Serial.print(prefs.getString("ssid"));
@@ -91,6 +97,9 @@ void connectToWifi()
         default: {
             WiFi.mode(WIFI_AP);
             WiFi.softAP("http://rcmv3.local");
+#ifdef RCM_MCU_NOU3
+            WiFi.setTxPower(WIFI_POWER_8_5dBm); // fix for wifi on nou3 thanks @torchtopher from mini FRC
+#endif
             hasWifiConnected = true;
             Serial.print("\nCreated open AP with SSID http://rcmv3.local and IP address ");
             Serial.println(WiFi.softAPIP());
