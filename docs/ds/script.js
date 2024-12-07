@@ -1393,6 +1393,7 @@ class ActiveComponent {
                     case "JEncoder":
                     case "JControlLoop":
                     case "JMotorController":
+                    case "PCA9685":
                         this.parameters.push(-1);
                         break;
 
@@ -1852,6 +1853,10 @@ class ActiveComponent {
                         this.createHelperForComponentThatNeedsComponent(["MotorControllerOpen", "MotorControllerClosed"], element, constructorParameter, i);
                     }
                     break;
+                case "PCA9685":
+                    {
+                        this.createHelperForComponentThatNeedsComponent(["PCA9685"], element, constructorParameter, i);
+                    }
                 default:
                     console.log("unknown parameter input type: " + constructorParameter.type);
                     break;
