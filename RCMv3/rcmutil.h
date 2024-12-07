@@ -26,22 +26,20 @@ CRGB RSL_leds[1] = { CRGB(0, 0, 0) };
 
 void setupRSL()
 {
-#ifndef PIN_NEOPIXEL
-#define ONBOARD_LED 2
-    pinMode(ONBOARD_LED, OUTPUT);
-#else
+#if defined(RCM_MCU_QTPY)
     pinMode(NEOPIXEL_POWER, OUTPUT);
     digitalWrite(NEOPIXEL_POWER, HIGH);
     FastLED.addLeds<NEOPIXEL, PIN_NEOPIXEL>(RSL_leds, 1);
     RSL_LED = CRGB(0, 0, 0);
     FastLED.show();
+#else
+#define ONBOARD_LED 2
+    pinMode(ONBOARD_LED, OUTPUT);
 #endif
 }
 void enabledRSL()
 {
-#ifndef PIN_NEOPIXEL
-    digitalWrite(ONBOARD_LED, millis() % 500 < 250); // flash, enabled
-#else
+#if defined(RCM_MCU_QTPY)
     if (millis() % 500 < 250) {
         RSL_LED = RSL_COLOR;
         FastLED.show();
@@ -49,33 +47,35 @@ void enabledRSL()
         RSL_LED = RSL_OFF;
         FastLED.show();
     }
+#else
+    digitalWrite(ONBOARD_LED, millis() % 500 < 250); // flash, enabled
 #endif
 }
 void rslOn()
 {
-#ifndef PIN_NEOPIXEL
-    digitalWrite(ONBOARD_LED, HIGH);
-#else
+#if defined(RCM_MCU_QTPY)
     RSL_LED = RSL_COLOR;
     FastLED.show();
+#else
+    digitalWrite(ONBOARD_LED, HIGH);
 #endif
 }
 void rslOff()
 {
-#ifndef PIN_NEOPIXEL
-    digitalWrite(ONBOARD_LED, LOW);
-#else
+#if defined(RCM_MCU_QTPY)
     RSL_LED = RSL_OFF;
     FastLED.show();
+#else
+    digitalWrite(ONBOARD_LED, LOW);
 #endif
 }
 void disabledRSL()
 {
-#ifndef PIN_NEOPIXEL
-    digitalWrite(ONBOARD_LED, HIGH); // on, disabled
-#else
-    RSL_LED = RSL_COLOR;
+#if defined(RCM_MCU_QTPY)
+    RSL_LED = RSL_OFF;
     FastLED.show();
+#else
+    digitalWrite(ONBOARD_LED, LOW); // off, disabled
 #endif
 }
 
