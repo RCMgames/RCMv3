@@ -38,7 +38,7 @@ jobs:
       - name: copy
         run: |
             cd .pio/build
-            rm ../../docs/programmer/firmware/configurations_info.txt
+            rm -f ../../docs/programmer/firmware/configurations_info.txt
             for folder in $(ls -td -- */|tac); do
             if [ -d "$folder" ]; then
                 mkdir -p ../../docs/programmer/firmware/$folder
