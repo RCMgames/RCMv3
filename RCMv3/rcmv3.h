@@ -412,8 +412,8 @@ public:
                 { "channelPos", RC_DATA_Int },
                 { "channelNeg", RC_DATA_Int },
                 { "reverse", RC_DATA_Bool },
-                { "breakWhenEnabled", RC_DATA_Bool },
-                { "breakWhenDisabled", RC_DATA_Bool }
+                { "brakeWhenEnabled", RC_DATA_Bool },
+                { "brakeWhenDisabled", RC_DATA_Bool }
             };
         } // end of switch
         return {};

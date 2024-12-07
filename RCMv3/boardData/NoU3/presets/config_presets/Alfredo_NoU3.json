@@ -1,1 +1,220 @@
-[]
+[
+    {
+        "type": 0,
+        "name": "VoltageCompMeasure",
+        "username": "battery monitor",
+        "inputs": [],
+        "outputs": [
+            0
+        ],
+        "parameters": [
+            2,
+            155,
+            0,
+            0
+        ]
+    },
+    {
+        "type": 14,
+        "name": "PCA9685",
+        "username": "PCA",
+        "inputs": [],
+        "outputs": [],
+        "parameters": [
+            1,
+            64,
+            35,
+            36,
+            12,
+            1500
+        ]
+    },
+    {
+        "type": 15,
+        "name": "MotorDriverPCA9685HBridge",
+        "username": "motor driver 1",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            1,
+            5,
+            4,
+            false,
+            true,
+            false
+        ]
+    },
+    {
+        "type": 15,
+        "name": "MotorDriverPCA9685HBridge",
+        "username": "motor driver 2",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            1,
+            7,
+            6,
+            false,
+            true,
+            false
+        ]
+    },
+    {
+        "type": 15,
+        "name": "MotorDriverPCA9685HBridge",
+        "username": "motor driver 3",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            1,
+            9,
+            8,
+            false,
+            true,
+            false
+        ]
+    },
+    {
+        "type": 15,
+        "name": "MotorDriverPCA9685HBridge",
+        "username": "motor driver 4",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            1,
+            11,
+            10,
+            false,
+            true,
+            false
+        ]
+    },
+    {
+        "type": 15,
+        "name": "MotorDriverPCA9685HBridge",
+        "username": "motor driver 5",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            1,
+            14,
+            15,
+            false,
+            true,
+            false
+        ]
+    },
+    {
+        "type": 15,
+        "name": "MotorDriverPCA9685HBridge",
+        "username": "motor driver 6",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            1,
+            12,
+            13,
+            false,
+            true,
+            false
+        ]
+    },
+    {
+        "type": 15,
+        "name": "MotorDriverPCA9685HBridge",
+        "username": "motor driver 7",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            1,
+            2,
+            3,
+            false,
+            true,
+            false
+        ]
+    },
+    {
+        "type": 15,
+        "name": "MotorDriverPCA9685HBridge",
+        "username": "motor driver 8",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            1,
+            0,
+            1,
+            false,
+            true,
+            false
+        ]
+    },
+    {
+        "type": 3,
+        "name": "MotorDriverEsp32Servo",
+        "username": "servo driver 1",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            2,
+            4
+        ]
+    },
+    {
+        "type": 3,
+        "name": "MotorDriverEsp32Servo",
+        "username": "servo driver 2",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            3,
+            5
+        ]
+    },
+    {
+        "type": 3,
+        "name": "MotorDriverEsp32Servo",
+        "username": "servo driver 3",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            4,
+            6
+        ]
+    },
+    {
+        "type": 3,
+        "name": "MotorDriverEsp32Servo",
+        "username": "servo driver 4",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            5,
+            7
+        ]
+    }
+]

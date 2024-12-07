@@ -1,1 +1,134 @@
-[]
+[
+    {
+        "type": "float",
+        "name": "default",
+        "value": "155",
+        "mask": [
+            "adcUnitsPerVolt"
+        ]
+    },
+    {
+        "type": "pin",
+        "name": "PIN_SERVO_1",
+        "value": 4
+    },
+    {
+        "type": "pin",
+        "name": "PIN_SERVO_2",
+        "value": 5
+    },
+    {
+        "type": "pin",
+        "name": "PIN_SERVO_3",
+        "value": 6
+    },
+    {
+        "type": "pin",
+        "name": "PIN_SERVO_4",
+        "value": 7
+    },
+    {
+        "type": "pin",
+        "name": "PIN_SERVO_5",
+        "value": 8
+    },
+    {
+        "type": "pin",
+        "name": "PIN_SERVO_6",
+        "value": 9
+    },
+    {
+        "type": "HBridgePCA9685",
+        "name": "motor1port",
+        "value": [
+            5,
+            4
+        ]
+    },
+    {
+        "type": "HBridgePCA9685",
+        "name": "motor2port",
+        "value": [
+            7,
+            6
+        ]
+    },
+    {
+        "type": "HBridgePCA9685",
+        "name": "motor3port",
+        "value": [
+            9,
+            8
+        ]
+    },
+    {
+        "type": "HBridgePCA9685",
+        "name": "motor4port",
+        "value": [
+            11,
+            10
+        ]
+    },
+    {
+        "type": "HBridgePCA9685",
+        "name": "motor5port",
+        "value": [
+            14,
+            15
+        ]
+    },
+    {
+        "type": "HBridgePCA9685",
+        "name": "motor6port",
+        "value": [
+            12,
+            13
+        ]
+    },
+    {
+        "type": "HBridgePCA9685",
+        "name": "motor7port",
+        "value": [
+            2,
+            3
+        ]
+    },
+    {
+        "type": "HBridgePCA9685",
+        "name": "motor8port",
+        "value": [
+            0,
+            1
+        ]
+    },
+    {
+        "type": "pin",
+        "name": "batMonitorPin",
+        "value": 2
+    },
+    {
+        "type": "pin",
+        "name": "PIN_I2C_SDA_QWIIC",
+        "value": 33
+    },
+    {
+        "type": "pin",
+        "name": "PIN_I2C_SCL_QWIIC",
+        "value": 34
+    },
+    {
+        "type": "pin",
+        "name": "PIN_I2C_SDA_IMU",
+        "value": 35
+    },
+    {
+        "type": "pin",
+        "name": "PIN_I2C_SCL_IMU",
+        "value": 36
+    },
+    {
+        "type": "pin",
+        "name": "outputEnablePin",
+        "value": 36
+    }
+]

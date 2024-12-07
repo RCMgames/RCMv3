@@ -43,17 +43,7 @@ void setupRSL()
 }
 void enabledRSL()
 {
-#if defined(RCM_MCU_QTPY)
-    if (millis() % 500 < 250) {
-        RSL_LED = RSL_COLOR;
-        FastLED.show();
-    } else {
-        RSL_LED = RSL_OFF;
-        FastLED.show();
-    }
-#else
-    digitalWrite(ONBOARD_LED, millis() % 500 < 250); // flash, enabled
-#endif
+    (millis() % 500 < 250) ? rslOn() : rslOff();
 }
 void rslOn()
 {
@@ -75,12 +65,7 @@ void rslOff()
 }
 void disabledRSL()
 {
-#if defined(RCM_MCU_QTPY)
-    RSL_LED = RSL_OFF;
-    FastLED.show();
-#else
-    digitalWrite(ONBOARD_LED, LOW); // off, disabled
-#endif
+    rslOn();
 }
 
 void setup()
@@ -124,7 +109,7 @@ void loop()
             int blinkTime = millis() % 1500;
             for (byte i = 0; i < wifiMethod + 1; i++) {
                 if (blinkTime > i * 300 && blinkTime <= i * 300 + 100) {
-                    rslOffVal = false;
+                    rslOffVal = false; // on
                 }
             }
             rslOffVal ? rslOff() : rslOn();

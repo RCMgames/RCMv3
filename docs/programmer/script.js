@@ -80,7 +80,7 @@ async function getCode() {
         } else if (boardType == "esp32dev") {
             document.getElementById("upload-instructions").innerHTML = "<ol><li>Plug in the ESP32.</li><li>Press and hold the IO0 button on the ESP32</li><li>Press the Upload button when you have started to hold the button.</li><li>Select your ESP32's serial port in the box that will pop up.</li><li>When a green progress bar appears, let go of the IO0 button.</li></ol>";
         } else if (boardType == "NoU3") {
-            document.getElementById("upload-instructions").innerHTML = "<ol><li>Plug in the ESP32.</li><li>Press the Upload button</li><li>Select your ESP32's serial port in the box that will pop up.</li><li>Wait for a green progress bar to complete</li></ol>";
+            document.getElementById("upload-instructions").innerHTML = "<ol><li>Plug in the NoU3.</li><li>Press the Upload button</li><li>Select your NoU3's serial port in the box that pops up.</li><li>Wait for a green progress bar to complete</li></ol>";
         } else {
             document.getElementById("upload-instructions").innerHTML = "Board type unsupported. Please make an issue on github";
         }

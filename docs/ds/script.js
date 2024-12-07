@@ -1856,6 +1856,7 @@ class ActiveComponent {
                 case "PCA9685":
                     {
                         this.createHelperForComponentThatNeedsComponent(["PCA9685"], element, constructorParameter, i);
+                        break;
                     }
                 default:
                     console.log("unknown parameter input type: " + constructorParameter.type);
@@ -1890,6 +1891,33 @@ class ActiveComponent {
             }
             document.getElementById("component-properties").appendChild(helper);
         }
+
+        if (this.typename == "MotorDriverPCA9685HBridge") {
+            let helper = document.createElement("select");
+            let defaultOption = document.createElement("option");
+            defaultOption.value = null;
+            defaultOption.textContent = "select port";
+            helper.appendChild(defaultOption);
+            for (let j = 0; j < loadedParameterPreset.length; j++) {
+                if (loadedParameterPreset[j].type == "HBridgePCA9685") {
+                    let option = document.createElement("option");
+                    option.value = loadedParameterPreset[j].value;
+                    option.textContent = loadedParameterPreset[j].name;
+                    helper.appendChild(option);
+                }
+            }
+            helper.onchange = (event) => {
+                if (event.target.value) {
+                    let params = event.target.value.split(",");
+                    this.parameters[1] = parseInt(params[0]);
+                    this.parameters[2] = parseInt(params[1]);
+                    this.openProperties();
+                }
+            }
+            document.getElementById("component-properties").appendChild(helper);
+        }
+        //TODO: add special helper for JMotorDriverEsp32Servo
+
 
         // display all inputs
         let inputsElement = document.createElement("div");
