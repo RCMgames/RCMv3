@@ -481,7 +481,7 @@ public:
 
     virtual ~RCMv3Component()
     {
-        // child classes should call disable() in their destructor if needed
+        disable();
         jsonData.clear();
         delete[] inputs;
         delete[] outputs;
@@ -774,13 +774,29 @@ void ISR12(){isrManager(12);}
 void ISR13(){isrManager(13);}
 void ISR14(){isrManager(14);}
 void ISR15(){isrManager(15);}
+void ISR16(){isrManager(16);}
+void ISR17(){isrManager(17);}
+void ISR18(){isrManager(18);}
+void ISR19(){isrManager(19);}
+void ISR20(){isrManager(20);}
+void ISR21(){isrManager(21);}
+void ISR22(){isrManager(22);}
+void ISR23(){isrManager(23);}
+void ISR24(){isrManager(24);}
+void ISR25(){isrManager(25);}
+void ISR26(){isrManager(26);}
+void ISR27(){isrManager(27);}
+void ISR28(){isrManager(28);}
+void ISR29(){isrManager(29);}
+void ISR30(){isrManager(30);}
+void ISR31(){isrManager(31);}
 // clang-format on
 
-#define NUM_ISRS 16
-void (*isrArrayVoids[NUM_ISRS])(void) = { &ISR0, &ISR1, &ISR2, &ISR3, &ISR4, &ISR5, &ISR6, &ISR7, &ISR8, &ISR9, &ISR10, &ISR11, &ISR12, &ISR13, &ISR14, &ISR15 };
-boolean isrArrayElementAssigned[NUM_ISRS] = { false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
-RCMv3Component* isrArrayComponents[NUM_ISRS] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
-byte isrArrayCallbackIndex[NUM_ISRS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+#define NUM_ISRS 32 // only half can really be used, since components are created before they are deleted
+void (*isrArrayVoids[NUM_ISRS])(void) = { &ISR0, &ISR1, &ISR2, &ISR3, &ISR4, &ISR5, &ISR6, &ISR7, &ISR8, &ISR9, &ISR10, &ISR11, &ISR12, &ISR13, &ISR14, &ISR15, &ISR16, &ISR17, &ISR18, &ISR19, &ISR20, &ISR21, &ISR22, &ISR23, &ISR24, &ISR25, &ISR26, &ISR27, &ISR28, &ISR29, &ISR30, &ISR31 };
+boolean isrArrayElementAssigned[NUM_ISRS] = { false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
+RCMv3Component* isrArrayComponents[NUM_ISRS] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+byte isrArrayCallbackIndex[NUM_ISRS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 void isrManager(byte i)
 {
@@ -829,7 +845,7 @@ protected:
 
 public:
     /**
-     * @note   use isrManagerClaimPointer to get the isr functions and handle errors in the code that calls this constructor
+     * @note if successfullyCreatedISRs() returns false, the component must be deleted
      */
     RCMv3ComponentJEncoderQuadrature(byte pinA, byte pinB, float distPerCountFactor, bool reverse, int slowestIntervalMicros)
         : RCMv3Component(RC_TYPE_JEncoderQuadrature)
@@ -879,8 +895,10 @@ public:
     }
     ~RCMv3ComponentJEncoderQuadrature()
     {
-        isrManagerFreePointer(isrAI);
-        isrManagerFreePointer(isrBI);
+        if (successfullyCreatedISRsVal) {
+            isrManagerFreePointer(isrAI);
+            isrManagerFreePointer(isrBI);
+        }
         delete (JEncoderQuadratureAttachInterrupt*)internalInstance;
     }
 };

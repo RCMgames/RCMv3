@@ -1471,6 +1471,11 @@ class ActiveComponent {
             this.element.remove();
             activeComponentList.splice(activeComponentList.indexOf(this), 1);
             document.getElementById("component-properties").replaceChildren();
+            //TODO: test re-assign this.index for all activeComponentList
+            for (let i = 0; i < activeComponentList.length; i++) {
+                activeComponentList[i].index = i;
+                activeComponentList[i].updateHTMLElement();
+            }
         }
         this.element.appendChild(deleteButton);
 
