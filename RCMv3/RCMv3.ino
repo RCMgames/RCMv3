@@ -5,8 +5,6 @@
 #include "rcmv3.h"
 #include "websocketcomms.h"
 
-#include <vector>
-
 void Enabled()
 {
     // code to run while enabled, put your main code here

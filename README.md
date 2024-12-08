@@ -12,6 +12,9 @@ https://rcmgames.github.io/RCMv3/programmer
 ## Driverstation
 https://rcmgames.github.io/RCMv3/ds/
 
+## Examples
+https://github.com/RCMgames/RCMv3-examples
+
 ## Compatibility
 * [RCM_V4](https://github.com/RCMgames/RCM-Hardware-V4)
 * [RCM_BYTE](https://github.com/RCMgames/RCM-Hardware-BYTE)
@@ -30,6 +33,9 @@ https://rcmgames.github.io/RCMv3/ds/
 * [Information about all hardware and software for Robot Control Modules](https://github.com/rcmgames?view_as=public)
 * [JMotor library documentation](https://joshua-8.github.io/JMotor/md_readme.html) (documentation for many of the motor control components)
 
+## Note
+* If you like the web driverstation but prefer to program the robot in C++/Arduino you can add code into RCMv3.ino similarly to RCMv2, though the definitions for pins and ports aren't included.
+
 ## LED blink codes
 * 2Hz: enabled
 * solid on: disabled but connected
@@ -45,7 +51,7 @@ https://rcmgames.github.io/RCMv3/ds/
 * [esptool-js](https://github.com/espressif/esptool-js)
 * [ArduinoJson](https://arduinojson.org/) library for using JSON data in Arduino by Benoit Blanchon
 * [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) web server and web sockets library for ESP32 by @me-no-dev
-* [Alfredo Systems](https://www.alfredosys.com/) for making opensource libraries for their NoU2 and NoU3 boards
+* [Alfredo Systems](https://www.alfredosys.com/) for making open source libraries for their NoU2 and NoU3 boards
 * [FastLED](https://github.com/FastLED/FastLED) library for controlling the RGB led on QT Py
 * [gobabygocarswithjoysticks/programmer](https://github.com/gobabygocarswithjoysticks/programmer) the RCM programmer reuses code from this project for programming ESP32s
 * [JMotor](https://github.com/joshua-8/JMotor) library for motor control by @joshua-8

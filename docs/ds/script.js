@@ -1840,7 +1840,7 @@ class ActiveComponent {
                     break;
                 case "JEncoder":
                     {
-                        this.createHelperForComponentThatNeedsComponent(["EncoderBSED"], element, constructorParameter, i);
+                        this.createHelperForComponentThatNeedsComponent(["EncoderBSED", "EncoderQuadrature"], element, constructorParameter, i);
                     }
                     break;
                 case "JControlLoop":
@@ -2128,7 +2128,7 @@ async function loadPresets() {
 
             element.onclick = () => {
                 document.getElementById("config-status").innerHTML = "Loading...";
-                document.getElementById("config-status").style.backgroundColor = "yellow"; //TODO: CLEAN UP CONFIG-STATUS WINDOW SETTING CODE
+                document.getElementById("config-status").style.backgroundColor = "yellow"; //TODO: clean up config-status window setting code (make a function?)
                 fetch('/presets/config_presets/' + config_presets[i]).then(response => response.json()).then(configComponents => {
                     for (let j = 0; j < configComponents.length; j++) {
                         activeComponentList.push(new ActiveComponent(configComponents[j], activeComponentList.length, true));

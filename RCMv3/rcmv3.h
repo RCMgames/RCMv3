@@ -93,7 +93,8 @@ const char* RCMv3ComponentTypeNames[] = {
     "MotorControllerClosed",
     "VoltageCompConst",
     "PCA9685",
-    "MotorDriverPCA9685HBridge"
+    "MotorDriverPCA9685HBridge",
+    "EncoderQuadrature"
 };
 // DO NOT REARRANGE arrays, it breaks old config files
 enum RCMv3ComponentType {
@@ -113,6 +114,7 @@ enum RCMv3ComponentType {
     RC_TYPE_JVoltageCompConst,
     RC_TYPE_PCA9685,
     RC_TYPE_JMotorDriverPCA9685HBridge,
+    RC_TYPE_JEncoderQuadrature,
     RC_TYPE_COUNT
 };
 
@@ -132,7 +134,8 @@ int RCMv3ComponentNumInputs[] = {
     2, // JMotorControllerClosed
     0, // JVoltageCompConst
     0, // PCA9685
-    1 // Motor Driver PCA9685 HBridge
+    1, // Motor Driver PCA9685 HBridge
+    0 // Encoder Quadrature
 };
 
 /**
@@ -201,6 +204,8 @@ const char* RCMv3ComponentInputNames(RCMv3ComponentType type, uint8_t input)
         return "";
     case RC_TYPE_JMotorDriverPCA9685HBridge:
         return "power";
+    case RC_TYPE_JEncoderQuadrature:
+        return "";
     } // end of switch
     return "";
 };
@@ -221,7 +226,8 @@ int RCMv3ComponentNumOutputs[] = {
     2, // JMotorControllerClosed
     1, // JVoltageCompConst
     0, // PCA9685
-    0 // Motor Driver PCA9685 HBridge
+    0, // Motor Driver PCA9685 HBridge
+    2, // Encoder Quadrature
 };
 
 const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
@@ -281,6 +287,13 @@ const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
         return "";
     case RC_TYPE_JMotorDriverPCA9685HBridge:
         return "";
+    case RC_TYPE_JEncoderQuadrature:
+        switch (output) {
+        case 0:
+            return "position";
+        case 1:
+            return "velocity";
+        }
     } // end of switch
     return "";
 };
@@ -414,6 +427,14 @@ public:
                 { "reverse", RC_DATA_Bool },
                 { "brakeWhenEnabled", RC_DATA_Bool },
                 { "brakeWhenDisabled", RC_DATA_Bool }
+            };
+        case RC_TYPE_JEncoderQuadrature:
+            return {
+                { "pinA", RC_DATA_Pin },
+                { "pinB", RC_DATA_Pin },
+                { "distPerCountFactor", RC_DATA_Float },
+                { "reverse", RC_DATA_Bool },
+                { "slowestIntervalMicros", RC_DATA_Int }
             };
         } // end of switch
         return {};
@@ -734,6 +755,93 @@ public:
     }
 };
 
+void isrManager(byte i);
+// clang-format off
+void ISR0(){isrManager(0);}
+void ISR1(){isrManager(1);}
+void ISR2(){isrManager(2);}
+void ISR3(){isrManager(3);}
+void ISR4(){isrManager(4);}
+void ISR5(){isrManager(5);}
+void ISR6(){isrManager(6);}
+void ISR7(){isrManager(7);}
+void ISR8(){isrManager(8);}
+void ISR9(){isrManager(9);}
+void ISR10(){isrManager(10);}
+void ISR11(){isrManager(11);}
+// clang-format on
+
+#define NUM_ISRS 12
+void (*isrArray[NUM_ISRS])(void) = { &ISR0, &ISR1, &ISR2, &ISR3, &ISR4, &ISR5, &ISR6, &ISR7, &ISR8, &ISR9, &ISR10, &ISR11 };
+boolean isrArrayElementAssigned[NUM_ISRS] = { false, false, false, false, false, false, false, false, false, false, false, false };
+
+void isrManager(byte i)
+{
+    if (isrArrayElementAssigned[i] == true && isrArray[i] != nullptr) {
+        isrArray[i]();
+    }
+}
+
+boolean isrManagerClaimPointer(void (**func)(void), int* num)
+{
+    for (int i = 0; i < NUM_ISRS; i++) {
+        if (isrArrayElementAssigned[i] == false) {
+            isrArrayElementAssigned[i] = true;
+            *num = i;
+            *func = isrArray[i];
+            return true;
+        }
+    }
+    return false;
+}
+
+void isrManagerFreePointer(int num)
+{
+    isrArrayElementAssigned[num] = false;
+}
+
+class RCMv3ComponentJEncoderQuadrature : public RCMv3Component {
+protected:
+    void (*isra)(void);
+    void (*isrb)(void);
+    int isrAI;
+    int isrBI;
+
+public:
+    /**
+     * @note   use isrManagerClaimPointer to get the isr functions and handle errors in the code that calls this constructor
+     */
+    RCMv3ComponentJEncoderQuadrature(void (*_isra)(void), void (*_isrb)(void), int isrAI, int isrBI, byte pinA, byte pinB, float distPerCountFactor, bool reverse, int slowestIntervalMicros)
+        : RCMv3Component(RC_TYPE_JEncoderQuadrature)
+    {
+        isra = _isra;
+        isrb = _isrb;
+        isrAI = isrAI;
+        isrBI = isrBI;
+        internalInstance = new JEncoderQuadratureAttachInterrupt(pinA, pinB, distPerCountFactor, reverse, slowestIntervalMicros);
+    }
+    void begin()
+    {
+        ((JEncoderQuadratureAttachInterrupt*)internalInstance)->setUpInterrupts(isra, isrb);
+    }
+    float read(int index)
+    {
+        switch (index) {
+        case 0:
+            return ((JEncoderQuadratureAttachInterrupt*)internalInstance)->getPos();
+        case 1:
+            return ((JEncoderQuadratureAttachInterrupt*)internalInstance)->getVel();
+        }
+        return 0;
+    }
+    ~RCMv3ComponentJEncoderQuadrature()
+    {
+        isrManagerFreePointer(isrAI);
+        isrManagerFreePointer(isrBI);
+        delete (JEncoderQuadratureAttachInterrupt*)internalInstance;
+    }
+};
+
 class RCMv3ComponentJServoController : public RCMv3Component {
 protected:
     int inputMode;
@@ -873,7 +981,7 @@ public:
         delete (JMotorControllerOpen*)internalInstance;
     }
 };
-
+// TODO: think about when/how position is reset. avoid the float getting big, but also allow for moving specific distances (most important for when drivetrains are added)
 class RCMv3ComponentJMotorControllerClosed : public RCMv3Component {
 protected:
     int inputMode;
@@ -1059,7 +1167,7 @@ public:
                 }
             } break;
             case RC_DATA_JEncoder: {
-                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_JEncoderBSED }) == false) {
+                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_JEncoderBSED, RC_TYPE_JEncoderQuadrature }) == false) {
                     return false;
                 }
             } break;
@@ -1220,6 +1328,25 @@ public:
             PCA9685* pca9685 = (PCA9685*)components[(int)data[0]]->getInternalInstance();
             Serial.printf("creating JMotorDriverPCA9685HBridge with pca9685 %d and channelPos %d and channelNeg %d and reverse %d and breakWhenEnabled %d and breakWhenDisabled %d\n", (int)data[0], (int)data[1], (int)data[2], (int)data[3], (int)data[4], (int)data[5]);
             components.push_back(new RCMv3ComponentJMotorDriverPCA9685HBridge(*pca9685, (int)data[1], (int)data[2], (bool)data[3], (bool)data[4], (bool)data[5]));
+        } break;
+        case RC_TYPE_JEncoderQuadrature: {
+            void (*isra)(void);
+            void (*isrb)(void);
+            int isrAI;
+            int isrBI;
+            boolean gotAisr = isrManagerClaimPointer(&isra, &isrAI);
+            if (!gotAisr) {
+                create_component_error_msg += " could not claim isrA pointer";
+                return false;
+            }
+            boolean gotBisr = isrManagerClaimPointer(&isrb, &isrBI);
+            if (!gotBisr) {
+                isrManagerFreePointer(isrAI);
+                create_component_error_msg += " could not claim isrB pointer";
+                return false;
+            }
+            Serial.printf("creating JEncoderQuadrature with isrAI %d and isrBI %d and pinA %d and pinB %d and distPerCountFactor %f and reverse %d and slowestIntervalMicros %d\n", isrAI, isrBI, (int)data[0], (int)data[1], (float)data[2], (bool)data[3], (int)data[4]);
+            components.push_back(new RCMv3ComponentJEncoderQuadrature(isra, isrb, isrAI, isrBI, (byte)data[0], (byte)data[1], (float)data[2], (bool)data[3], (int)data[4]));
         } break;
         } // end switch
 
