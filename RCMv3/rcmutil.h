@@ -26,7 +26,7 @@ CRGB RSL_leds[1] = { CRGB(0, 0, 0) };
 
 void setupRSL()
 {
-#if defined(RCM_MCU_QTPY)
+#if defined(RCM_MCU_QT_PY)
     pinMode(NEOPIXEL_POWER, OUTPUT);
     digitalWrite(NEOPIXEL_POWER, HIGH);
     FastLED.addLeds<NEOPIXEL, PIN_NEOPIXEL>(RSL_leds, 1);
@@ -47,7 +47,7 @@ void enabledRSL()
 }
 void rslOn()
 {
-#if defined(RCM_MCU_QTPY)
+#if defined(RCM_MCU_QT_PY)
     RSL_LED = RSL_COLOR;
     FastLED.show();
 #else
@@ -56,7 +56,7 @@ void rslOn()
 }
 void rslOff()
 {
-#if defined(RCM_MCU_QTPY)
+#if defined(RCM_MCU_QT_PY)
     RSL_LED = RSL_OFF;
     FastLED.show();
 #else
