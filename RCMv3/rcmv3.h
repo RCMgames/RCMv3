@@ -477,13 +477,14 @@ public:
     virtual void run() { }
     virtual void write(int index, float value) { }
     virtual float read(int index) { return 0; }
+    virtual void callback(byte id) { }
 
     virtual ~RCMv3Component()
     {
         // child classes should call disable() in their destructor if needed
         jsonData.clear();
-        delete inputs;
-        delete outputs;
+        delete[] inputs;
+        delete[] outputs;
     }
 };
 
@@ -769,28 +770,45 @@ void ISR8(){isrManager(8);}
 void ISR9(){isrManager(9);}
 void ISR10(){isrManager(10);}
 void ISR11(){isrManager(11);}
+void ISR12(){isrManager(12);}
+void ISR13(){isrManager(13);}
+void ISR14(){isrManager(14);}
+void ISR15(){isrManager(15);}
 // clang-format on
 
-#define NUM_ISRS 12
-void (*isrArray[NUM_ISRS])(void) = { &ISR0, &ISR1, &ISR2, &ISR3, &ISR4, &ISR5, &ISR6, &ISR7, &ISR8, &ISR9, &ISR10, &ISR11 };
-boolean isrArrayElementAssigned[NUM_ISRS] = { false, false, false, false, false, false, false, false, false, false, false, false };
+#define NUM_ISRS 16
+void (*isrArrayVoids[NUM_ISRS])(void) = { &ISR0, &ISR1, &ISR2, &ISR3, &ISR4, &ISR5, &ISR6, &ISR7, &ISR8, &ISR9, &ISR10, &ISR11, &ISR12, &ISR13, &ISR14, &ISR15 };
+boolean isrArrayElementAssigned[NUM_ISRS] = { false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
+RCMv3Component* isrArrayComponents[NUM_ISRS] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+byte isrArrayCallbackIndex[NUM_ISRS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 void isrManager(byte i)
 {
-    if (isrArrayElementAssigned[i] == true && isrArray[i] != nullptr) {
-        isrArray[i]();
+    if (isrArrayElementAssigned[i] == true && isrArrayComponents[i] != nullptr) {
+        isrArrayComponents[i]->callback(isrArrayCallbackIndex[i]);
     }
 }
 
-boolean isrManagerClaimPointer(void (**func)(void), int* num)
+boolean isrManagerClaimPointer(void (**func)(void), int* pointerIndex, RCMv3Component* component, byte callbackIndex)
 {
     for (int i = 0; i < NUM_ISRS; i++) {
         if (isrArrayElementAssigned[i] == false) {
             isrArrayElementAssigned[i] = true;
-            *num = i;
-            *func = isrArray[i];
+            *func = isrArrayVoids[i];
+            *pointerIndex = i;
+            isrArrayComponents[i] = component;
+            isrArrayCallbackIndex[i] = callbackIndex;
             return true;
         }
+    }
+    return false;
+}
+
+boolean isrManagerSetComponent(int num, RCMv3Component* component)
+{
+    if (isrArrayElementAssigned[num] == true && isrArrayComponents[num] == nullptr) {
+        isrArrayComponents[num] = component;
+        return true;
     }
     return false;
 }
@@ -798,6 +816,7 @@ boolean isrManagerClaimPointer(void (**func)(void), int* num)
 void isrManagerFreePointer(int num)
 {
     isrArrayElementAssigned[num] = false;
+    isrArrayComponents[num] = nullptr;
 }
 
 class RCMv3ComponentJEncoderQuadrature : public RCMv3Component {
@@ -806,19 +825,39 @@ protected:
     void (*isrb)(void);
     int isrAI;
     int isrBI;
+    boolean successfullyCreatedISRsVal;
 
 public:
     /**
      * @note   use isrManagerClaimPointer to get the isr functions and handle errors in the code that calls this constructor
      */
-    RCMv3ComponentJEncoderQuadrature(void (*_isra)(void), void (*_isrb)(void), int isrAI, int isrBI, byte pinA, byte pinB, float distPerCountFactor, bool reverse, int slowestIntervalMicros)
+    RCMv3ComponentJEncoderQuadrature(byte pinA, byte pinB, float distPerCountFactor, bool reverse, int slowestIntervalMicros)
         : RCMv3Component(RC_TYPE_JEncoderQuadrature)
     {
-        isra = _isra;
-        isrb = _isrb;
-        isrAI = isrAI;
-        isrBI = isrBI;
+        successfullyCreatedISRsVal = false;
+        if (isrManagerClaimPointer(&isra, &isrAI, this, 0)) {
+            if (isrManagerClaimPointer(&isrb, &isrBI, this, 1)) {
+                successfullyCreatedISRsVal = true;
+            } else {
+                isrManagerFreePointer(isrAI);
+            }
+        }
         internalInstance = new JEncoderQuadratureAttachInterrupt(pinA, pinB, distPerCountFactor, reverse, slowestIntervalMicros);
+    }
+    boolean successfullyCreatedISRs()
+    {
+        return successfullyCreatedISRsVal;
+    }
+    void callback(byte id)
+    {
+        switch (id) {
+        case 0:
+            ((JEncoderQuadratureAttachInterrupt*)internalInstance)->ISRA();
+            break;
+        case 1:
+            ((JEncoderQuadratureAttachInterrupt*)internalInstance)->ISRB();
+            break;
+        }
     }
     void begin()
     {
@@ -1330,23 +1369,15 @@ public:
             components.push_back(new RCMv3ComponentJMotorDriverPCA9685HBridge(*pca9685, (int)data[1], (int)data[2], (bool)data[3], (bool)data[4], (bool)data[5]));
         } break;
         case RC_TYPE_JEncoderQuadrature: {
-            void (*isra)(void);
-            void (*isrb)(void);
-            int isrAI;
-            int isrBI;
-            boolean gotAisr = isrManagerClaimPointer(&isra, &isrAI);
-            if (!gotAisr) {
-                create_component_error_msg += " could not claim isrA pointer";
+            Serial.printf("creating JEncoderQuadrature with pinA %d and pinB %d and distPerCountFactor %f and reverse %d and slowestIntervalMicros %d\n", (int)data[0], (int)data[1], (float)data[2], (bool)data[3], (int)data[4]);
+            RCMv3ComponentJEncoderQuadrature* newEncoder = new RCMv3ComponentJEncoderQuadrature((byte)data[0], (byte)data[1], (float)data[2], (bool)data[3], (int)data[4]);
+            if (newEncoder && newEncoder->successfullyCreatedISRs()) {
+                components.push_back(newEncoder);
+            } else {
+                create_component_error_msg += " failed to create ISRs";
+                delete newEncoder;
                 return false;
             }
-            boolean gotBisr = isrManagerClaimPointer(&isrb, &isrBI);
-            if (!gotBisr) {
-                isrManagerFreePointer(isrAI);
-                create_component_error_msg += " could not claim isrB pointer";
-                return false;
-            }
-            Serial.printf("creating JEncoderQuadrature with isrAI %d and isrBI %d and pinA %d and pinB %d and distPerCountFactor %f and reverse %d and slowestIntervalMicros %d\n", isrAI, isrBI, (int)data[0], (int)data[1], (float)data[2], (bool)data[3], (int)data[4]);
-            components.push_back(new RCMv3ComponentJEncoderQuadrature(isra, isrb, isrAI, isrBI, (byte)data[0], (byte)data[1], (float)data[2], (bool)data[3], (int)data[4]));
         } break;
         } // end switch
 
