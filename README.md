@@ -13,15 +13,18 @@ https://rcmgames.github.io/RCMv3/programmer
 https://rcmgames.github.io/RCMv3/ds/
 
 ## Compatibility
-### RCM Boards
+* [RCM_V4](https://github.com/RCMgames/RCM-Hardware-V4)
 * [RCM_BYTE](https://github.com/RCMgames/RCM-Hardware-BYTE)
 * [RCM_Nibble](https://github.com/RCMgames/RCM-Hardware-Nibble)
-* [RCM_V4](https://github.com/RCMgames/RCM-Hardware-V4)
+* [Alfredo Systems NoU2](https://www.alfredosys.com/products/alfredo-nou2/)
+* [Alfredo Systems NoU3](https://www.alfredosys.com/products/alfredo-nou3/)
 
-### ESP32 Boards
+### ESP32 Microcontrollers
 * ESP32 DevKitC with 38 pins
 * Adafruit ESP32s3 QT Py with no psram (#5426)
 * Adafruit ESP32s3 QT Py with 2MB psram (#5700)
+* ESP32 DevKit with 30 pins (NoU2)
+* Alfredo Systems NoU3
 
 ## References
 * [Information about all hardware and software for Robot Control Modules](https://github.com/rcmgames?view_as=public)
@@ -42,6 +45,7 @@ https://rcmgames.github.io/RCMv3/ds/
 * [esptool-js](https://github.com/espressif/esptool-js)
 * [ArduinoJson](https://arduinojson.org/) library for using JSON data in Arduino by Benoit Blanchon
 * [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) web server and web sockets library for ESP32 by @me-no-dev
+* [Alfredo Systems](https://www.alfredosys.com/) for making opensource libraries for their NoU2 and NoU3 boards
 * [FastLED](https://github.com/FastLED/FastLED) library for controlling the RGB led on QT Py
 * [gobabygocarswithjoysticks/programmer](https://github.com/gobabygocarswithjoysticks/programmer) the RCM programmer reuses code from this project for programming ESP32s
 * [JMotor](https://github.com/joshua-8/JMotor) library for motor control by @joshua-8
