@@ -863,6 +863,10 @@ public:
     {
         ((JEncoderQuadratureAttachInterrupt*)internalInstance)->setUpInterrupts(isra, isrb);
     }
+    void run()
+    {
+        ((JEncoderQuadratureAttachInterrupt*)internalInstance)->run();
+    }
     float read(int index)
     {
         switch (index) {
@@ -1372,6 +1376,7 @@ public:
             Serial.printf("creating JEncoderQuadrature with pinA %d and pinB %d and distPerCountFactor %f and reverse %d and slowestIntervalMicros %d\n", (int)data[0], (int)data[1], (float)data[2], (bool)data[3], (int)data[4]);
             RCMv3ComponentJEncoderQuadrature* newEncoder = new RCMv3ComponentJEncoderQuadrature((byte)data[0], (byte)data[1], (float)data[2], (bool)data[3], (int)data[4]);
             if (newEncoder && newEncoder->successfullyCreatedISRs()) {
+                Serial.println("        encoder created successfully");
                 components.push_back(newEncoder);
             } else {
                 create_component_error_msg += " failed to create ISRs";
