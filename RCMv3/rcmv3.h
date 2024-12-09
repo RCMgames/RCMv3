@@ -1125,7 +1125,7 @@ protected:
         }
         int componentIndex = data;
         if (componentIndex < 0 || componentIndex >= components.size()) {
-            create_component_error_msg += " there is no component #" + String(componentIndex) + " ";
+            create_component_error_msg += " there is no component #" + String(componentIndex) + " above the current component ";
             return false;
         }
         boolean validType = false;
@@ -1211,7 +1211,7 @@ public:
                 }
             } break;
             case RC_DATA_VoltageComp: {
-                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_JVoltageCompMeasure }) == false) {
+                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_JVoltageCompMeasure, RC_TYPE_JVoltageCompConst }) == false) {
                     return false;
                 }
             } break;
