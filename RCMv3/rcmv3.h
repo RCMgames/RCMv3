@@ -48,6 +48,7 @@ enum RCMv3DataType {
     RC_DATA_JControlLoop,
     RC_DATA_JMotorController,
     RC_DATA_PCA9685,
+    RC_DATA_JDrivetrain,
     RC_DATA_COUNT
 };
 // DO NOT RENAME without updating docs/ds/script.js and all presets
@@ -70,6 +71,7 @@ const char* RCMv3DataTypeNames[] = {
     "JControlLoop",
     "JMotorController",
     "PCA9685",
+    "JDrivetrain"
 };
 typedef struct {
     const char* name;
@@ -94,7 +96,8 @@ const char* RCMv3ComponentTypeNames[] = {
     "VoltageCompConst",
     "PCA9685",
     "MotorDriverPCA9685HBridge",
-    "EncoderQuadrature"
+    "EncoderQuadrature",
+    "DrivetrainTwoSide"
 };
 // DO NOT REARRANGE arrays, it breaks old config files
 enum RCMv3ComponentType {
@@ -115,6 +118,7 @@ enum RCMv3ComponentType {
     RC_TYPE_PCA9685,
     RC_TYPE_JMotorDriverPCA9685HBridge,
     RC_TYPE_JEncoderQuadrature,
+    RC_TYPE_JDrivetrainTwoSide,
     RC_TYPE_COUNT
 };
 
@@ -135,7 +139,8 @@ int RCMv3ComponentNumInputs[] = {
     0, // JVoltageCompConst
     0, // PCA9685
     1, // Motor Driver PCA9685 HBridge
-    0 // Encoder Quadrature
+    0, // Encoder Quadrature
+    3 // Drivetrain Two Side
 };
 
 /**
@@ -206,6 +211,15 @@ const char* RCMv3ComponentInputNames(RCMv3ComponentType type, uint8_t input)
         return "power";
     case RC_TYPE_JEncoderQuadrature:
         return "";
+    case RC_TYPE_JDrivetrainTwoSide:
+        switch (input) {
+        case 0:
+            return "velocity turning";
+        case 1:
+            return "velocity forwards";
+        case 2:
+            return "velocity left";
+        }
     } // end of switch
     return "";
 };
@@ -228,6 +242,7 @@ int RCMv3ComponentNumOutputs[] = {
     0, // PCA9685
     0, // Motor Driver PCA9685 HBridge
     2, // Encoder Quadrature
+    3 // Drivetrain Two Side
 };
 
 const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
@@ -293,6 +308,15 @@ const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
             return "position";
         case 1:
             return "velocity";
+        }
+    case RC_TYPE_JDrivetrainTwoSide:
+        switch (output) {
+        case 0:
+            return "velocity turning";
+        case 1:
+            return "velocity forwards";
+        case 2:
+            return "velocity left";
         }
     } // end of switch
     return "";
@@ -435,6 +459,12 @@ public:
                 { "distPerCountFactor", RC_DATA_Float },
                 { "reverse", RC_DATA_Bool },
                 { "slowestIntervalMicros", RC_DATA_Int }
+            };
+        case RC_TYPE_JDrivetrainTwoSide:
+            return {
+                { "leftMotor", RC_DATA_JMotorController },
+                { "rightMotor", RC_DATA_JMotorController },
+                { "width", RC_DATA_Float }
             };
         } // end of switch
         return {};
@@ -1114,6 +1144,57 @@ public:
     }
 };
 
+class RCMv3ComponentJDrivetrainTwoSide : public RCMv3Component {
+protected:
+    JTwoDTransform twoDTransform;
+
+public:
+    RCMv3ComponentJDrivetrainTwoSide(JMotorController& left, JMotorController& right, float width)
+        : RCMv3Component(RC_TYPE_JDrivetrainTwoSide)
+    {
+        internalInstance = new JDrivetrainTwoSide(left, right, width);
+    }
+    void enable()
+    {
+        ((JDrivetrainTwoSide*)internalInstance)->enable();
+    }
+    void disable()
+    {
+        ((JDrivetrainTwoSide*)internalInstance)->disable();
+    }
+    void run()
+    {
+        ((JDrivetrainTwoSide*)internalInstance)->setVel(twoDTransform, false);
+        ((JDrivetrainTwoSide*)internalInstance)->run();
+    }
+    void write(int index, float value)
+    {
+        if (index == 0) {
+            twoDTransform.theta = value;
+        } else if (index == 1) {
+            twoDTransform.x = value;
+        } else if (index == 2) {
+            twoDTransform.y = value;
+        }
+    }
+    float read(int index)
+    {
+        switch (index) {
+        case 0:
+            return ((JDrivetrainTwoSide*)internalInstance)->getVel().theta;
+        case 1:
+            return ((JDrivetrainTwoSide*)internalInstance)->getVel().x;
+        case 2:
+            return ((JDrivetrainTwoSide*)internalInstance)->getVel().y;
+        }
+        return 0;
+    }
+    ~RCMv3ComponentJDrivetrainTwoSide()
+    {
+        delete (JDrivetrainTwoSide*)internalInstance;
+    }
+};
+
 boolean refreshOutputListSize = true;
 
 class RCMv3ComponentFactory {
@@ -1239,6 +1320,11 @@ public:
             } break;
             case RC_DATA_JMotorController: {
                 if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_JMotorControllerOpen, RC_TYPE_JMotorControllerClosed }) == false) {
+                    return false;
+                }
+            } break;
+            case RC_DATA_JDrivetrain: {
+                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_JDrivetrainTwoSide }) == false) {
                     return false;
                 }
             } break;
