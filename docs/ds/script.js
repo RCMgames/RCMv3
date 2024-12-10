@@ -1866,7 +1866,7 @@ class ActiveComponent {
                     break;
                 case "JDrivetrain":
                     {
-                        this.createHelperForComponentThatNeedsComponent(["DrivetrainTwoSide"], element, constructorParameter, i);
+                        this.createHelperForComponentThatNeedsComponent(["DrivetrainTwoSide", "JDrivetrainMecanum"], element, constructorParameter, i);
                     }
                     break;
                 default:

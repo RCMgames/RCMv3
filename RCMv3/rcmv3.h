@@ -119,6 +119,7 @@ enum RCMv3ComponentType {
     RC_TYPE_JMotorDriverPCA9685HBridge,
     RC_TYPE_JEncoderQuadrature,
     RC_TYPE_JDrivetrainTwoSide,
+    RC_TYPE_JDrivetrainMecanum,
     RC_TYPE_COUNT
 };
 
@@ -140,7 +141,8 @@ int RCMv3ComponentNumInputs[] = {
     0, // PCA9685
     1, // Motor Driver PCA9685 HBridge
     0, // Encoder Quadrature
-    3 // Drivetrain Two Side
+    3, // Drivetrain Two Side
+    3, // Drivetrain Mecanum
 };
 
 /**
@@ -220,6 +222,15 @@ const char* RCMv3ComponentInputNames(RCMv3ComponentType type, uint8_t input)
         case 2:
             return "velocity left";
         }
+    case RC_TYPE_JDrivetrainMecanum:
+        switch (input) {
+        case 0:
+            return "velocity turning";
+        case 1:
+            return "velocity forwards";
+        case 2:
+            return "velocity left";
+        }
     } // end of switch
     return "";
 };
@@ -242,7 +253,8 @@ int RCMv3ComponentNumOutputs[] = {
     0, // PCA9685
     0, // Motor Driver PCA9685 HBridge
     2, // Encoder Quadrature
-    3 // Drivetrain Two Side
+    3, // Drivetrain Two Side
+    3, // Drivetrain Mecanum
 };
 
 const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
@@ -310,6 +322,15 @@ const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
             return "velocity";
         }
     case RC_TYPE_JDrivetrainTwoSide:
+        switch (output) {
+        case 0:
+            return "velocity turning";
+        case 1:
+            return "velocity forwards";
+        case 2:
+            return "velocity left";
+        }
+    case RC_TYPE_JDrivetrainMecanum:
         switch (output) {
         case 0:
             return "velocity turning";
@@ -465,6 +486,16 @@ public:
                 { "leftMotor", RC_DATA_JMotorController },
                 { "rightMotor", RC_DATA_JMotorController },
                 { "width", RC_DATA_Float }
+            };
+        case RC_TYPE_JDrivetrainMecanum:
+            return {
+                { "FRmotor", RC_DATA_JMotorController },
+                { "FLmotor", RC_DATA_JMotorController },
+                { "BLmotor", RC_DATA_JMotorController },
+                { "BRmotor", RC_DATA_JMotorController },
+                { "forwardsScalar", RC_DATA_Float },
+                { "rightScalar", RC_DATA_Float },
+                { "CCWScalar", RC_DATA_Float }
             };
         } // end of switch
         return {};
@@ -1195,6 +1226,57 @@ public:
     }
 };
 
+class RCMv3ComponentJDrivetrainMecanum : public RCMv3Component {
+protected:
+    JTwoDTransform twoDTransform;
+
+public:
+    RCMv3ComponentJDrivetrainMecanum(JMotorController& FRmotor, JMotorController& FLmotor, JMotorController& BLmotor, JMotorController& BRmotor, float forwardsScalar, float rightScalar, float CCWScalar)
+        : RCMv3Component(RC_TYPE_JDrivetrainMecanum)
+    {
+        internalInstance = new JDrivetrainMecanum(FRmotor, FLmotor, BLmotor, BRmotor, { forwardsScalar, rightScalar, CCWScalar });
+    }
+    void enable()
+    {
+        ((JDrivetrainMecanum*)internalInstance)->enable();
+    }
+    void disable()
+    {
+        ((JDrivetrainMecanum*)internalInstance)->disable();
+    }
+    void run()
+    {
+        ((JDrivetrainMecanum*)internalInstance)->setVel(twoDTransform, false);
+        ((JDrivetrainMecanum*)internalInstance)->run();
+    }
+    void write(int index, float value)
+    {
+        if (index == 0) {
+            twoDTransform.theta = value;
+        } else if (index == 1) {
+            twoDTransform.x = value;
+        } else if (index == 2) {
+            twoDTransform.y = value;
+        }
+    }
+    float read(int index)
+    {
+        switch (index) {
+        case 0:
+            return ((JDrivetrainMecanum*)internalInstance)->getVel().theta;
+        case 1:
+            return ((JDrivetrainMecanum*)internalInstance)->getVel().x;
+        case 2:
+            return ((JDrivetrainMecanum*)internalInstance)->getVel().y;
+        }
+        return 0;
+    }
+    ~RCMv3ComponentJDrivetrainMecanum()
+    {
+        delete (JDrivetrainMecanum*)internalInstance;
+    }
+};
+
 boolean refreshOutputListSize = true;
 
 class RCMv3ComponentFactory {
@@ -1237,6 +1319,7 @@ public:
         }
         for (int i = 0; i < params.size(); i++) {
             if (!data[i].is<JsonVariant>()) {
+                create_component_error_msg += " invalid data for parameter " + String(i);
                 return false;
             }
             switch (params[i].type) {
@@ -1324,7 +1407,7 @@ public:
                 }
             } break;
             case RC_DATA_JDrivetrain: {
-                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_JDrivetrainTwoSide }) == false) {
+                if (verifyThatDataIsComponent(components, data[i], { RC_TYPE_JDrivetrainTwoSide, RC_TYPE_JDrivetrainMecanum }) == false) {
                     return false;
                 }
             } break;
