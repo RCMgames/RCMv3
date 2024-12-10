@@ -1404,6 +1404,8 @@ class ActiveComponent {
                         break;
                 }
             }
+            // TODO: make default parameter values for each type?
+
         } else {
             this.parameters = jsonData.parameters;
             this.inputs = jsonData.inputs;

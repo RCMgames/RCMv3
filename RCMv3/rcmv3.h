@@ -10,6 +10,7 @@
 #include <ESPAsyncWebServer.h>
 #include <JMotor.h>
 #include <Preferences.h>
+#include <cassert>
 #include <mutex>
 #include <vector>
 
@@ -77,6 +78,7 @@ typedef struct {
     const char* name;
     RCMv3DataType type;
 } RCMv3Parameter;
+static_assert(sizeof(RCMv3DataTypeNames) / sizeof(RCMv3DataTypeNames[0]) == RC_DATA_COUNT, "RCMv3DataTypeNames and RCMv3DataType have different number of elements");
 
 // DO NOT RENAME without updating docs/ds/script.js and all presets
 const char* RCMv3ComponentTypeNames[] = {
@@ -97,7 +99,8 @@ const char* RCMv3ComponentTypeNames[] = {
     "PCA9685",
     "MotorDriverPCA9685HBridge",
     "EncoderQuadrature",
-    "DrivetrainTwoSide"
+    "DrivetrainTwoSide",
+    "DrivetrainMecanum"
 };
 // DO NOT REARRANGE arrays, it breaks old config files
 enum RCMv3ComponentType {
@@ -122,6 +125,7 @@ enum RCMv3ComponentType {
     RC_TYPE_JDrivetrainMecanum,
     RC_TYPE_COUNT
 };
+static_assert(sizeof(RCMv3ComponentTypeNames) / sizeof(RCMv3ComponentTypeNames[0]) == RC_TYPE_COUNT, "RCMv3ComponentTypeNames and RCMv3ComponentType have different number of elements");
 
 int RCMv3ComponentNumInputs[] = {
     0, // JVoltageCompMeasure
