@@ -1516,7 +1516,7 @@ class ActiveComponent {
         defaultOption.value = null;
         defaultOption.textContent = "select";
         helper.appendChild(defaultOption);
-        for (let j = 0; j < activeComponentList.length; j++) {
+        for (let j = 0; j < this.index; j++) {
             if (componentType.includes(activeComponentList[j].typename) || componentType.includes(true)) {
                 let option = document.createElement("option");
                 option.value = j;

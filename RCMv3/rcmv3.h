@@ -1360,6 +1360,7 @@ public:
             } break;
             case RC_DATA_Pin: {
                 if (!data[i].is<int>()) {
+                    create_component_error_msg += " invalid pin value for parameter " + String(i);
                     return false;
                 }
             } break;
@@ -1574,6 +1575,24 @@ public:
                 delete newEncoder;
                 return false;
             }
+        } break;
+        case RC_TYPE_JDrivetrainTwoSide: {
+            JMotorController* left = (JMotorController*)components[(int)data[0]]->getInternalInstance();
+            JMotorController* right = (JMotorController*)components[(int)data[1]]->getInternalInstance();
+            Serial.printf("creating JDrivetrainTwoSide with left %d and right %d and width %f\n", (int)data[0], (int)data[1], (float)data[2]);
+            components.push_back(new RCMv3ComponentJDrivetrainTwoSide(*left, *right, (float)data[2]));
+        } break;
+        case RC_TYPE_JDrivetrainMecanum: {
+            JMotorController* FRmotor = (JMotorController*)components[(int)data[0]]->getInternalInstance();
+            JMotorController* FLmotor = (JMotorController*)components[(int)data[1]]->getInternalInstance();
+            JMotorController* BLmotor = (JMotorController*)components[(int)data[2]]->getInternalInstance();
+            JMotorController* BRmotor = (JMotorController*)components[(int)data[3]]->getInternalInstance();
+            Serial.printf("creating JDrivetrainMecanum with FRmotor %d and FLmotor %d and BLmotor %d and BRmotor %d and forwardsScalar %f and rightScalar %f and CCWScalar %f\n", (int)data[0], (int)data[1], (int)data[2], (int)data[3], (float)data[4], (float)data[5], (float)data[6]);
+            components.push_back(new RCMv3ComponentJDrivetrainMecanum(*FRmotor, *FLmotor, *BLmotor, *BRmotor, (float)data[4], (float)data[5], (float)data[6]));
+        } break;
+        default: {
+            create_component_error_msg += " unknown component type ";
+            return false;
         } break;
         } // end switch
 
