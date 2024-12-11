@@ -2017,6 +2017,7 @@ function clearConfig() {
 }
 
 function saveConfigToFile() {
+    //TODO: save software version in the file.
     let componentDataToSend = { "components": [] };
     for (let i = 0; i < activeComponentList.length; i++) {
         componentDataToSend["components"].push(activeComponentList[i].jsonify());

@@ -1204,13 +1204,14 @@ public:
 
 class RCMv3ComponentJDrivetrainTwoSide : public RCMv3Component {
 protected:
-    JTwoDTransform twoDTransform;
+    JTwoDTransform velToSet;
 
 public:
     RCMv3ComponentJDrivetrainTwoSide(JMotorController& left, JMotorController& right, float width)
         : RCMv3Component(RC_TYPE_JDrivetrainTwoSide)
     {
         internalInstance = new JDrivetrainTwoSide(left, right, width);
+        velToSet = { 0, 0, 0 };
     }
     void enable()
     {
@@ -1222,18 +1223,18 @@ public:
     }
     void run()
     {
-        ((JDrivetrainTwoSide*)internalInstance)->setVel(twoDTransform, false);
         ((JDrivetrainTwoSide*)internalInstance)->run();
     }
     void write(int index, float value)
     {
         if (index == 0) {
-            twoDTransform.theta = value;
+            velToSet.theta = value;
         } else if (index == 1) {
-            twoDTransform.x = value;
+            velToSet.x = value;
         } else if (index == 2) {
-            twoDTransform.y = value;
+            velToSet.y = value;
         }
+        ((JDrivetrainTwoSide*)internalInstance)->setVel(velToSet, false);
     }
     float read(int index)
     {
@@ -1255,13 +1256,14 @@ public:
 
 class RCMv3ComponentJDrivetrainMecanum : public RCMv3Component {
 protected:
-    JTwoDTransform twoDTransform;
+    JTwoDTransform velToSet;
 
 public:
     RCMv3ComponentJDrivetrainMecanum(JMotorController& FRmotor, JMotorController& FLmotor, JMotorController& BLmotor, JMotorController& BRmotor, float forwardsScalar, float rightScalar, float CCWScalar)
         : RCMv3Component(RC_TYPE_JDrivetrainMecanum)
     {
         internalInstance = new JDrivetrainMecanum(FRmotor, FLmotor, BLmotor, BRmotor, { forwardsScalar, rightScalar, CCWScalar });
+        velToSet = { 0, 0, 0 };
     }
     void enable()
     {
@@ -1273,18 +1275,18 @@ public:
     }
     void run()
     {
-        ((JDrivetrainMecanum*)internalInstance)->setVel(twoDTransform, false);
         ((JDrivetrainMecanum*)internalInstance)->run();
     }
     void write(int index, float value)
     {
         if (index == 0) {
-            twoDTransform.theta = value;
+            velToSet.theta = value;
         } else if (index == 1) {
-            twoDTransform.x = value;
+            velToSet.x = value;
         } else if (index == 2) {
-            twoDTransform.y = value;
+            velToSet.y = value;
         }
+        ((JDrivetrainMecanum*)internalInstance)->setVel(velToSet, false);
     }
     float read(int index)
     {
@@ -1303,55 +1305,48 @@ public:
         delete (JDrivetrainMecanum*)internalInstance;
     }
 };
-
+// TODO: add option to reverse "SIDEWAYS"
 class RCMv3ComponentDrivetrainControlNormalizer : public RCMv3Component {
 protected:
     JTwoDTransform deadzone;
-    JTwoDTransform value;
+    JTwoDTransform val;
     JTwoDTransform output;
     JDrivetrain& drivetrain;
     boolean CCWIsPositive;
 
 public:
+    // TODO: access the RCMv3 component instead of the drivetrain? then this can use write() instead of setVel()
     RCMv3ComponentDrivetrainControlNormalizer(JDrivetrain& _drivetrain, float deadzoneTheta, float deadzoneX, float deadzoneY, boolean _CCWIsPositive)
         : RCMv3Component(RC_TYPE_DrivetrainControlNormalizer)
         , drivetrain(_drivetrain)
     {
         deadzone = { deadzoneX, deadzoneY, deadzoneTheta };
         CCWIsPositive = _CCWIsPositive;
-        value = { 0, 0, 0 };
+        val = { 0, 0, 0 };
         output = { 0, 0, 0 };
     }
     void run()
     {
         JTwoDTransform max = drivetrain.getMaxVel();
-        output = JDeadzoneRemover::calculate(value, { 0, 0, 0 }, max, deadzone);
+        output = JDeadzoneRemover::calculate(val, { 0, 0, 0 }, max, deadzone);
         drivetrain.setVel(output, false);
     }
     void write(int index, float value)
     {
         switch (index) {
         case 0:
-            this->value.theta = value * (CCWIsPositive ? 1 : -1);
+            val.theta = value * (CCWIsPositive ? 1 : -1);
             break;
         case 1:
-            this->value.x = value;
+            val.x = value;
             break;
         case 2:
-            this->value.y = value;
+            val.y = value;
             break;
         }
     }
     float read(int index)
     {
-        switch (index) {
-        case 0:
-            return value.theta * (CCWIsPositive ? 1 : -1);
-        case 1:
-            return value.x;
-        case 2:
-            return value.y;
-        }
         return 0;
     }
     ~RCMv3ComponentDrivetrainControlNormalizer()
@@ -1675,7 +1670,7 @@ public:
         case RC_TYPE_DrivetrainControlNormalizer: {
             JDrivetrain* drivetrain = (JDrivetrain*)components[(int)data[0]]->getInternalInstance();
             Serial.printf("creating DrivetrainControlNormalizer with drivetrain %d and deadzoneTheta %f and deadzoneX %f and deadzoneY %f and CCWIsPositive %d\n", (int)data[0], (float)data[1], (float)data[2], (float)data[3], (int)data[4]);
-            components.push_back(new RCMv3ComponentDrivetrainControlNormalizer(*drivetrain, (float)data[1], (float)data[2], (float)data[3], (boolean)data[4]));
+            components.push_back(new RCMv3ComponentDrivetrainControlNormalizer(*drivetrain, (float)data[3], (float)data[1], (float)data[2], (boolean)data[4]));
         } break;
         default: {
             create_component_error_msg += " unknown component type ";
