@@ -489,7 +489,8 @@ public:
             return {
                 { "leftMotor", RC_DATA_JMotorController },
                 { "rightMotor", RC_DATA_JMotorController },
-                { "width", RC_DATA_Float }
+                { "width", RC_DATA_Float },
+                { "CCW is positive", RC_DATA_Bool }
             };
         case RC_TYPE_JDrivetrainMecanum:
             return {
@@ -1182,12 +1183,14 @@ public:
 class RCMv3ComponentJDrivetrainTwoSide : public RCMv3Component {
 protected:
     JTwoDTransform twoDTransform;
+    boolean CCWIsPositive;
 
 public:
-    RCMv3ComponentJDrivetrainTwoSide(JMotorController& left, JMotorController& right, float width)
+    RCMv3ComponentJDrivetrainTwoSide(JMotorController& left, JMotorController& right, float width, boolean _CCWIsPositive)
         : RCMv3Component(RC_TYPE_JDrivetrainTwoSide)
     {
         internalInstance = new JDrivetrainTwoSide(left, right, width);
+        CCWIsPositive = _CCWIsPositive;
     }
     void enable()
     {
@@ -1205,7 +1208,7 @@ public:
     void write(int index, float value)
     {
         if (index == 0) {
-            twoDTransform.theta = value;
+            twoDTransform.theta = value * (CCWIsPositive ? 1 : -1);
         } else if (index == 1) {
             twoDTransform.x = value;
         } else if (index == 2) {
@@ -1216,7 +1219,7 @@ public:
     {
         switch (index) {
         case 0:
-            return ((JDrivetrainTwoSide*)internalInstance)->getVel().theta;
+            return ((JDrivetrainTwoSide*)internalInstance)->getVel().theta * (CCWIsPositive ? 1 : -1);
         case 1:
             return ((JDrivetrainTwoSide*)internalInstance)->getVel().x;
         case 2:
@@ -1577,10 +1580,14 @@ public:
             }
         } break;
         case RC_TYPE_JDrivetrainTwoSide: {
+            if (data[2] == 0) {
+                create_component_error_msg += " width can not be 0";
+                return false;
+            }
             JMotorController* left = (JMotorController*)components[(int)data[0]]->getInternalInstance();
             JMotorController* right = (JMotorController*)components[(int)data[1]]->getInternalInstance();
-            Serial.printf("creating JDrivetrainTwoSide with left %d and right %d and width %f\n", (int)data[0], (int)data[1], (float)data[2]);
-            components.push_back(new RCMv3ComponentJDrivetrainTwoSide(*left, *right, (float)data[2]));
+            Serial.printf("creating JDrivetrainTwoSide with left %d and right %d and width %f and CCWIsPositive %d \n", (int)data[0], (int)data[1], (float)data[2], (int)data[3]);
+            components.push_back(new RCMv3ComponentJDrivetrainTwoSide(*left, *right, (float)data[2], (boolean)data[3]));
         } break;
         case RC_TYPE_JDrivetrainMecanum: {
             JMotorController* FRmotor = (JMotorController*)components[(int)data[0]]->getInternalInstance();

@@ -129,6 +129,66 @@
     {
         "type": "pin",
         "name": "outputEnablePin",
-        "value": 36
+        "value": 12
+    },
+    {
+        "type": "pin",
+        "name": "E2A",
+        "value": 18
+    },
+    {
+        "type": "pin",
+        "name": "E2B",
+        "value": 17
+    },
+    {
+        "type": "pin",
+        "name": "E3A",
+        "value": 16
+    },
+    {
+        "type": "pin",
+        "name": "E3B",
+        "value": 15
+    },
+    {
+        "type": "pin",
+        "name": "E4A",
+        "value": 11
+    },
+    {
+        "type": "pin",
+        "name": "E4B",
+        "value": 10
+    },
+    {
+        "type": "pin",
+        "name": "E5A",
+        "value": 41
+    },
+    {
+        "type": "pin",
+        "name": "E5B",
+        "value": 42
+    },
+    {
+        "type": "pin",
+        "name": "E6A",
+        "value": 40
+    },
+    {
+        "type": "pin",
+        "name": "E6B",
+        "value": 39
+    },
+    {
+        "type": "pin",
+        "name": "E7A",
+        "value": 38
+    },
+    {
+        "type": "pin",
+        "name": "E7B",
+        "value": 37
     }
 ]

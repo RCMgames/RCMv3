@@ -501,7 +501,6 @@ class DSItem {
             ctx.fill();
         } else if (this.type == "number indicator") {
             ctx.font = 50 * this.size / 215 + "px " + "Courier New";
-            ctx.textAlign = "right";
             ctx.fillStyle = 'white';
             ctx.textAlign = "left";
             ctx.fillText(this.labelText, this.posX, this.posY + this.height / 2);
@@ -1354,7 +1353,6 @@ class ActiveComponent {
             this.parameters = [];
             for (let i = 0; i < boardInfo.potential_components[this.typeid]["parameters"].length; i++) {
                 switch (boardInfo.potential_components[this.typeid]["parameters"][i].type) {
-                    // TODO: if there is a parameter_preset with a matching mask maybe use it instead?
                     case "pin":
                         this.parameters.push(null);
                         break;
@@ -1404,7 +1402,7 @@ class ActiveComponent {
                         break;
                 }
             }
-            // TODO: make default parameter values for each type?
+            // TODO: make default constructor values for each type?
 
         } else {
             this.parameters = jsonData.parameters;
