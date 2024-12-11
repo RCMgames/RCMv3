@@ -100,7 +100,8 @@ const char* RCMv3ComponentTypeNames[] = {
     "MotorDriverPCA9685HBridge",
     "EncoderQuadrature",
     "DrivetrainTwoSide",
-    "DrivetrainMecanum"
+    "DrivetrainMecanum",
+    "DrivetrainControlNormalizer"
 };
 // DO NOT REARRANGE arrays, it breaks old config files
 enum RCMv3ComponentType {
@@ -123,6 +124,7 @@ enum RCMv3ComponentType {
     RC_TYPE_JEncoderQuadrature,
     RC_TYPE_JDrivetrainTwoSide,
     RC_TYPE_JDrivetrainMecanum,
+    RC_TYPE_DrivetrainControlNormalizer,
     RC_TYPE_COUNT
 };
 static_assert(sizeof(RCMv3ComponentTypeNames) / sizeof(RCMv3ComponentTypeNames[0]) == RC_TYPE_COUNT, "RCMv3ComponentTypeNames and RCMv3ComponentType have different number of elements");
@@ -147,6 +149,7 @@ int RCMv3ComponentNumInputs[] = {
     0, // Encoder Quadrature
     3, // Drivetrain Two Side
     3, // Drivetrain Mecanum
+    3, // Drivetrain Control Normalizer
 };
 
 /**
@@ -235,6 +238,15 @@ const char* RCMv3ComponentInputNames(RCMv3ComponentType type, uint8_t input)
         case 2:
             return "velocity left";
         }
+    case RC_TYPE_DrivetrainControlNormalizer:
+        switch (input) {
+        case 0:
+            return "velocity turning";
+        case 1:
+            return "velocity forwards";
+        case 2:
+            return "velocity left";
+        }
     } // end of switch
     return "";
 };
@@ -259,6 +271,7 @@ int RCMv3ComponentNumOutputs[] = {
     2, // Encoder Quadrature
     3, // Drivetrain Two Side
     3, // Drivetrain Mecanum
+    0, // Drivetrain Control Normalizer
 };
 
 const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
@@ -343,6 +356,8 @@ const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
         case 2:
             return "velocity left";
         }
+    case RC_TYPE_DrivetrainControlNormalizer:
+        return "";
     } // end of switch
     return "";
 };
@@ -489,8 +504,7 @@ public:
             return {
                 { "leftMotor", RC_DATA_JMotorController },
                 { "rightMotor", RC_DATA_JMotorController },
-                { "width", RC_DATA_Float },
-                { "CCW is positive", RC_DATA_Bool }
+                { "width", RC_DATA_Float }
             };
         case RC_TYPE_JDrivetrainMecanum:
             return {
@@ -501,6 +515,14 @@ public:
                 { "forwardsScalar", RC_DATA_Float },
                 { "rightScalar", RC_DATA_Float },
                 { "CCWScalar", RC_DATA_Float }
+            };
+        case RC_TYPE_DrivetrainControlNormalizer:
+            return {
+                { "drivetrain", RC_DATA_JDrivetrain },
+                { "forwards control deadzone", RC_DATA_Float },
+                { "left control deadzone", RC_DATA_Float },
+                { "turning control deadzone", RC_DATA_Float },
+                { "CCW is positive", RC_DATA_Bool }
             };
         } // end of switch
         return {};
@@ -1183,14 +1205,12 @@ public:
 class RCMv3ComponentJDrivetrainTwoSide : public RCMv3Component {
 protected:
     JTwoDTransform twoDTransform;
-    boolean CCWIsPositive;
 
 public:
-    RCMv3ComponentJDrivetrainTwoSide(JMotorController& left, JMotorController& right, float width, boolean _CCWIsPositive)
+    RCMv3ComponentJDrivetrainTwoSide(JMotorController& left, JMotorController& right, float width)
         : RCMv3Component(RC_TYPE_JDrivetrainTwoSide)
     {
         internalInstance = new JDrivetrainTwoSide(left, right, width);
-        CCWIsPositive = _CCWIsPositive;
     }
     void enable()
     {
@@ -1208,7 +1228,7 @@ public:
     void write(int index, float value)
     {
         if (index == 0) {
-            twoDTransform.theta = value * (CCWIsPositive ? 1 : -1);
+            twoDTransform.theta = value;
         } else if (index == 1) {
             twoDTransform.x = value;
         } else if (index == 2) {
@@ -1219,7 +1239,7 @@ public:
     {
         switch (index) {
         case 0:
-            return ((JDrivetrainTwoSide*)internalInstance)->getVel().theta * (CCWIsPositive ? 1 : -1);
+            return ((JDrivetrainTwoSide*)internalInstance)->getVel().theta;
         case 1:
             return ((JDrivetrainTwoSide*)internalInstance)->getVel().x;
         case 2:
@@ -1281,6 +1301,61 @@ public:
     ~RCMv3ComponentJDrivetrainMecanum()
     {
         delete (JDrivetrainMecanum*)internalInstance;
+    }
+};
+
+class RCMv3ComponentDrivetrainControlNormalizer : public RCMv3Component {
+protected:
+    JTwoDTransform deadzone;
+    JTwoDTransform value;
+    JTwoDTransform output;
+    JDrivetrain& drivetrain;
+    boolean CCWIsPositive;
+
+public:
+    RCMv3ComponentDrivetrainControlNormalizer(JDrivetrain& _drivetrain, float deadzoneTheta, float deadzoneX, float deadzoneY, boolean _CCWIsPositive)
+        : RCMv3Component(RC_TYPE_DrivetrainControlNormalizer)
+        , drivetrain(_drivetrain)
+    {
+        deadzone = { deadzoneX, deadzoneY, deadzoneTheta };
+        CCWIsPositive = _CCWIsPositive;
+        value = { 0, 0, 0 };
+        output = { 0, 0, 0 };
+    }
+    void run()
+    {
+        JTwoDTransform max = drivetrain.getMaxVel();
+        output = JDeadzoneRemover::calculate(value, { 0, 0, 0 }, max, deadzone);
+        drivetrain.setVel(output, false);
+    }
+    void write(int index, float value)
+    {
+        switch (index) {
+        case 0:
+            this->value.theta = value * (CCWIsPositive ? 1 : -1);
+            break;
+        case 1:
+            this->value.x = value;
+            break;
+        case 2:
+            this->value.y = value;
+            break;
+        }
+    }
+    float read(int index)
+    {
+        switch (index) {
+        case 0:
+            return value.theta * (CCWIsPositive ? 1 : -1);
+        case 1:
+            return value.x;
+        case 2:
+            return value.y;
+        }
+        return 0;
+    }
+    ~RCMv3ComponentDrivetrainControlNormalizer()
+    {
     }
 };
 
@@ -1586,8 +1661,8 @@ public:
             }
             JMotorController* left = (JMotorController*)components[(int)data[0]]->getInternalInstance();
             JMotorController* right = (JMotorController*)components[(int)data[1]]->getInternalInstance();
-            Serial.printf("creating JDrivetrainTwoSide with left %d and right %d and width %f and CCWIsPositive %d \n", (int)data[0], (int)data[1], (float)data[2], (int)data[3]);
-            components.push_back(new RCMv3ComponentJDrivetrainTwoSide(*left, *right, (float)data[2], (boolean)data[3]));
+            Serial.printf("creating JDrivetrainTwoSide with left %d and right %d and width %f\n", (int)data[0], (int)data[1], (float)data[2]);
+            components.push_back(new RCMv3ComponentJDrivetrainTwoSide(*left, *right, (float)data[2]));
         } break;
         case RC_TYPE_JDrivetrainMecanum: {
             JMotorController* FRmotor = (JMotorController*)components[(int)data[0]]->getInternalInstance();
@@ -1596,6 +1671,11 @@ public:
             JMotorController* BRmotor = (JMotorController*)components[(int)data[3]]->getInternalInstance();
             Serial.printf("creating JDrivetrainMecanum with FRmotor %d and FLmotor %d and BLmotor %d and BRmotor %d and forwardsScalar %f and rightScalar %f and CCWScalar %f\n", (int)data[0], (int)data[1], (int)data[2], (int)data[3], (float)data[4], (float)data[5], (float)data[6]);
             components.push_back(new RCMv3ComponentJDrivetrainMecanum(*FRmotor, *FLmotor, *BLmotor, *BRmotor, (float)data[4], (float)data[5], (float)data[6]));
+        } break;
+        case RC_TYPE_DrivetrainControlNormalizer: {
+            JDrivetrain* drivetrain = (JDrivetrain*)components[(int)data[0]]->getInternalInstance();
+            Serial.printf("creating DrivetrainControlNormalizer with drivetrain %d and deadzoneTheta %f and deadzoneX %f and deadzoneY %f and CCWIsPositive %d\n", (int)data[0], (float)data[1], (float)data[2], (float)data[3], (int)data[4]);
+            components.push_back(new RCMv3ComponentDrivetrainControlNormalizer(*drivetrain, (float)data[1], (float)data[2], (float)data[3], (boolean)data[4]));
         } break;
         default: {
             create_component_error_msg += " unknown component type ";
