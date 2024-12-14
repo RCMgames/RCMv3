@@ -908,15 +908,6 @@ boolean isrManagerClaimPointer(void (**func)(void), int* pointerIndex, RCMv3Comp
     return false;
 }
 
-boolean isrManagerSetComponent(int num, RCMv3Component* component)
-{
-    if (isrArrayElementAssigned[num] == true && isrArrayComponents[num] == nullptr) {
-        isrArrayComponents[num] = component;
-        return true;
-    }
-    return false;
-}
-
 void isrManagerFreePointer(int num)
 {
     isrArrayElementAssigned[num] = false;
