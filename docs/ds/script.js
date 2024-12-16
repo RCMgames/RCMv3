@@ -89,6 +89,16 @@ function updateNumCtrlVars() {
     }
 }
 
+function setWifiSettingsHelper() {
+    document.getElementById("wifi-details").setAttribute("open", "true");
+    document.getElementById("hostname-box").className = "hostname-error-connecting";
+    document.getElementById("hostname-box").className = "hostname-error-connecting";
+    let element = document.createElement("span");
+    element.innerHTML = '<br><strong>You are connected to your RCM using the default hostname, ssid, and password. Update the settings then press the "save wifi settings and reboot" button.</strong><br>';
+    document.getElementById("hostname-box").appendChild(element);
+
+}
+
 function errorConnecting() {
     document.getElementById("wifi-details").setAttribute("open", "true");
     document.getElementById("hostname-box").className = "hostname-error-connecting";
@@ -1408,6 +1418,9 @@ function loadWifiSettings() {
                 document.getElementById("wifi-password").value = data.password;
                 document.getElementById("wifi-hostname").value = data.hostname;
                 document.getElementById("wifi-mode").checked = data.mode != 1;
+            }
+            if (document.getElementById("wifi-hostname").value == "rcmv3" && document.getElementById("wifi-ssid").value == "" && document.getElementById("wifi-password").value == "") {
+                setWifiSettingsHelper();
             }
         }).catch((error) => {
         });
