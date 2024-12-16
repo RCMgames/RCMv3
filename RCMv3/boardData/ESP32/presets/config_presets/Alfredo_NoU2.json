@@ -1,1 +1,153 @@
-[]
+[
+    {
+        "type": 4,
+        "name": "MotorDriverEsp32HBridge",
+        "username": "motor 1",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            0,
+            13,
+            12
+        ]
+    },
+    {
+        "type": 4,
+        "name": "MotorDriverEsp32HBridge",
+        "username": "motor 2",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            1,
+            27,
+            33
+        ]
+    },
+    {
+        "type": 4,
+        "name": "MotorDriverEsp32HBridge",
+        "username": "motor 3",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            2,
+            32,
+            18
+        ]
+    },
+    {
+        "type": 4,
+        "name": "MotorDriverEsp32HBridge",
+        "username": "motor 4",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            3,
+            19,
+            23
+        ]
+    },
+    {
+        "type": 4,
+        "name": "MotorDriverEsp32HBridge",
+        "username": "motor 5",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            4,
+            15,
+            14
+        ]
+    },
+    {
+        "type": 4,
+        "name": "MotorDriverEsp32HBridge",
+        "username": "motor 6",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            5,
+            22,
+            21
+        ]
+    },
+    {
+        "type": 3,
+        "name": "MotorDriverEsp32Servo",
+        "username": "servo 1",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            6,
+            16
+        ]
+    },
+    {
+        "type": 3,
+        "name": "MotorDriverEsp32Servo",
+        "username": "servo 2",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            7,
+            17
+        ]
+    },
+    {
+        "type": 3,
+        "name": "MotorDriverEsp32Servo",
+        "username": "servo 3",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            8,
+            25
+        ]
+    },
+    {
+        "type": 3,
+        "name": "MotorDriverEsp32Servo",
+        "username": "servo 4",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            9,
+            26
+        ]
+    },
+    {
+        "type": 0,
+        "name": "VoltageCompMeasure",
+        "username": "battery monitor (circuit modification)",
+        "inputs": [],
+        "outputs": [
+            -1
+        ],
+        "parameters": [
+            36,
+            310,
+            0,
+            0
+        ]
+    }
+]

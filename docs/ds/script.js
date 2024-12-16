@@ -20,14 +20,77 @@ document.addEventListener("DOMContentLoaded", () => {
         //TODO: handle errors loading from robot
     }
     setInterval(() => {
-        document.getElementById("console").innerHTML = "tx: " + txdata + "rx: " + rxdata;
+        let console_control = document.getElementById("console-control");
+        for (let i = 0; i < txdata.length; i++) {
+            if (console_control.children.length < txdata.length) {
+                let cell = document.createElement("td");
+                let indexField = document.createElement("div");
+                indexField.style.width = "50px";
+                indexField.innerHTML = "#" + console_control.children.length;
+                cell.appendChild(indexField);
+                let nameField = document.createElement("input");
+                nameField.style.width = "50px";
+                cell.appendChild(nameField);
+                let valueField = document.createElement("div");
+                valueField.style.width = "50px";
+                cell.appendChild(valueField);
+                console_control.appendChild(cell);
+            }
+        }
+        for (let i = 0; i < txdata.length; i++) {
+            console_control.children[i].children[2].innerHTML = txdata[i];
+        }
+        let console_telemetry = document.getElementById("console-telemetry");
+
+        for (let i = 0; i < rxdata.length; i++) {
+            if (console_telemetry.children.length < rxdata.length) {
+                let cell = document.createElement("td");
+                let indexField = document.createElement("div");
+                indexField.style.width = "50px";
+                indexField.innerHTML = "#" + console_telemetry.children.length;
+                cell.appendChild(indexField);
+                let nameField = document.createElement("input");
+                nameField.style.width = "50px";
+                cell.appendChild(nameField);
+                let valueField = document.createElement("div");
+                valueField.style.width = "50px";
+                cell.appendChild(valueField);
+                console_telemetry.appendChild(cell);
+            }
+        }
+        for (let i = 0; i < rxdata.length; i++) {
+            console_telemetry.children[i].children[2].innerHTML = rxdata[i];
+        }
+
         for (let i = 0; i < DSItems.length; i++) {
             DSItems[i].run(txdata, rxdata);
         }
     }, 20);
 });
 
+function updateNumTelemVars() {
+    let input_box = document.getElementById("num-telemetry-variables");
+    let numVars = parseInt(input_box.value);
+    numVars = Math.max(numVars, rxdata.length);
+    input_box.value = numVars;
+    // append undefined to rxData until it is the right length
+    while (rxdata.length < numVars) {
+        rxdata.push(undefined);
+    }
+}
+function updateNumCtrlVars() {
+    let input_box = document.getElementById("num-control-variables");
+    let numVars = parseInt(input_box.value);
+    numVars = Math.max(numVars, txdata.length);
+    input_box.value = numVars;
+    // append undefined to txData until it is the right length
+    while (txdata.length < numVars) {
+        txdata.push(undefined);
+    }
+}
+
 function errorConnecting() {
+    document.getElementById("wifi-details").setAttribute("open", "true");
     document.getElementById("hostname-box").className = "hostname-error-connecting";
     document.getElementById("wifi-hostname").value = "rcmv3.local";
     let element = document.createElement("span");
@@ -556,6 +619,7 @@ class DSItem {
         let row_data_label = document.createElement("td");
         row_data_label.innerHTML = this.indicator ? "input variable" : "output variable";
         row_data.appendChild(row_data_label);
+        let control_console = document.getElementById("console-control");
         for (let i = 0; i < this.numData; i++) {
             let cell = document.createElement("td");
             let input = document.createElement("input");
@@ -566,6 +630,7 @@ class DSItem {
             input.onchange = (event) => {
                 this.dataIndices[i] = parseInt(event.target.value);
                 input.value = this.dataIndices[i];
+                helper.value = this.dataIndices[i];
             };
             let inputlable = document.createElement("label");
             if (this.type == "joystick") {
@@ -575,6 +640,19 @@ class DSItem {
             }
             cell.appendChild(inputlable);
             cell.appendChild(input);
+            let helper = document.createElement("select");
+            for (let j = 0; j < control_console.children.length; j++) {
+                let option = document.createElement("option");
+                option.value = j;
+                option.textContent = control_console.children[j].children[1].value;
+                helper.appendChild(option);
+            }
+            helper.value = this.dataIndices[i];
+            helper.onchange = (event) => {
+                this.dataIndices[i] = event.target.value;
+                input.value = this.dataIndices[i];
+            }
+            cell.appendChild(helper);
             row_data.appendChild(cell);
         }
         element.appendChild(row_data);
@@ -1074,7 +1152,7 @@ var configEditable = false;
 function toggleEditConfig() {
     configEditable = !configEditable;
     document.getElementById("toggleEditConfig").innerHTML = !configEditable ? "Configure Robot" : "Close Robot Configuration";
-    document.getElementById("config-edit").style.visibility = configEditable ? "visible" : "hidden";
+    document.getElementById("config-edit").hidden = style.visibility = configEditable ? "visible" : "none";
     document.getElementById("config-status").innerHTML = "";
     document.getElementById("config-status").style.backgroundColor = "lightgrey";
 
@@ -1931,6 +2009,8 @@ class ActiveComponent {
 
 
         // display all inputs
+        let control_console = document.getElementById("console-control");
+        let telemetry_console = document.getElementById("console-telemetry");
         let inputsElement = document.createElement("div");
         let inputsTitle = document.createElement("label");
         inputsTitle.innerHTML = "control variables: ";
@@ -1947,6 +2027,18 @@ class ActiveComponent {
                 this.inputs[i] = parseInt(event.target.value);
             }
             element.appendChild(input);
+            let helper = document.createElement("select");
+            for (let j = 0; j < control_console.children.length; j++) {
+                let option = document.createElement("option");
+                option.value = j;
+                option.textContent = control_console.children[j].children[1].value;
+                option.onchange = (event) => {
+                    this.inputs[i] = (event.target.value);
+                    input.value = this.inputs[i];
+                }
+                helper.appendChild(option);
+            }
+            element.appendChild(helper);
             inputsElement.appendChild(element);
         }
         document.getElementById("component-properties").appendChild(inputsElement);
@@ -1969,6 +2061,18 @@ class ActiveComponent {
                 this.outputs[i] = parseInt(event.target.value);
             }
             element.appendChild(input);
+            let helper = document.createElement("select");
+            for (let j = 0; j < telemetry_console.children.length; j++) {
+                let option = document.createElement("option");
+                option.value = j;
+                option.textContent = telemetry_console.children[j].children[1].value;
+                option.onchange = (event) => {
+                    this.outputs[i] = (event.target.value);
+                    input.value = this.outputs[i];
+                }
+                helper.appendChild(option);
+            }
+            element.appendChild(helper);
             outputsElement.appendChild(element);
         }
         document.getElementById("component-properties").appendChild(outputsElement);

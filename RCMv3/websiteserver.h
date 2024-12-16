@@ -12,7 +12,7 @@
 AsyncWebServer server(80);
 Preferences prefs;
 
-const unsigned long wifiConnectionTimeout = 5000;
+const unsigned long wifiConnectionTimeout = 10000;
 enum WifiMethod {
     STA,
     AP,
@@ -35,7 +35,11 @@ void connectToWifi()
     delay(100);
     prefs.begin("wifiSettings", true, nvsPartition);
 
+    WiFi.disconnect(true, true);
+    WiFi.mode(WIFI_MODE_NULL);
+
     if (prefs.isKey("ssid") && prefs.isKey("password") && prefs.isKey("mode") && prefs.isKey("hostname")) {
+        WiFi.setHostname(prefs.getString("hostname").c_str());
         if (prefs.getInt("mode") == WIFI_STA) {
             wifiMethod = STA;
         } else {

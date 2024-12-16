@@ -10,43 +10,13 @@
 
 <body>
   <h1>RCMv3 Driver Station</h1>
-  <br>
-  <button onclick="connect();">Connect</button>
-  <button onclick="disconnect();">Disconnect</button>
-  <div id="connection-status">Not connected</div>
-  <button class="toggleEditDriverstation" id="toggleEditDriverstation" onclick='toggleEditDriverstation()'>Edit
-    Driverstation</button>
-  <button class="toggleEditConfig" id="toggleEditConfig" onclick='toggleEditConfig()'>Configure Robot</button>
-  <br>
-  <div id="hostname-box">
-    hostname
-    <input id="wifi-hostname" type="text"></input>
+  <div><button onclick="connect();">Connect</button>
+    <button onclick="disconnect();">Disconnect</button>
+    <span id="connection-status">Not connected</span>
+    <button class="toggleEditDriverstation" id="toggleEditDriverstation" onclick='toggleEditDriverstation()'>Edit
+      Driverstation</button>
+    <button class="toggleEditConfig" id="toggleEditConfig" onclick='toggleEditConfig()'>Configure Robot</button>
   </div>
-  <br>
-  ssid
-  <input id="wifi-ssid" type="text"></input>
-  <br>
-  password
-  <input id="wifi-password" type="text"></input>
-  <br>
-  create network from robot
-  <input id="wifi-mode" type="checkbox"></input>
-  <br>
-  <button onclick="saveWifiSettings();">save wifi settings and reboot</button>
-  <button onclick="loadWifiSettings();">load wifi settings from robot</button>
-  <br>
-  <div id="load-projects-div">
-    load example project from <a target="_blank" rel="noopener noreferrer"
-      href="https://github.com/RCMgames/RCMv3-examples">here</a>:
-    <br>
-    <input id="projecturl" type="text"
-      value="https://raw.githubusercontent.com/RCMgames/RCMv3-examples/refs/heads/main/"></input>
-    <br>
-    <input id="project-name" type="text"></input>
-    <br>
-    <button onclick="loadProject();">load project</button>
-  </div>
-  <br>
   enable robot:
   <input id="robot-enabled" type="checkbox" style="width:30px;height:30px;"></input>
   <br>
@@ -101,9 +71,59 @@
         <div id="component-properties" class="component-properties"> </div>
       </div>
     </span>
+    <span>
+      <details id="wifi-details">
+        <summary>wifi settings</summary>
+        <div id="hostname-box">
+          hostname
+          <input id="wifi-hostname" type="text"></input>
+        </div>
+        <br>
+        ssid
+        <input id="wifi-ssid" type="text"></input>
+        <br>
+        password
+        <input id="wifi-password" type="text"></input>
+        <br>
+        create network from robot
+        <input id="wifi-mode" type="checkbox"></input>
+        <br>
+        <button onclick="saveWifiSettings();">save wifi settings and reboot</button>
+        <button onclick="loadWifiSettings();">load wifi settings from robot</button>
+      </details>
+      <br>
+      <details>
+        <summary>example projects</summary>
+        <div id="load-projects-div">
+          load example project from <a target="_blank" rel="noopener noreferrer"
+            href="https://github.com/RCMgames/RCMv3-examples">here</a>:
+          <br>
+          <input id="projecturl" type="text"
+            value="https://raw.githubusercontent.com/RCMgames/RCMv3-examples/refs/heads/main/"></input>
+          <br>
+          <input id="project-name" type="text"></input>
+          <br>
+          <button onclick="loadProject();">load project</button>
+        </div>
+      </details>
+      <br>
+    </span>
   </div>
   <br>
-  <div id="console"></div>
+  <span>control variables</span>
+  <div style="overflow-x:scroll;">
+    <table id="console-control"></table>
+  </div>
+  <br>
+  <span>telemetry variables</span>
+  <div style="overflow-x:scroll;">
+    <table id="console-telemetry"></table>
+  </div>
+  number of control variables: <input id="num-control-variables" type="number" value="0"
+    onchange="updateNumCtrlVars()"></input>
+  <br>
+  number of telemetry variables: <input id="num-telemetry-variables" type="number" value="0"
+    onchange="updateNumTelemVars()"></input>
   <br>
   <footer style="text-align: center;">
     <strong>

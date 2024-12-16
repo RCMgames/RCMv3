@@ -1,1 +1,84 @@
-[]
+[
+    {
+        "type": "float",
+        "name": "default",
+        "value": "310",
+        "mask": [
+            "adcUnitsPerVolt"
+        ]
+    },
+    {
+        "type": "pin",
+        "name": "servo 1 pin",
+        "value": 16
+    },
+    {
+        "type": "pin",
+        "name": "servo 2 pin",
+        "value": 17
+    },
+    {
+        "type": "pin",
+        "name": "servo 3 pin",
+        "value": 25
+    },
+    {
+        "type": "pin",
+        "name": "servo 4 pin",
+        "value": 26
+    },
+    {
+        "type": "HBridgeESP32",
+        "name": "motor 1",
+        "value": [
+            0,
+            13,
+            12
+        ]
+    },
+    {
+        "type": "HBridgeESP32",
+        "name": "motor 2",
+        "value": [
+            1,
+            27,
+            33
+        ]
+    },
+    {
+        "type": "HBridgeESP32",
+        "name": "motor 3",
+        "value": [
+            2,
+            32,
+            18
+        ]
+    },
+    {
+        "type": "HBridgeESP32",
+        "name": "motor 4",
+        "value": [
+            3,
+            19,
+            23
+        ]
+    },
+    {
+        "type": "HBridgeESP32",
+        "name": "motor 5",
+        "value": [
+            4,
+            15,
+            14
+        ]
+    },
+    {
+        "type": "HBridgeESP32",
+        "name": "motor 6",
+        "value": [
+            5,
+            22,
+            21
+        ]
+    }
+]
