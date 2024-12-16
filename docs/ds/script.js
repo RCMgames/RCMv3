@@ -25,14 +25,14 @@ document.addEventListener("DOMContentLoaded", () => {
             if (console_control.children.length < txdata.length) {
                 let cell = document.createElement("td");
                 let indexField = document.createElement("div");
-                indexField.style.width = "50px";
+                indexField.style.width = "60px";
                 indexField.innerHTML = "#" + console_control.children.length;
                 cell.appendChild(indexField);
                 let nameField = document.createElement("input");
-                nameField.style.width = "50px";
+                nameField.style.width = "60px";
                 cell.appendChild(nameField);
                 let valueField = document.createElement("div");
-                valueField.style.width = "50px";
+                valueField.style.width = "60px";
                 cell.appendChild(valueField);
                 console_control.appendChild(cell);
             }
@@ -46,14 +46,14 @@ document.addEventListener("DOMContentLoaded", () => {
             if (console_telemetry.children.length < rxdata.length) {
                 let cell = document.createElement("td");
                 let indexField = document.createElement("div");
-                indexField.style.width = "50px";
+                indexField.style.width = "60px";
                 indexField.innerHTML = "#" + console_telemetry.children.length;
                 cell.appendChild(indexField);
                 let nameField = document.createElement("input");
-                nameField.style.width = "50px";
+                nameField.style.width = "60px";
                 cell.appendChild(nameField);
                 let valueField = document.createElement("div");
-                valueField.style.width = "50px";
+                valueField.style.width = "60px";
                 cell.appendChild(valueField);
                 console_telemetry.appendChild(cell);
             }
@@ -1152,7 +1152,7 @@ var configEditable = false;
 function toggleEditConfig() {
     configEditable = !configEditable;
     document.getElementById("toggleEditConfig").innerHTML = !configEditable ? "Configure Robot" : "Close Robot Configuration";
-    document.getElementById("config-edit").hidden = style.visibility = configEditable ? "visible" : "none";
+    document.getElementById("config-edit").style.display = configEditable ? "flex" : "none";
     document.getElementById("config-status").innerHTML = "";
     document.getElementById("config-status").style.backgroundColor = "lightgrey";
 

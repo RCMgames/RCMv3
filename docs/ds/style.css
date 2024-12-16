@@ -94,7 +94,6 @@
 
 .config-edit {
   width: 800px;
-  display: flex;
   flex-direction: column;
   background-color: rgb(168, 207, 168);
   display: none;
