@@ -23,6 +23,7 @@
 .add-ds-items-button-list {
   display: flex;
   flex-direction: row;
+  margin: 2px;
 }
 
 .ds-list {
@@ -89,7 +90,7 @@
 }
 
 .clear-ds-items-button {
-  background-color: #f44336;
+  background-color: #FF3355;
 }
 
 .config-edit {
@@ -107,6 +108,23 @@
   margin: 5px;
 }
 
+.default-button-class {
+  background-color: #aaaaaa;
+  border: none;
+  margin: 2px;
+}
+
+.saved-button-class {
+  background-color: #00b300;
+  border: none;
+  margin: 2px;
+}
+
+.unsaved-button-class {
+  background-color: #ffff00;
+  border: none;
+  margin: 2px;
+}
 
 .config-buttons {
   display: flex;

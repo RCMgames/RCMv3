@@ -144,6 +144,12 @@ document.addEventListener(
     false,
 );
 
+function set_ui_save_button_unsaved() {
+    document.getElementById("save-ui-button").classList.remove("default-button-class");
+    document.getElementById("save-ui-button").classList.remove("saved-button-class");
+    document.getElementById("save-ui-button").classList.add("unsaved-button-class");
+}
+
 class DSItem {
     constructor(_dsCanvas, data) {
         this.dsCanvas = _dsCanvas;
@@ -390,6 +396,7 @@ class DSItem {
     onMove(x, y) {
         if (this.mousePressed) {
             if (this.beingEdited) {
+                set_ui_save_button_unsaved();
                 const rect = this.dsCanvas.getBoundingClientRect();
                 this.posX = x - rect.left - this.offsetX;
                 this.posY = y - rect.top - this.offsetY;
@@ -606,6 +613,7 @@ class DSItem {
         deleteButton.onclick = (event) => {
             event.stopPropagation();
             deleteDSItem(this);
+            set_ui_save_button_unsaved();
         }
         element.appendChild(deleteButton);
 
@@ -638,6 +646,7 @@ class DSItem {
             input.style.width = "50px";
             input.value = this.dataIndices[i];
             input.onchange = (event) => {
+                set_ui_save_button_unsaved();
                 this.dataIndices[i] = parseInt(event.target.value);
                 input.value = this.dataIndices[i];
                 helper.value = this.dataIndices[i];
@@ -659,6 +668,7 @@ class DSItem {
             }
             helper.value = this.dataIndices[i];
             helper.onchange = (event) => {
+                set_ui_save_button_unsaved();
                 this.dataIndices[i] = event.target.value;
                 input.value = this.dataIndices[i];
             }
@@ -677,6 +687,7 @@ class DSItem {
         input_size.style.width = "50px";
         input_size.value = this.size;
         input_size.onchange = (event) => {
+            set_ui_save_button_unsaved();
             let sizeVal = parseInt(event.target.value);
             if (!isNaN(sizeVal)) {
                 this.size = sizeVal;
@@ -701,6 +712,7 @@ class DSItem {
             input_textlable.maxLength = 7;
             input_textlable.value = this.labelText;
             input_textlable.onchange = (event) => {
+                set_ui_save_button_unsaved();
                 this.labelText = event.target.value;
                 this.draw();
             }
@@ -741,6 +753,7 @@ class DSItem {
             input_buttonRVal.step = "0.01";
             input_buttonRVal.value = this.buttonReleasedVal;
             input_buttonRVal.onchange = (event) => {
+                set_ui_save_button_unsaved();
                 let tempFloat = parseFloat(event.target.value);
                 if (!isNaN(tempFloat)) {
                     this.buttonReleasedVal = tempFloat;
@@ -797,6 +810,7 @@ class DSItem {
                 if (this.keyboardKeys[i] == undefined) this.keyboardKeys[i] = null;
                 input.value = this.keyboardKeys[i];
                 input.oninput = (event) => {
+                    set_ui_save_button_unsaved();
                     this.keyboardKeys[i] = event.target.value;
                     this.keyboardKeys[i] = this.keyboardKeys[i].charAt(this.keyboardKeys[i].length - 1);
                     input.value = this.keyboardKeys[i];
@@ -860,6 +874,7 @@ class DSItem {
                                     if (Math.abs(gp[j].axes[k]) > 0.5) {
                                         this.gamepadAxes[2 * i] = j;
                                         this.gamepadAxes[2 * i + 1] = k;
+                                        set_ui_save_button_unsaved();
                                         break;
                                     }
                                 }
@@ -889,6 +904,7 @@ class DSItem {
                                     if (gp[j].buttons[k].value) {
                                         this.gamepadAxes[2 * i] = j;
                                         this.gamepadAxes[2 * i + 1] = k;
+                                        set_ui_save_button_unsaved();
                                         break;
                                     }
                                 }
@@ -914,6 +930,7 @@ class DSItem {
             recenterInput.type = "checkbox";
             recenterInput.checked = this.recenter;
             recenterInput.onchange = () => {
+                set_ui_save_button_unsaved();
                 this.recenter = recenterInput.checked;
             }
             cell_recenter.appendChild(recenterInput);
@@ -931,6 +948,7 @@ class DSItem {
             colorHighInput.type = "color";
             colorHighInput.value = this.colorHigh;
             colorHighInput.oninput = () => {
+                set_ui_save_button_unsaved();
                 this.colorHigh = colorHighInput.value;
                 this.highlighted = false;
                 this.draw();
@@ -948,6 +966,7 @@ class DSItem {
             colorHighValInput.type = "number";
             colorHighValInput.value = this.colorHighVal;
             colorHighValInput.onchange = () => {
+                set_ui_save_button_unsaved();
                 this.colorHighVal = parseFloat(colorHighValInput.value);
                 this.draw();
             }
@@ -964,6 +983,7 @@ class DSItem {
             colorLowInput.type = "color";
             colorLowInput.value = this.colorLow;
             colorLowInput.oninput = () => {
+                set_ui_save_button_unsaved();
                 this.colorLow = colorLowInput.value;
                 this.highlighted = false;
                 this.draw();
@@ -981,6 +1001,7 @@ class DSItem {
             colorLowValInput.type = "number";
             colorLowValInput.value = this.colorLowVal;
             colorLowValInput.onchange = () => {
+                set_ui_save_button_unsaved();
                 this.colorLowVal = parseFloat(colorLowValInput.value);
                 this.draw();
             }
@@ -1192,6 +1213,7 @@ function addDSItem(_type) {
     DSItems.push(item);
     document.getElementById("ds-list").appendChild(item.nameElement())
     document.getElementById("ds-properties").replaceChildren(item.propertiesElement());
+    set_ui_save_button_unsaved();
 }
 function clearDSItems(deletePermanently = true) {
     const list = document.getElementById("ds-list");
@@ -1205,6 +1227,9 @@ function clearDSItems(deletePermanently = true) {
     }
 
     if (deletePermanently) {
+        if (DSItems.length > 0) {
+            set_ui_save_button_unsaved();
+        }
         for (let i = 0; i < DSItems.length; i++) {
             DSItems[i].removeEventListeners();
         }
@@ -1348,6 +1373,9 @@ function saveUI() {
         },
         body: UIDataToSendEncoded
     }).then(response => {
+        document.getElementById("save-ui-button").classList.remove("default-button-class");
+        document.getElementById("save-ui-button").classList.remove("unsaved-button-class");
+        document.getElementById("save-ui-button").classList.add("saved-button-class");
         console.log(response);
     });
 }
@@ -1372,6 +1400,7 @@ function loadUI(fromURL = '/loadUI.json') {
                     DSItems.push(item);
                     document.getElementById("ds-list").appendChild(item.nameElement());
                 }
+                set_ui_save_button_unsaved();
             }
         })
         .catch(() => {
