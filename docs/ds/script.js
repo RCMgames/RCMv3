@@ -1563,7 +1563,7 @@ class ActiveComponent {
             this.element.remove();
             activeComponentList.splice(activeComponentList.indexOf(this), 1);
             document.getElementById("component-properties").replaceChildren();
-            //TODO: test re-assign this.index for all activeComponentList
+            //TODO: test re-assign this.index for all activeComponentList when components are deleted
             for (let i = 0; i < activeComponentList.length; i++) {
                 activeComponentList[i].index = i;
                 activeComponentList[i].updateHTMLElement();
@@ -2036,20 +2036,26 @@ class ActiveComponent {
             let input = document.createElement("input");
             input.type = "number";
             input.value = this.inputs[i];
-            input.onchange = (event) => {
-                this.inputs[i] = parseInt(event.target.value);
-            }
             element.appendChild(input);
             let helper = document.createElement("select");
+            let doption = document.createElement("option");
+            doption.value = -1;
+            doption.textContent = "none";
+            helper.appendChild(doption);
             for (let j = 0; j < control_console.children.length; j++) {
                 let option = document.createElement("option");
                 option.value = j;
                 option.textContent = control_console.children[j].children[1].value;
-                option.onchange = (event) => {
-                    this.inputs[i] = (event.target.value);
-                    input.value = this.inputs[i];
-                }
                 helper.appendChild(option);
+            }
+            helper.onchange = (event) => {
+                this.inputs[i] = (event.target.value);
+                input.value = this.inputs[i];
+            }
+            helper.value = this.inputs[i];
+            input.onchange = (event) => {
+                this.inputs[i] = parseInt(event.target.value);
+                helper.value = this.inputs[i];
             }
             element.appendChild(helper);
             inputsElement.appendChild(element);
@@ -2070,21 +2076,28 @@ class ActiveComponent {
             let input = document.createElement("input");
             input.type = "number";
             input.value = this.outputs[i];
-            input.onchange = (event) => {
-                this.outputs[i] = parseInt(event.target.value);
-            }
             element.appendChild(input);
             let helper = document.createElement("select");
+            let doption = document.createElement("option");
+            doption.value = -1;
+            doption.textContent = "none";
+            helper.appendChild(doption);
             for (let j = 0; j < telemetry_console.children.length; j++) {
                 let option = document.createElement("option");
                 option.value = j;
                 option.textContent = telemetry_console.children[j].children[1].value;
-                option.onchange = (event) => {
-                    this.outputs[i] = (event.target.value);
-                    input.value = this.outputs[i];
-                }
                 helper.appendChild(option);
             }
+            helper.onchange = (event) => {
+                this.outputs[i] = (event.target.value);
+                input.value = this.outputs[i];
+            }
+            helper.value = this.outputs[i];
+            input.onchange = (event) => {
+                this.outputs[i] = parseInt(event.target.value);
+                helper.value = this.outputs[i];
+            }
+
             element.appendChild(helper);
             outputsElement.appendChild(element);
         }
@@ -2296,7 +2309,7 @@ async function loadPresets() {
             }
         }
     });
-
+    // TODO: save and recall variable user names
     fetch('/loadMiscConfigInfo.json')
         .then(response => response.text())
         .then(data => {
