@@ -10,9 +10,12 @@
 
 <body>
   <h1>RCMv3 Driver Station</h1>
-  <div><button onclick="connect();">Connect</button>
-    <button onclick="disconnect();">Disconnect</button>
-    <span id="connection-status">Not connected</span>
+  <div>
+    <div>
+      <button class="connectButton" onclick="connect();">Connect</button>
+      <button class="disconnectButton" onclick="disconnect();">Disconnect</button>
+      <span id="connection-status">Not connected</span>
+    </div>
     <button class="toggleEditDriverstation" id="toggleEditDriverstation" onclick='toggleEditDriverstation()'>Edit
       Driverstation</button>
     <button class="toggleEditConfig" id="toggleEditConfig" onclick='toggleEditConfig()'>Configure Robot</button>
@@ -51,10 +54,14 @@
     </span>
     <span class="config-edit" id="config-edit">
       <div class="config-buttons">
-        <button class="config-save-buttons config-save-button-default" onclick="saveConfigToFile();">save config to file</button>
-        <button class="config-save-buttons config-save-button-default" onclick="loadConfigFromFile();">load config from file</button>
-        <button class="config-save-buttons config-save-button-default" onclick="loadConfig();">reload config from robot</button>
-        <button id="config-save-button" class="config-save-buttons config-save-button-default" onclick="saveConfig();">send config to robot</button>
+        <button class="config-save-buttons config-save-button-default" onclick="saveConfigToFile();">save config to
+          file</button>
+        <button class="config-save-buttons config-save-button-default" onclick="loadConfigFromFile();">load config from
+          file</button>
+        <button class="config-save-buttons config-save-button-default" onclick="loadConfig();">reload config from
+          robot</button>
+        <button id="config-save-button" class="config-save-buttons config-save-button-default"
+          onclick="saveConfig();">send config to robot</button>
         <button class="config-save-buttons config-save-button-default" onclick="clearConfig();">clear</button>
         <span id="config-status" class="config-status"> </span>
       </div>
@@ -110,21 +117,21 @@
     </span>
   </div>
   <br>
-  <span>control variables</span>
+  <button class="default-misc-save-button-class" id="saveMiscConfigInfoButton" onclick="saveMiscConfigInfo()">save
+    variable names</button>
+  <br>
+  <span>control variables</span> <button onclick="addControlVariable()">add</button> <button
+    onclick="deleteControlVariable()">subtract</button> <button onclick="zeroControlVariables()">reset to zero</button>
   <div style="overflow-x:scroll">
     <table id="console-control" style="overflow:hidden;white-space:nowrap;"></table>
   </div>
   <br>
-  <span>telemetry variables</span>
+  <span>telemetry variables</span> <button onclick="addTelemetryVariable()">add</button> <button
+    onclick="deleteTelemetryVariable()">subtract</button> <button onclick="zeroTelemetryVariables()">reset to
+    zero</button>
   <div style="overflow-x:scroll;">
     <table id="console-telemetry" style="overflow:hidden;white-space:nowrap;"></table>
   </div>
-  number of control variables: <input id="num-control-variables" type="number" value="0"
-    onchange="updateNumCtrlVars()"></input>
-  <br>
-  number of telemetry variables: <input id="num-telemetry-variables" type="number" value="0"
-    onchange="updateNumTelemVars()"></input>
-  <br>
   <footer style="text-align: center;">
     <strong>
       The source code for this website is on Github <a target="_blank" rel="noopener noreferrer"

@@ -21,72 +21,120 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     setInterval(() => {
         let console_control = document.getElementById("console-control");
-        for (let i = 0; i < txdata.length; i++) {
-            if (console_control.children.length < txdata.length) {
-                let cell = document.createElement("td");
-                let indexField = document.createElement("div");
-                indexField.style.width = "60px";
-                indexField.innerHTML = "#" + console_control.children.length;
-                cell.appendChild(indexField);
-                let nameField = document.createElement("input");
-                nameField.style.width = "60px";
-                cell.appendChild(nameField);
-                let valueField = document.createElement("div");
-                valueField.style.width = "60px";
-                cell.appendChild(valueField);
-                console_control.appendChild(cell);
-            }
+        let txdatalength = txdata.length;
+        for (let i = 0; i < txdatalength; i++) {
+            expandConsoleControlIfNeeded(console_control, txdatalength);
         }
-        for (let i = 0; i < txdata.length; i++) {
-            console_control.children[i].children[2].innerHTML = txdata[i];
+        for (let i = 0; i < txdatalength; i++) {
+            if (txdata[i] == undefined) txdata[i] = 0;
+            console_control.children[i].children[2].innerHTML = txdata[i].toFixed(4);
         }
         let console_telemetry = document.getElementById("console-telemetry");
+        let rxdatalength = rxdata.length;
+        for (let i = 0; i < rxdatalength; i++) {
+            expandConsoleTelemetryIfNeeded(console_telemetry, rxdatalength);
+        }
+        for (let i = 0; i < rxdatalength; i++) {
+            if (rxdata[i] == undefined) rxdata[i] = 0;
+            console_telemetry.children[i].children[2].innerHTML = rxdata[i].toFixed(4);
+        }
 
-        for (let i = 0; i < rxdata.length; i++) {
-            if (console_telemetry.children.length < rxdata.length) {
-                let cell = document.createElement("td");
-                let indexField = document.createElement("div");
-                indexField.style.width = "60px";
-                indexField.innerHTML = "#" + console_telemetry.children.length;
-                cell.appendChild(indexField);
-                let nameField = document.createElement("input");
-                nameField.style.width = "60px";
-                cell.appendChild(nameField);
-                let valueField = document.createElement("div");
-                valueField.style.width = "60px";
-                cell.appendChild(valueField);
-                console_telemetry.appendChild(cell);
-            }
-        }
-        for (let i = 0; i < rxdata.length; i++) {
-            console_telemetry.children[i].children[2].innerHTML = rxdata[i];
-        }
+        // TODO: record and save txdata and rxdata over time to files
 
         for (let i = 0; i < DSItems.length; i++) {
             DSItems[i].run(txdata, rxdata);
         }
-    }, 20);
+
+    }, 10);
 });
 
-function updateNumTelemVars() {
-    let input_box = document.getElementById("num-telemetry-variables");
-    let numVars = parseInt(input_box.value);
-    numVars = Math.max(numVars, rxdata.length);
-    input_box.value = numVars;
-    // append undefined to rxData until it is the right length
-    while (rxdata.length < numVars) {
-        rxdata.push(undefined);
+function expandConsoleTelemetryIfNeeded(console_telemetry, rxlength) {
+    if (console_telemetry.children.length < rxlength) {
+        let cell = document.createElement("td");
+        let indexField = document.createElement("div");
+        indexField.style.width = "60px";
+        indexField.innerHTML = "#" + console_telemetry.children.length;
+        cell.appendChild(indexField);
+        let nameField = document.createElement("input");
+        nameField.style.width = "60px";
+        nameField.onchange = (event) => {
+            set_misc_save_button_unsaved();
+        }
+        cell.appendChild(nameField);
+        let valueField = document.createElement("div");
+        valueField.style.width = "60px";
+        cell.appendChild(valueField);
+        console_telemetry.appendChild(cell);
     }
 }
-function updateNumCtrlVars() {
-    let input_box = document.getElementById("num-control-variables");
-    let numVars = parseInt(input_box.value);
-    numVars = Math.max(numVars, txdata.length);
-    input_box.value = numVars;
-    // append undefined to txData until it is the right length
-    while (txdata.length < numVars) {
-        txdata.push(undefined);
+
+function expandConsoleControlIfNeeded(console_control, txlength) {
+    if (console_control.children.length < txlength) {
+        let cell = document.createElement("td");
+        let indexField = document.createElement("div");
+        indexField.style.width = "60px";
+        indexField.innerHTML = "#" + console_control.children.length;
+        cell.appendChild(indexField);
+        let nameField = document.createElement("input");
+        nameField.style.width = "60px";
+        nameField.onchange = (event) => {
+            set_misc_save_button_unsaved();
+        }
+        cell.appendChild(nameField);
+        let valueField = document.createElement("div");
+        valueField.style.width = "60px";
+        cell.appendChild(valueField);
+        console_control.appendChild(cell);
     }
+}
+
+function addTelemetryVariable() {
+    rxdata.push(0);
+    set_misc_save_button_unsaved();
+}
+function addControlVariable() {
+    txdata.push(0);
+    set_misc_save_button_unsaved();
+}
+function deleteTelemetryVariable() {
+    rxdata.pop();
+    let console_telemetry = document.getElementById("console-telemetry");
+    while (rxdata.length < console_telemetry.children.length) {
+        console_telemetry.removeChild(console_telemetry.lastChild);
+    }
+}
+function deleteControlVariable() {
+    txdata.pop();
+    let console_control = document.getElementById("console-control");
+    while (txdata.length < console_control.children.length) {
+        console_control.removeChild(console_control.lastChild);
+    }
+}
+function zeroTelemetryVariables() {
+    for (let i = 0; i < rxdata.length; i++) {
+        rxdata[i] = 0;
+    }
+}
+function zeroControlVariables() {
+    for (let i = 0; i < txdata.length; i++) {
+        txdata[i] = 0;
+    }
+}
+
+function set_misc_save_button_unsaved() {
+    document.getElementById("saveMiscConfigInfoButton").classList.remove("default-misc-save-button-class");
+    document.getElementById("saveMiscConfigInfoButton").classList.remove("saved-misc-save-button-class");
+    document.getElementById("saveMiscConfigInfoButton").classList.add("unsaved-misc-save-button-class");
+}
+function set_misc_save_button_default() {
+    document.getElementById("saveMiscConfigInfoButton").classList.remove("saved-misc-save-button-class");
+    document.getElementById("saveMiscConfigInfoButton").classList.remove("unsaved-misc-save-button-class");
+    document.getElementById("saveMiscConfigInfoButton").classList.add("default-misc-save-button-class");
+}
+function set_misc_save_button_saved() {
+    document.getElementById("saveMiscConfigInfoButton").classList.remove("default-misc-save-button-class");
+    document.getElementById("saveMiscConfigInfoButton").classList.remove("unsaved-misc-save-button-class");
+    document.getElementById("saveMiscConfigInfoButton").classList.add("saved-misc-save-button-class");
 }
 
 function setWifiSettingsHelper() {
@@ -1019,6 +1067,7 @@ class DSItem {
             colorInput.type = "color";
             colorInput.value = this.color;
             colorInput.oninput = () => {
+                set_ui_save_button_unsaved();
                 this.color = colorInput.value;
                 this.highlighted = false;
                 this.draw();
@@ -1213,7 +1262,6 @@ function addDSItem(_type) {
     DSItems.push(item);
     document.getElementById("ds-list").appendChild(item.nameElement())
     document.getElementById("ds-properties").replaceChildren(item.propertiesElement());
-    set_ui_save_button_unsaved();
 }
 function clearDSItems(deletePermanently = true) {
     const list = document.getElementById("ds-list");
@@ -1270,6 +1318,7 @@ function uploadUIData() {
                 const item = new DSItem(document.getElementById("ds"), data.UIdata[i]);
                 item.beingEdited = driverstationEditable;
                 DSItems.push(item);
+                set_ui_save_button_unsaved();
                 document.getElementById("ds-list").appendChild(item.nameElement());
             }
         }
@@ -1377,10 +1426,17 @@ function saveUI() {
         },
         body: UIDataToSendEncoded
     }).then(response => {
-        document.getElementById("save-ui-button").classList.remove("default-button-class");
-        document.getElementById("save-ui-button").classList.remove("unsaved-button-class");
-        document.getElementById("save-ui-button").classList.add("saved-button-class");
-        console.log(response);
+        return response.text();
+    }).then(data => {
+        if (data == "OK") {
+            document.getElementById("save-ui-button").classList.remove("default-button-class");
+            document.getElementById("save-ui-button").classList.remove("unsaved-button-class");
+            document.getElementById("save-ui-button").classList.add("saved-button-class");
+        } else {
+            document.getElementById("save-ui-button").classList.remove("default-button-class");
+            document.getElementById("save-ui-button").classList.remove("saved-button-class");
+            document.getElementById("save-ui-button").classList.add("unsaved-button-class");
+        }
     });
 }
 function loadUI(fromURL = '/loadUI.json') {
@@ -1404,7 +1460,6 @@ function loadUI(fromURL = '/loadUI.json') {
                     DSItems.push(item);
                     document.getElementById("ds-list").appendChild(item.nameElement());
                 }
-                set_ui_save_button_unsaved();
             }
         })
         .catch(() => {
@@ -1459,21 +1514,31 @@ function loadWifiSettings() {
         });
 }
 
+function set_config_save_button_default() {
+    document.getElementById("config-save-button").classList.remove("config-save-button-unsaved");
+    document.getElementById("config-save-button").classList.remove("config-save-button-saved");
+    document.getElementById("config-save-button").classList.add("config-save-button-default");
+}
+
 function set_config_save_button_unsaved() {
-    document.getElementById("config-save-button").classList.remove("saved-button-class");
-    document.getElementById("config-save-button").classList.remove("default-button-class");
-    document.getElementById("config-save-button").classList.add("unsaved-button-class");
+    document.getElementById("config-save-button").classList.remove("config-save-button-saved");
+    document.getElementById("config-save-button").classList.remove("config-save-button-default");
+    document.getElementById("config-save-button").classList.add("config-save-button-unsaved");
 }
 
 function set_config_save_button_saved() {
-    document.getElementById("config-save-button").classList.remove("unsaved-button-class");
-    document.getElementById("config-save-button").classList.remove("default-button-class");
-    document.getElementById("config-save-button").classList.add("saved-button-class");
+    document.getElementById("config-save-button").classList.remove("config-save-button-unsaved");
+    document.getElementById("config-save-button").classList.remove("config-save-button-default");
+    document.getElementById("config-save-button").classList.add("config-save-button-saved");
 }
 
 var boardInfo = {};
 
 var activeComponentList = [];
+
+document.getElementById("component-properties").onchange = (event) => {
+    set_config_save_button_unsaved();
+};
 
 class ActiveComponent {
     constructor(jsonData, index, setParameterVals) {
@@ -1552,19 +1617,6 @@ class ActiveComponent {
 
         document.getElementById("active-components").appendChild(this.element);
 
-        const observer = new MutationObserver((mutationsList, observer) => {
-            for (let mutation of mutationsList) {
-                if (mutation.type === 'attributes') {
-                    set_config_save_button_unsaved();
-                    break;
-                }
-            }
-        });
-        observer.observe(this.element, {
-            attributes: true,
-            subtree: true
-        });
-
     }
     updateHTMLElement() {
         this.element.replaceChildren();
@@ -1592,6 +1644,7 @@ class ActiveComponent {
                 this.updateHTMLElement();
                 above.updateHTMLElement();
                 this.element.parentElement.insertBefore(this.element, above.element);
+                set_config_save_button_unsaved();
             }
         }
         this.element.appendChild(upButton);
@@ -1610,6 +1663,7 @@ class ActiveComponent {
                 this.updateHTMLElement();
                 below.updateHTMLElement();
                 this.element.parentElement.insertBefore(this.element, below.element.nextSibling);
+                set_config_save_button_unsaved();
             }
         }
         this.element.appendChild(downButton);
@@ -1622,11 +1676,11 @@ class ActiveComponent {
             this.element.remove();
             activeComponentList.splice(activeComponentList.indexOf(this), 1);
             document.getElementById("component-properties").replaceChildren();
-            //TODO: test re-assign this.index for all activeComponentList when components are deleted
             for (let i = 0; i < activeComponentList.length; i++) {
                 activeComponentList[i].index = i;
                 activeComponentList[i].updateHTMLElement();
             }
+            set_config_save_button_unsaved();
         }
         this.element.appendChild(deleteButton);
 
@@ -2194,6 +2248,7 @@ function updateBoardInfoUI() {
         element.onclick = () => {
             document.getElementById("component-properties").replaceChildren();
             activeComponentList.push(new ActiveComponent(component, activeComponentList.length, false));
+            set_config_save_button_unsaved();
         }
         document.getElementById("potential-components").appendChild(element);
     }
@@ -2227,6 +2282,7 @@ function loadConfigFromFile() {
             for (let i = 0; i < data.length; i++) {
                 activeComponentList.push(new ActiveComponent(data[i], activeComponentList.length, true));
             }
+            set_config_save_button_unsaved();
         }
         reader.readAsText(file);
     }
@@ -2297,6 +2353,8 @@ function saveConfig() {
     document.getElementById("config-status").innerHTML = "saving...";
     document.getElementById("config-status").style.backgroundColor = "yellow";
 
+    set_config_save_button_default();
+
     let componentDataToSend = [];
     for (let i = 0; i < activeComponentList.length; i++) {
         componentDataToSend.push(activeComponentList[i].jsonify());
@@ -2338,11 +2396,12 @@ async function loadPresets() {
 
             element.onclick = () => {
                 document.getElementById("config-status").innerHTML = "Loading...";
-                document.getElementById("config-status").style.backgroundColor = "yellow"; //TODO: clean up config-status window setting code (make a function?)
+                document.getElementById("config-status").style.backgroundColor = "yellow";
                 fetch('/presets/config_presets/' + config_presets[i]).then(response => response.json()).then(configComponents => {
                     for (let j = 0; j < configComponents.length; j++) {
                         activeComponentList.push(new ActiveComponent(configComponents[j], activeComponentList.length, true));
                     }
+                    set_config_save_button_unsaved();
                     document.getElementById("config-status").innerHTML = "Loaded Preset";
                     document.getElementById("config-status").style.backgroundColor = "lightgreen";
                 });
@@ -2350,20 +2409,22 @@ async function loadPresets() {
             document.getElementById("config-presets-list").appendChild(element);
         }
 
-        document.getElementById("board-type-selector").replaceChildren();
+        let boardTypeSelector = document.getElementById("board-type-selector");
+
+        boardTypeSelector.replaceChildren();
         let parameter_presets = presets.presets.parameter_presets;
         let option = document.createElement("option");
         option.textContent = "select RCM Board";
         option.value = null;
-        document.getElementById("board-type-selector").appendChild(option);
+        boardTypeSelector.appendChild(option);
         for (let i = 0; i < parameter_presets.length; i++) {
             let option = document.createElement("option");
             option.textContent = parameter_presets[i].substring(0, parameter_presets[i].length - 5);
             option.value = parameter_presets[i];
-            document.getElementById("board-type-selector").appendChild(option);
+            boardTypeSelector.appendChild(option);
         }
         // TODO: load non-board specific presets (parameter presets)
-        document.getElementById("board-type-selector").onchange = (event) => {
+        boardTypeSelector.onchange = (event) => {
             let preset = event.target.value;
             if (preset && preset != "null") {
                 fetch('/presets/parameter_presets/' + preset).then(response => response.json()).then(data => {
@@ -2377,7 +2438,7 @@ async function loadPresets() {
             }
         }
     });
-    // TODO: save and recall variable user names
+
     fetch('/loadMiscConfigInfo.json')
         .then(response => response.text())
         .then(data => {
@@ -2390,12 +2451,42 @@ async function loadPresets() {
                 document.getElementById("board-type-selector").value = miscConfigInfo["board"];
                 document.getElementById("board-type-selector").dispatchEvent(new Event('change'));
             }
+            if (miscConfigInfo["variableNames"] != undefined) {
+                if (miscConfigInfo["variableNames"]["control"] != undefined) {
+                    for (let i = 0; i < miscConfigInfo["variableNames"]["control"].length; i++) {
+                        if (i >= txdata.length) {
+                            txdata.push(0);
+                        }
+                        let consoleControl = document.getElementById("console-control");
+                        expandConsoleControlIfNeeded(consoleControl, txdata.length);
+                        consoleControl.children[i].children[1].value = miscConfigInfo["variableNames"]["control"][i];
+                    }
+                }
+                if (miscConfigInfo["variableNames"]["telemetry"] != undefined) {
+                    for (let i = 0; i < miscConfigInfo["variableNames"]["telemetry"].length; i++) {
+                        if (i >= rxdata.length) {
+                            rxdata.push(0);
+                        }
+                        let consoleTelemetry = document.getElementById("console-telemetry");
+                        expandConsoleTelemetryIfNeeded(consoleTelemetry, rxdata.length);
+                        consoleTelemetry.children[i].children[1].value = miscConfigInfo["variableNames"]["telemetry"][i];
+                    }
+                }
+            }
         });
 }
 
 function saveMiscConfigInfo() {
-    document.getElementById("config-status").innerHTML = "saving misc config info...";
-    document.getElementById("config-status").style.backgroundColor = "yellow";
+
+    set_misc_save_button_default();
+
+    miscConfigInfo["variableNames"] = { "control": [], "telemetry": [] };
+    for (let i = 0; i < document.getElementById("console-control").children.length; i++) {
+        miscConfigInfo["variableNames"]["control"].push(document.getElementById("console-control").children[i].children[1].value);
+    }
+    for (let i = 0; i < document.getElementById("console-telemetry").children.length; i++) {
+        miscConfigInfo["variableNames"]["telemetry"].push(document.getElementById("console-telemetry").children[i].children[1].value);
+    }
 
     dataToSend = JSON.stringify(miscConfigInfo);
     const dataToSendEncoded = new URLSearchParams({ miscConfigInfo: dataToSend });
@@ -2409,12 +2500,10 @@ function saveMiscConfigInfo() {
     }).then(response => {
         response.text().then((text) => {
             if (text == "OK") {
-                robotSaveConfig();
-                document.getElementById("config-status").innerHTML = "Sent config info";
-                document.getElementById("config-status").style.backgroundColor = "lightgreen";
+                // robotSaveConfig(); //TODO WAS THIS IMPORTANT?
+                set_misc_save_button_saved();
             } else {
-                document.getElementById("config-status").style.backgroundColor = "#ff9999";
-                document.getElementById("config-status").innerHTML = text;
+                set_misc_save_button_unsaved();
             }
         });
     });

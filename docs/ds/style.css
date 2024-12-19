@@ -108,22 +108,42 @@
   margin: 5px;
 }
 
+.connectButton {
+  display: inline-block;
+  border: none;
+  font-size: large;
+  padding: 10px 20px;
+  margin: 5px;
+}
+
+.disconnectButton {
+  display: inline-block;
+  border: none;
+  font-size: large;
+  padding: 10px 20px;
+  margin: 5px;
+}
+
 .default-button-class {
   background-color: #aaaaaa;
   border: none;
   margin: 2px;
+  font-weight: normal;
 }
 
 .saved-button-class {
   background-color: #00b300;
   border: none;
   margin: 2px;
+  font-weight: normal;
 }
 
 .unsaved-button-class {
   background-color: #ffff00;
   border: none;
   margin: 2px;
+  font-weight: bold;
+  ;
 }
 
 .config-buttons {
@@ -177,14 +197,17 @@
 
 .config-save-button-default {
   background-color: #aaaaaa;
+  font-weight: normal;
 }
 
 .config-save-button-saved {
   background-color: #00b300;
+  font-weight: normal;
 }
 
 .config-save-button-unsaved {
   background-color: #ffff00;
+  font-weight: bold;
 }
 
 .component-element {
@@ -198,4 +221,25 @@
   float: right;
   border: none;
   padding: 5px 5px 5px 5px;
+}
+
+.default-misc-save-button-class {
+  background-color: #aaaaaa;
+  border: none;
+  margin: 2px;
+  font-weight: normal;
+}
+
+.unsaved-misc-save-button-class {
+  background-color: #ffff00;
+  border: none;
+  margin: 2px;
+  font-weight: bold;
+}
+
+.saved-misc-save-button-class {
+  background-color: #00b300;
+  border: none;
+  margin: 2px;
+  font-weight: normal;
 }
