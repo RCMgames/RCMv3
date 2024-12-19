@@ -2516,4 +2516,5 @@ function loadProject() {
     let projectFullURL = projectUrl + projectName;
     loadUI(projectFullURL + "/UIdata.json");
     loadConfig(projectFullURL + "/config.json");
+    set_ui_save_button_unsaved();
 }

@@ -20,13 +20,18 @@ import json
 directory_description = {"presets":{}}
 
 def describe_directory(directory, dir_description):
-    for item in os.listdir(directory):
+    for item in sorted(os.listdir(directory), reverse=True): # reversed so that RCM boards go above Alfredo
         item_path = os.path.join(directory, item)
         if os.path.isdir(item_path):
             dir_description[item] = []
             describe_directory(item_path, dir_description[item])
         else:
             dir_description.append(item)
+            #minimize json in files
+            with open(item_path, 'r') as f:
+                data = json.load(f)
+            with open(item_path, 'w') as f:
+                f.write(json.dumps(data, separators=(',', ':'), indent=None))
 
 
 describe_directory(destination_dir, directory_description["presets"])
