@@ -20,8 +20,11 @@
       Driverstation</button>
     <button class="toggleEditConfig" id="toggleEditConfig" onclick='toggleEditConfig()'>Configure Robot</button>
   </div>
-  enable robot:
+  <span style="font-size: large">
+    enable robot:
+  </span>
   <input id="robot-enabled" type="checkbox" style="width:30px;height:30px;"></input>
+  <button class="zeroControlButton" onclick="zeroControlVariables()">reset controls to zero</button>
   <br>
   <div class="outer-flex-box">
     <canvas class="ds" id="ds" width="600" height="1000"></canvas>
@@ -121,14 +124,13 @@
     variable names</button>
   <br>
   <span>control variables</span> <button onclick="addControlVariable()">add</button> <button
-    onclick="deleteControlVariable()">subtract</button> <button onclick="zeroControlVariables()">reset to zero</button>
+    onclick="deleteControlVariable()">subtract</button>
   <div style="overflow-x:scroll">
     <table id="console-control" style="overflow:hidden;white-space:nowrap;"></table>
   </div>
   <br>
   <span>telemetry variables</span> <button onclick="addTelemetryVariable()">add</button> <button
-    onclick="deleteTelemetryVariable()">subtract</button> <button onclick="zeroTelemetryVariables()">reset to
-    zero</button>
+    onclick="deleteTelemetryVariable()">subtract</button>
   <div style="overflow-x:scroll;">
     <table id="console-telemetry" style="overflow:hidden;white-space:nowrap;"></table>
   </div>

@@ -225,21 +225,26 @@
 
 .default-misc-save-button-class {
   background-color: #aaaaaa;
-  border: none;
-  margin: 2px;
+  margin: 5px;
   font-weight: normal;
 }
 
 .unsaved-misc-save-button-class {
   background-color: #ffff00;
-  border: none;
-  margin: 2px;
+  margin: 5px;
   font-weight: bold;
 }
 
 .saved-misc-save-button-class {
   background-color: #00b300;
-  border: none;
-  margin: 2px;
+  margin: 5px;
   font-weight: normal;
+}
+
+.zeroControlButton {
+  display: inline-block;
+  border: none;
+  font-size: large;
+  padding: 10px 20px;
+  margin: 5px;
 }

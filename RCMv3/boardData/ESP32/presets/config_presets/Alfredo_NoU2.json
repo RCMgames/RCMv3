@@ -149,5 +149,17 @@
             0,
             0
         ]
+    },
+    {
+        "type": 13,
+        "name": "VoltageCompConst",
+        "username": "9v battery (fake battery monitor)",
+        "inputs": [],
+        "outputs": [
+            -1
+        ],
+        "parameters": [
+            9
+        ]
     }
 ]

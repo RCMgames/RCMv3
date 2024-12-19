@@ -88,6 +88,7 @@ function expandConsoleControlIfNeeded(console_control, txlength) {
     }
 }
 
+//TODO: when connected to the robot rxdata gets reset to the received length so only one additional telemetry variable can be added beyond the length of rxdata
 function addTelemetryVariable() {
     rxdata.push(0);
     set_misc_save_button_unsaved();
@@ -99,20 +100,15 @@ function addControlVariable() {
 function deleteTelemetryVariable() {
     rxdata.pop();
     let console_telemetry = document.getElementById("console-telemetry");
-    while (rxdata.length < console_telemetry.children.length) {
+    if (rxdata.length < console_telemetry.children.length) {
         console_telemetry.removeChild(console_telemetry.lastChild);
     }
 }
 function deleteControlVariable() {
     txdata.pop();
     let console_control = document.getElementById("console-control");
-    while (txdata.length < console_control.children.length) {
+    if (txdata.length < console_control.children.length) {
         console_control.removeChild(console_control.lastChild);
-    }
-}
-function zeroTelemetryVariables() {
-    for (let i = 0; i < rxdata.length; i++) {
-        rxdata[i] = 0;
     }
 }
 function zeroControlVariables() {
@@ -2162,7 +2158,7 @@ class ActiveComponent {
                 helper.appendChild(option);
             }
             helper.onchange = (event) => {
-                this.inputs[i] = (event.target.value);
+                this.inputs[i] = parseInt(event.target.value);
                 input.value = this.inputs[i];
             }
             helper.value = this.inputs[i];
@@ -2202,7 +2198,7 @@ class ActiveComponent {
                 helper.appendChild(option);
             }
             helper.onchange = (event) => {
-                this.outputs[i] = (event.target.value);
+                this.outputs[i] = parseInt(event.target.value);
                 input.value = this.outputs[i];
             }
             helper.value = this.outputs[i];
@@ -2510,6 +2506,8 @@ function saveMiscConfigInfo() {
 }
 
 function loadProject() {
+    // TODO: load miscConfigInfo
+    // TODO: save miscConfigInfo to file
     let projectName = document.getElementById("project-name").value;
     // TODO: option to append instead of replace
     let projectUrl = document.getElementById("projecturl").value;
