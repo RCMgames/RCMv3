@@ -1366,6 +1366,10 @@ function saveUI() {
 
     const UIDataToSendEncoded = new URLSearchParams({ UIdata: UIDataToSend });
 
+    document.getElementById("save-ui-button").classList.remove("saved-button-class");
+    document.getElementById("save-ui-button").classList.remove("unsaved-button-class");
+    document.getElementById("save-ui-button").classList.add("default-button-class");
+
     fetch('/saveUI', {
         method: "post",
         headers: {
@@ -1455,6 +1459,18 @@ function loadWifiSettings() {
         });
 }
 
+function set_config_save_button_unsaved() {
+    document.getElementById("config-save-button").classList.remove("saved-button-class");
+    document.getElementById("config-save-button").classList.remove("default-button-class");
+    document.getElementById("config-save-button").classList.add("unsaved-button-class");
+}
+
+function set_config_save_button_saved() {
+    document.getElementById("config-save-button").classList.remove("unsaved-button-class");
+    document.getElementById("config-save-button").classList.remove("default-button-class");
+    document.getElementById("config-save-button").classList.add("saved-button-class");
+}
+
 var boardInfo = {};
 
 var activeComponentList = [];
@@ -1535,6 +1551,20 @@ class ActiveComponent {
         this.updateHTMLElement();
 
         document.getElementById("active-components").appendChild(this.element);
+
+        const observer = new MutationObserver((mutationsList, observer) => {
+            for (let mutation of mutationsList) {
+                if (mutation.type === 'attributes') {
+                    set_config_save_button_unsaved();
+                    break;
+                }
+            }
+        });
+        observer.observe(this.element, {
+            attributes: true,
+            subtree: true
+        });
+
     }
     updateHTMLElement() {
         this.element.replaceChildren();
@@ -2204,6 +2234,9 @@ function loadConfigFromFile() {
 }
 
 function robotSaveConfig() {
+    document.getElementById("config-save-button").classList.remove("config-save-button-unsaved");
+    document.getElementById("config-save-button").classList.remove("config-save-button-saved");
+    document.getElementById("config-save-button").classList.add("config-save-button-default");
     document.getElementById("config-status").innerHTML = "Saving...";
     document.getElementById("config-status").style.backgroundColor = "yellow";
 
@@ -2212,6 +2245,10 @@ function robotSaveConfig() {
             if (text == "OK") {
                 document.getElementById("config-status").innerHTML = "Saved";
                 document.getElementById("config-status").style.backgroundColor = "lightgreen";
+            } else {
+                set_config_save_button_unsaved();
+                document.getElementById("config-status").innerHTML = "config not saved, try again";
+                document.getElementById("config-status").style.backgroundColor = "#ff9999";
             }
         }
         );
@@ -2279,7 +2316,9 @@ function saveConfig() {
                 robotSaveConfig();
                 document.getElementById("config-status").innerHTML = "Sent config";
                 document.getElementById("config-status").style.backgroundColor = "lightgreen";
+                set_config_save_button_saved();
             } else {
+                set_config_save_button_unsaved();
                 document.getElementById("config-status").style.backgroundColor = "#ff9999";
                 document.getElementById("config-status").innerHTML = text;
             }

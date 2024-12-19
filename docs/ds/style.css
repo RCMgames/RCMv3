@@ -175,6 +175,18 @@
   font-size: large;
 }
 
+.config-save-button-default {
+  background-color: #aaaaaa;
+}
+
+.config-save-button-saved {
+  background-color: #00b300;
+}
+
+.config-save-button-unsaved {
+  background-color: #ffff00;
+}
+
 .component-element {
   background-color: lightgray;
   padding: 5px 5px;
