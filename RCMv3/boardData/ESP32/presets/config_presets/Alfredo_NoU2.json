@@ -136,6 +136,18 @@
         ]
     },
     {
+        "type": 13,
+        "name": "VoltageCompConst",
+        "username": "9v battery (fake battery monitor)",
+        "inputs": [],
+        "outputs": [
+            0
+        ],
+        "parameters": [
+            9
+        ]
+    },
+    {
         "type": 0,
         "name": "VoltageCompMeasure",
         "username": "battery monitor (circuit modification)",
@@ -148,18 +160,6 @@
             310,
             0,
             0
-        ]
-    },
-    {
-        "type": 13,
-        "name": "VoltageCompConst",
-        "username": "9v battery (fake battery monitor)",
-        "inputs": [],
-        "outputs": [
-            -1
-        ],
-        "parameters": [
-            9
         ]
     }
 ]

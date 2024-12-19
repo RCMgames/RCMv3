@@ -681,7 +681,7 @@ class DSItem {
         let row_data_label = document.createElement("td");
         row_data_label.innerHTML = this.indicator ? "input variable" : "output variable";
         row_data.appendChild(row_data_label);
-        let control_console = document.getElementById("console-control");
+        let console = this.indicator ? document.getElementById("console-telemetry") : document.getElementById("console-control");
         for (let i = 0; i < this.numData; i++) {
             let cell = document.createElement("td");
             let input = document.createElement("input");
@@ -689,12 +689,6 @@ class DSItem {
             input.min = 0;
             input.style.width = "50px";
             input.value = this.dataIndices[i];
-            input.onchange = (event) => {
-                set_ui_save_button_unsaved();
-                this.dataIndices[i] = parseInt(event.target.value);
-                input.value = this.dataIndices[i];
-                helper.value = this.dataIndices[i];
-            };
             let inputlable = document.createElement("label");
             if (this.type == "joystick") {
                 inputlable.innerHTML = (i == 0 ? "X" : "Y");
@@ -703,11 +697,17 @@ class DSItem {
             }
             cell.appendChild(inputlable);
             cell.appendChild(input);
-            let helper = document.createElement("select");
-            for (let j = 0; j < control_console.children.length; j++) {
+            let helper = document.createElement("select"); // TODO: update helper when control or telemetry variables are added or renamed? or, hide properties so they have to be re-opened?
+            input.onchange = (event) => {
+                set_ui_save_button_unsaved();
+                this.dataIndices[i] = parseInt(event.target.value);
+                input.value = this.dataIndices[i];
+                helper.value = this.dataIndices[i];
+            };
+            for (let j = 0; j < console.children.length; j++) {
                 let option = document.createElement("option");
                 option.value = j;
-                option.textContent = control_console.children[j].children[1].value;
+                option.textContent = console.children[j].children[1].value;
                 helper.appendChild(option);
             }
             helper.value = this.dataIndices[i];
