@@ -13,5 +13,135 @@
             0,
             0
         ]
+    },
+    {
+        "type": 1,
+        "name": "TMC7300IC",
+        "username": "TMC7300_AB",
+        "inputs": [],
+        "outputs": [],
+        "parameters": [
+            37,
+            0
+        ]
+    },
+    {
+        "type": 1,
+        "name": "TMC7300IC",
+        "username": "TMC7300_CD",
+        "inputs": [],
+        "outputs": [],
+        "parameters": [
+            37,
+            1
+        ]
+    },
+    {
+        "type": 2,
+        "name": "MotorDriverTMC7300",
+        "username": "portA",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            1,
+            true,
+            35
+        ]
+    },
+    {
+        "type": 2,
+        "name": "MotorDriverTMC7300",
+        "username": "portB",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            1,
+            false,
+            35
+        ]
+    },
+    {
+        "type": 2,
+        "name": "MotorDriverTMC7300",
+        "username": "portC",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            2,
+            true,
+            35
+        ]
+    },
+    {
+        "type": 2,
+        "name": "MotorDriverTMC7300",
+        "username": "portD",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            2,
+            false,
+            35
+        ]
+    },
+    {
+        "type": 3,
+        "name": "MotorDriverEsp32Servo",
+        "username": "port1",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            0,
+            18
+        ]
+    },
+    {
+        "type": 3,
+        "name": "MotorDriverEsp32Servo",
+        "username": "port2",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            1,
+            17
+        ]
+    },
+    {
+        "type": 3,
+        "name": "MotorDriverEsp32Servo",
+        "username": "port3",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            2,
+            9
+        ]
+    },
+    {
+        "type": 3,
+        "name": "MotorDriverEsp32Servo",
+        "username": "port4",
+        "inputs": [
+            -1
+        ],
+        "outputs": [],
+        "parameters": [
+            3,
+            5
+        ]
     }
 ]

@@ -18,6 +18,9 @@ document.addEventListener("DOMContentLoaded", () => {
         loadPresets();
         loadMiscConfigInfo();
         loadConfig();
+        fetch("/presets/build_info.json").then(response => response.json()).then(data => {
+            document.getElementById("build-time").innerHTML = "code compiled at " + data["build_time"];
+        });
         //TODO: handle errors loading from robot
     }
     setInterval(() => {
