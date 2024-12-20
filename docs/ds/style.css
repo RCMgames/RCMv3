@@ -90,7 +90,9 @@
 }
 
 .clear-ds-items-button {
-  background-color: #FF3355;
+  background-color: #cc9692;
+  margin: 2px;
+  border: none;
 }
 
 .config-edit {

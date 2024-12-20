@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loadWifiSettings();
         loadUI();
         loadPresets();
+        loadMiscConfigInfo();
         loadConfig();
         //TODO: handle errors loading from robot
     }
@@ -2380,6 +2381,44 @@ function saveConfig() {
     });
 }
 
+function loadMiscConfigInfo(path = "") {
+    fetch(path + '/loadMiscConfigInfo.json')
+        .then(response => response.text())
+        .then(data => {
+            data = data.substring(0, data.lastIndexOf('}') + 1);
+            return JSON.parse(data);// trim null character from end of string
+        }
+        ).then(data => {
+            miscConfigInfo = data;
+            if (miscConfigInfo["board"] != undefined) {
+                document.getElementById("board-type-selector").value = miscConfigInfo["board"];
+                document.getElementById("board-type-selector").dispatchEvent(new Event('change'));
+            }
+            if (miscConfigInfo["variableNames"] != undefined) {
+                if (miscConfigInfo["variableNames"]["control"] != undefined) {
+                    for (let i = 0; i < miscConfigInfo["variableNames"]["control"].length; i++) {
+                        if (i >= txdata.length) {
+                            txdata.push(0);
+                        }
+                        let consoleControl = document.getElementById("console-control");
+                        expandConsoleControlIfNeeded(consoleControl, txdata.length);
+                        consoleControl.children[i].children[1].value = miscConfigInfo["variableNames"]["control"][i];
+                    }
+                }
+                if (miscConfigInfo["variableNames"]["telemetry"] != undefined) {
+                    for (let i = 0; i < miscConfigInfo["variableNames"]["telemetry"].length; i++) {
+                        if (i >= rxdata.length) {
+                            rxdata.push(0);
+                        }
+                        let consoleTelemetry = document.getElementById("console-telemetry");
+                        expandConsoleTelemetryIfNeeded(consoleTelemetry, rxdata.length);
+                        consoleTelemetry.children[i].children[1].value = miscConfigInfo["variableNames"]["telemetry"][i];
+                    }
+                }
+            }
+        });
+}
+
 async function loadPresets() {
     fetch('/presets/presets.json').then(response => response.json()).then(presets => {
 
@@ -2434,42 +2473,6 @@ async function loadPresets() {
             }
         }
     });
-
-    fetch('/loadMiscConfigInfo.json')
-        .then(response => response.text())
-        .then(data => {
-            data = data.substring(0, data.lastIndexOf('}') + 1);
-            return JSON.parse(data);// trim null character from end of string
-        }
-        ).then(data => {
-            miscConfigInfo = data;
-            if (miscConfigInfo["board"] != undefined) {
-                document.getElementById("board-type-selector").value = miscConfigInfo["board"];
-                document.getElementById("board-type-selector").dispatchEvent(new Event('change'));
-            }
-            if (miscConfigInfo["variableNames"] != undefined) {
-                if (miscConfigInfo["variableNames"]["control"] != undefined) {
-                    for (let i = 0; i < miscConfigInfo["variableNames"]["control"].length; i++) {
-                        if (i >= txdata.length) {
-                            txdata.push(0);
-                        }
-                        let consoleControl = document.getElementById("console-control");
-                        expandConsoleControlIfNeeded(consoleControl, txdata.length);
-                        consoleControl.children[i].children[1].value = miscConfigInfo["variableNames"]["control"][i];
-                    }
-                }
-                if (miscConfigInfo["variableNames"]["telemetry"] != undefined) {
-                    for (let i = 0; i < miscConfigInfo["variableNames"]["telemetry"].length; i++) {
-                        if (i >= rxdata.length) {
-                            rxdata.push(0);
-                        }
-                        let consoleTelemetry = document.getElementById("console-telemetry");
-                        expandConsoleTelemetryIfNeeded(consoleTelemetry, rxdata.length);
-                        consoleTelemetry.children[i].children[1].value = miscConfigInfo["variableNames"]["telemetry"][i];
-                    }
-                }
-            }
-        });
 }
 
 function saveMiscConfigInfo() {
@@ -2496,13 +2499,25 @@ function saveMiscConfigInfo() {
     }).then(response => {
         response.text().then((text) => {
             if (text == "OK") {
-                // robotSaveConfig(); //TODO WAS THIS IMPORTANT?
                 set_misc_save_button_saved();
             } else {
                 set_misc_save_button_unsaved();
             }
         });
     });
+}
+
+function saveMiscConfigInfoToFile() {
+    miscConfigInfo["variableNames"] = { "control": [], "telemetry": [] };
+    for (let i = 0; i < document.getElementById("console-control").children.length; i++) {
+        miscConfigInfo["variableNames"]["control"].push(document.getElementById("console-control").children[i].children[1].value);
+    }
+    for (let i = 0; i < document.getElementById("console-telemetry").children.length; i++) {
+        miscConfigInfo["variableNames"]["telemetry"].push(document.getElementById("console-telemetry").children[i].children[1].value);
+    }
+
+    dataToSend = JSON.stringify(miscConfigInfo);
+    downloadFile(dataToSend, 'miscConfigInfo.json');
 }
 
 function loadProject() {
@@ -2514,5 +2529,12 @@ function loadProject() {
     let projectFullURL = projectUrl + projectName;
     loadUI(projectFullURL + "/UIdata.json");
     loadConfig(projectFullURL + "/config.json");
+    loadMiscConfigInfo(projectFullURL + "/miscConfigInfo.json");
     set_ui_save_button_unsaved();
+}
+
+function saveProjectToFile() {
+    downloadUIData();
+    saveMiscConfigInfoToFile();
+    saveConfigToFile();
 }
