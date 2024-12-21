@@ -1262,6 +1262,7 @@ function addDSItem(_type) {
     DSItems.push(item);
     document.getElementById("ds-list").appendChild(item.nameElement())
     document.getElementById("ds-properties").replaceChildren(item.propertiesElement());
+    set_ui_save_button_unsaved();
 }
 function clearDSItems(deletePermanently = true) {
     const list = document.getElementById("ds-list");
@@ -2258,6 +2259,7 @@ function clearConfig() {
     activeComponentList = [];
     document.getElementById("active-components").replaceChildren();
     document.getElementById("component-properties").replaceChildren();
+    set_config_save_button_unsaved();
 }
 
 function saveConfigToFile() {
@@ -2290,9 +2292,7 @@ function loadConfigFromFile() {
 }
 
 function robotSaveConfig() {
-    document.getElementById("config-save-button").classList.remove("config-save-button-unsaved");
-    document.getElementById("config-save-button").classList.remove("config-save-button-saved");
-    document.getElementById("config-save-button").classList.add("config-save-button-default");
+    set_config_save_button_default();
     document.getElementById("config-status").innerHTML = "Saving...";
     document.getElementById("config-status").style.backgroundColor = "yellow";
 
@@ -2301,6 +2301,7 @@ function robotSaveConfig() {
             if (text == "OK") {
                 document.getElementById("config-status").innerHTML = "Saved";
                 document.getElementById("config-status").style.backgroundColor = "lightgreen";
+                set_config_save_button_saved();
             } else {
                 set_config_save_button_unsaved();
                 document.getElementById("config-status").innerHTML = "config not saved, try again";
@@ -2374,7 +2375,6 @@ function saveConfig() {
                 robotSaveConfig();
                 document.getElementById("config-status").innerHTML = "Sent config";
                 document.getElementById("config-status").style.backgroundColor = "lightgreen";
-                set_config_save_button_saved();
             } else {
                 set_config_save_button_unsaved();
                 document.getElementById("config-status").style.backgroundColor = "#ff9999";
@@ -2384,8 +2384,8 @@ function saveConfig() {
     });
 }
 
-function loadMiscConfigInfo(path = "") {
-    fetch(path + '/loadMiscConfigInfo.json')
+function loadMiscConfigInfo(path = "/loadMiscConfigInfo.json") {
+    fetch(path)
         .then(response => response.text())
         .then(data => {
             data = data.substring(0, data.lastIndexOf('}') + 1);
@@ -2533,7 +2533,11 @@ function loadProject() {
     loadUI(projectFullURL + "/UIdata.json");
     loadConfig(projectFullURL + "/config.json");
     loadMiscConfigInfo(projectFullURL + "/miscConfigInfo.json");
+    set_misc_save_button_unsaved();
+    set_config_save_button_unsaved();
+    robotSaveConfig();
     set_ui_save_button_unsaved();
+    saveUI();
 }
 
 function saveProjectToFile() {
