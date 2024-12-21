@@ -1363,7 +1363,7 @@ function connect() {
             var rxByteArray = new Uint8Array(data);
             var newrxdata = new Float32Array(rxByteArray.buffer);
             rxdata = [];
-            for (var i = 1; i <= newrxdata.length; i++) { // websocketcomms.h adds an extra number to the front of the array so that the array is never empty
+            for (var i = 1; i < newrxdata.length; i++) { // websocketcomms.h adds an extra number to the front of the array so that the array is never empty
                 rxdata[i - 1] = newrxdata[i];
             }
 
