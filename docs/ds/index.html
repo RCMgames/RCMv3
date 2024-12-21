@@ -104,15 +104,16 @@
       <details>
         <summary>example projects</summary>
         <div id="load-projects-div">
-          load example project from <a target="_blank" rel="noopener noreferrer"
+          Load example projects from GitHub. See the examples <a target="_blank" rel="noopener noreferrer"
             href="https://github.com/RCMgames/RCMv3-examples">here</a>:
           <br>
-          <input id="projecturl" type="text"
-            value="https://raw.githubusercontent.com/RCMgames/RCMv3-examples/refs/heads/main/"></input>
+          <input id="projecturl" type="text" style="width:300px;" onchange="loadProjectHelper();"
+            value="RCMgames/RCMv3-examples"></input>
+          <br><br>
+          <input id="project-name" type="text" style="width:300px;"></input> <select id="project-name-helper"
+            onchange="projectNameHelperChanged();"></select>
           <br>
-          <input id="project-name" type="text"></input>
-          <br>
-          <button onclick="loadProject();">load project</button>
+          <button id="load-project-button" onclick="loadProject();">load project</button>
           <br><br>
           <button onclick="saveProjectToFile();">download current project</button>
         </div>

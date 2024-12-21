@@ -20,7 +20,10 @@ document.addEventListener("DOMContentLoaded", () => {
         loadConfig();
         fetch("/presets/build_info.json").then(response => response.json()).then(data => {
             document.getElementById("build-time").innerHTML = "code compiled at " + data["build_time"];
+        }).catch(() => {
+            document.getElementById("build-time").innerHTML = "error loading code compile time";
         });
+        loadProjectHelper();
         //TODO: handle errors loading from robot
     }
     setInterval(() => {
@@ -107,6 +110,7 @@ function deleteTelemetryVariable() {
     if (rxdata.length < console_telemetry.children.length) {
         console_telemetry.removeChild(console_telemetry.lastChild);
     }
+    set_misc_save_button_unsaved();
 }
 function deleteControlVariable() {
     txdata.pop();
@@ -114,6 +118,7 @@ function deleteControlVariable() {
     if (txdata.length < console_control.children.length) {
         console_control.removeChild(console_control.lastChild);
     }
+    set_misc_save_button_unsaved();
 }
 function zeroControlVariables() {
     for (let i = 0; i < txdata.length; i++) {
@@ -1440,19 +1445,12 @@ function saveUI() {
         }
     });
 }
-function loadUI(fromURL = '/loadUI.json') {
-    fetch(fromURL)
-        .then(response => {
-            if (response.ok) {
-                return response.text();
-            } else {
-                throw new Error();
-            }
-        })
-        .then(data => {
-            return JSON.parse(data.substring(0, data.lastIndexOf('}') + 1));
-        })
-        .then(data => {
+async function loadUI(fromURL = '/loadUI.json') {
+    try {
+        const response = await fetch(fromURL);
+        if (response.ok) {
+            const datatext = await response.text();
+            const data = JSON.parse(datatext.substring(0, datatext.lastIndexOf('}') + 1));
             if (data.UIdata != undefined) {
                 clearDSItems();
                 for (let i = 0; i < data.UIdata.length; i++) {
@@ -1461,10 +1459,13 @@ function loadUI(fromURL = '/loadUI.json') {
                     DSItems.push(item);
                     document.getElementById("ds-list").appendChild(item.nameElement());
                 }
+                return true;
             }
-        })
-        .catch(() => {
-        });
+        }
+        return false;
+    } catch {
+        return false;
+    }
 }
 
 function saveWifiSettings() {
@@ -1491,11 +1492,7 @@ function saveWifiSettings() {
 
 function loadWifiSettings() {
     fetch('/loadWifiSettings.json')
-        .catch((error) => {
-        })
         .then(response => response.json())
-        .catch((error) => {
-        })
         .then(data => {
             if (data.ssid == undefined || data.password == undefined || data.hostname == undefined || data.mode == undefined) {
                 document.getElementById("wifi-ssid").value = "";
@@ -1511,7 +1508,7 @@ function loadWifiSettings() {
             if (document.getElementById("wifi-hostname").value == "rcmv3" && document.getElementById("wifi-ssid").value == "" && document.getElementById("wifi-password").value == "") {
                 setWifiSettingsHelper();
             }
-        }).catch((error) => {
+        }).catch(() => {
         });
 }
 
@@ -2324,31 +2321,31 @@ function loadBoardInfo(errorCallback) {
         });
 }
 
-function loadConfig(fromURL = '/loadConfig.json') {
-    document.getElementById("config-status").innerHTML = "Loading...";
-    document.getElementById("config-status").style.backgroundColor = "yellow";
-    fetch(fromURL)
-        .then(response => {
-            return response.text();
-        })
-        .then(data => {
-            let processedText = data.replace(/-Infinity/g, "\"-Infinity\"")
-                .replace(/(?<!-)Infinity/g, "\"Infinity\"")
-                .replace(/NaN/g, "\"NaN\"");
-            return JSON.parse(processedText);
-        })
-        .then(data => {
-            document.getElementById("config-status").innerHTML = "reloaded";
-            document.getElementById("config-status").style.backgroundColor = "lightgreen";
-            document.getElementById("active-components").replaceChildren();
-            document.getElementById("component-properties").replaceChildren();
-            activeComponentList = [];
-            for (let i = 0; i < data.components.length; i++) {
-                activeComponentList.push(new ActiveComponent(data.components[i], activeComponentList.length, true));
-            }
-        }).catch((error) => {
-            console.log(error);
-        });
+async function loadConfig(fromURL = '/loadConfig.json') {
+    try {
+        document.getElementById("config-status").innerHTML = "Loading...";
+        document.getElementById("config-status").style.backgroundColor = "yellow";
+        const response = await fetch(fromURL);
+        if (!response.ok) {
+            return false;
+        }
+        const data = await response.text();
+        let processedText = data.replace(/-Infinity/g, "\"-Infinity\"")
+            .replace(/(?<!-)Infinity/g, "\"Infinity\"")
+            .replace(/NaN/g, "\"NaN\"");
+        let jsonData = await JSON.parse(processedText);
+        document.getElementById("config-status").innerHTML = "reloaded";
+        document.getElementById("config-status").style.backgroundColor = "lightgreen";
+        document.getElementById("active-components").replaceChildren();
+        document.getElementById("component-properties").replaceChildren();
+        activeComponentList = [];
+        for (let i = 0; i < jsonData.components.length; i++) {
+            activeComponentList.push(new ActiveComponent(jsonData.components[i], activeComponentList.length, true));
+        }
+        return true;
+    } catch {
+        return false;
+    }
 }
 function saveConfig() {
     document.getElementById("config-status").innerHTML = "saving...";
@@ -2384,42 +2381,45 @@ function saveConfig() {
     });
 }
 
-function loadMiscConfigInfo(path = "/loadMiscConfigInfo.json") {
-    fetch(path)
-        .then(response => response.text())
-        .then(data => {
-            data = data.substring(0, data.lastIndexOf('}') + 1);
-            return JSON.parse(data);// trim null character from end of string
+async function loadMiscConfigInfo(path = "/loadMiscConfigInfo.json") {
+    try {
+        let data = await fetch(path);
+        data = await data.text();
+        data = data.substring(0, data.lastIndexOf('}') + 1);
+        data = await JSON.parse(data);
+        miscConfigInfo = data;
+
+        if (miscConfigInfo["board"] != undefined) {
+            document.getElementById("board-type-selector").value = miscConfigInfo["board"];
+            document.getElementById("board-type-selector").dispatchEvent(new Event('change'));
         }
-        ).then(data => {
-            miscConfigInfo = data;
-            if (miscConfigInfo["board"] != undefined) {
-                document.getElementById("board-type-selector").value = miscConfigInfo["board"];
-                document.getElementById("board-type-selector").dispatchEvent(new Event('change'));
-            }
-            if (miscConfigInfo["variableNames"] != undefined) {
-                if (miscConfigInfo["variableNames"]["control"] != undefined) {
-                    for (let i = 0; i < miscConfigInfo["variableNames"]["control"].length; i++) {
-                        if (i >= txdata.length) {
-                            txdata.push(0);
-                        }
-                        let consoleControl = document.getElementById("console-control");
-                        expandConsoleControlIfNeeded(consoleControl, txdata.length);
-                        consoleControl.children[i].children[1].value = miscConfigInfo["variableNames"]["control"][i];
+        if (miscConfigInfo["variableNames"] != undefined) {
+            if (miscConfigInfo["variableNames"]["control"] != undefined) {
+                for (let i = 0; i < miscConfigInfo["variableNames"]["control"].length; i++) {
+                    if (i >= txdata.length) {
+                        txdata.push(0);
                     }
-                }
-                if (miscConfigInfo["variableNames"]["telemetry"] != undefined) {
-                    for (let i = 0; i < miscConfigInfo["variableNames"]["telemetry"].length; i++) {
-                        if (i >= rxdata.length) {
-                            rxdata.push(0);
-                        }
-                        let consoleTelemetry = document.getElementById("console-telemetry");
-                        expandConsoleTelemetryIfNeeded(consoleTelemetry, rxdata.length);
-                        consoleTelemetry.children[i].children[1].value = miscConfigInfo["variableNames"]["telemetry"][i];
-                    }
+                    let consoleControl = document.getElementById("console-control");
+                    expandConsoleControlIfNeeded(consoleControl, txdata.length);
+                    consoleControl.children[i].children[1].value = miscConfigInfo["variableNames"]["control"][i];
                 }
             }
-        });
+            if (miscConfigInfo["variableNames"]["telemetry"] != undefined) {
+                for (let i = 0; i < miscConfigInfo["variableNames"]["telemetry"].length; i++) {
+                    if (i >= rxdata.length) {
+                        rxdata.push(0);
+                    }
+                    let consoleTelemetry = document.getElementById("console-telemetry");
+                    expandConsoleTelemetryIfNeeded(consoleTelemetry, rxdata.length);
+                    consoleTelemetry.children[i].children[1].value = miscConfigInfo["variableNames"]["telemetry"][i];
+                }
+            }
+            return true;
+        }
+    } catch {
+        return false;
+    }
+    return false;
 }
 
 async function loadPresets() {
@@ -2523,21 +2523,82 @@ function saveMiscConfigInfoToFile() {
     downloadFile(dataToSend, 'miscConfigInfo.json');
 }
 
-function loadProject() {
-    // TODO: load miscConfigInfo
-    // TODO: save miscConfigInfo to file
+async function loadProject() {
+    // TODO: option to append instead of replace?
+    document.getElementById("project-name").style.border = "1px solid black";
+    document.getElementById("load-project-button").style.border = "1px solid black";
+
     let projectName = document.getElementById("project-name").value;
-    // TODO: option to append instead of replace
-    let projectUrl = document.getElementById("projecturl").value;
+    let projectUrl = "https://raw.githubusercontent.com/" + document.getElementById("projecturl").value + "/refs/heads/main/";
     let projectFullURL = projectUrl + projectName;
-    loadUI(projectFullURL + "/UIdata.json");
-    loadConfig(projectFullURL + "/config.json");
-    loadMiscConfigInfo(projectFullURL + "/miscConfigInfo.json");
-    set_misc_save_button_unsaved();
-    set_config_save_button_unsaved();
-    robotSaveConfig();
-    set_ui_save_button_unsaved();
-    saveUI();
+    const successfulUI = await loadUI(projectFullURL + "/UIdata.json");
+    if (successfulUI) {
+        set_ui_save_button_unsaved();
+        saveUI();
+    } else {
+        console.log("error in loading UI data for project");
+    }
+
+    const successfulConfig = await loadConfig(projectFullURL + "/config.json");
+    if (successfulConfig) {
+        set_config_save_button_unsaved();
+        robotSaveConfig();
+    } else {
+        console.log("error in loading config for project");
+    }
+
+    const successfulMisc = await loadMiscConfigInfo(projectFullURL + "/miscConfigInfo.json");
+    if (successfulMisc) {
+        set_misc_save_button_unsaved();
+        saveMiscConfigInfo();
+    } else {
+        console.log("error in loading miscConfigInfo for project");
+    }
+
+    if (!successfulUI || !successfulConfig || !successfulMisc) {
+        document.getElementById("project-name").style.border = "5px solid red";
+    }
+}
+
+function loadProjectHelper() {
+    console.log("starting load project helper");
+    document.getElementById("projecturl").style.border = "1px solid black";
+    if (document.getElementById("projecturl").value == "") {
+        return;
+    }
+    console.log("loading project helper");
+    const url = "https://api.github.com/repos/" + document.getElementById("projecturl").value + "/contents/";
+    fetch(url).then(response => {
+        if (!response.ok) {
+            console.log("response not ok");
+            throw new Error();
+        }
+        return response.json();
+    }).then(data => {
+        if (Array.isArray(data)) {
+            let selector = document.getElementById("project-name-helper");
+            selector.replaceChildren();
+            let defaultOption = document.createElement("option");
+            defaultOption.value = "";
+            defaultOption.textContent = "select project";
+            selector.appendChild(defaultOption);
+            const folders = data.filter(item => item.type === 'dir');
+            folders.forEach(folder => {
+                let option = document.createElement("option");
+                option.value = folder.name;
+                option.textContent = folder.name;
+                selector.appendChild(option);
+            });
+        }
+    }).catch(() => {
+        console.log("caught error in loading projects from repo");
+        document.getElementById("projecturl").style.border = "5px solid red";
+    });
+}
+
+function projectNameHelperChanged() {
+    document.getElementById("project-name").value = document.getElementById("project-name-helper").value;
+    document.getElementById("load-project-button").style.border = "5px solid green";
 }
 
 function saveProjectToFile() {
