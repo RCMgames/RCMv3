@@ -2561,12 +2561,10 @@ async function loadProject() {
 }
 
 function loadProjectHelper() {
-    console.log("starting load project helper");
     document.getElementById("projecturl").style.border = "1px solid black";
     if (document.getElementById("projecturl").value == "") {
         return;
     }
-    console.log("loading project helper");
     const url = "https://api.github.com/repos/" + document.getElementById("projecturl").value + "/contents/";
     fetch(url).then(response => {
         if (!response.ok) {
