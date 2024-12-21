@@ -1363,8 +1363,8 @@ function connect() {
             var rxByteArray = new Uint8Array(data);
             var newrxdata = new Float32Array(rxByteArray.buffer);
             rxdata = [];
-            for (var i = 0; i < newrxdata.length; i++) {
-                rxdata[i] = newrxdata[i];
+            for (var i = 1; i <= newrxdata.length; i++) { // websocketcomms.h adds an extra number to the front of the array so that the array is never empty
+                rxdata[i - 1] = newrxdata[i];
             }
 
             pingTime = Date.now() - lastPingTime;
@@ -2542,7 +2542,7 @@ async function loadProject() {
     const successfulConfig = await loadConfig(projectFullURL + "/config.json");
     if (successfulConfig) {
         set_config_save_button_unsaved();
-        robotSaveConfig();
+        saveConfig();
     } else {
         console.log("error in loading config for project");
     }
@@ -2557,6 +2557,8 @@ async function loadProject() {
 
     if (!successfulUI || !successfulConfig || !successfulMisc) {
         document.getElementById("project-name").style.border = "5px solid red";
+    } else {
+        document.getElementById("load-project-button").style.border = "5px solid green";
     }
 }
 
@@ -2596,7 +2598,7 @@ function loadProjectHelper() {
 
 function projectNameHelperChanged() {
     document.getElementById("project-name").value = document.getElementById("project-name-helper").value;
-    document.getElementById("load-project-button").style.border = "5px solid green";
+    document.getElementById("load-project-button").style.border = "5px solid yellow";
 }
 
 function saveProjectToFile() {

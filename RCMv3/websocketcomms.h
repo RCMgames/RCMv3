@@ -72,7 +72,19 @@ void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType 
                 }
                 wifiArrayCounter = 0;
                 receiveCallback();
+
+                // add a number to the start of the array so that the website never receives an empty message, the website discards this number
                 wifiArrayCounter = 0;
+                union { // this lets us translate between two variables (equal size, but one's 4 bytes in an array, and one's a 4 byte float Reference for unions: https://www.mcgurrin.info/robots/127/
+                    byte b[4];
+                    float v;
+                } d; // d is the union, d.b accesses the byte array, d.v accesses the float
+                d.v = 10;
+                for (int i = 0; i < 4; i++) {
+                    dataToSend[min(wifiArrayCounter, maxWifiSendBufSize - 1)] = d.b[i];
+                    wifiArrayCounter++;
+                }
+
                 sendCallback();
                 ws.binary(client->id(), dataToSend, wifiArrayCounter); // TODO when dataToSend is empty, the website stops getting messages and the ping stops
             }
