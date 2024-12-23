@@ -2037,7 +2037,7 @@ class ActiveComponent {
                 case "JMotorDriver":
                     {
                         this.createHelperForComponentThatNeedsComponent(
-                            ["MotorDriverTMC7300", "MotorDriverEsp32Servo", "MotorDriverEsp32HBridge"],
+                            ["MotorDriverTMC7300", "MotorDriverEsp32Servo", "MotorDriverEsp32HBridge", "MotorDriverPCA9685HBridge"],
                             element, constructorParameter, i);
                     }
                     break;
