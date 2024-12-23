@@ -1450,7 +1450,7 @@ public:
             } break;
             case RC_DATA_JMotorDriver: {
                 if (verifyThatDataIsComponent(components, data[i],
-                        { RC_TYPE_JMotorDriverTMC7300, RC_TYPE_JMotorDriverEsp32Servo, RC_Type_JMotorDriverEsp32HBridge })
+                        { RC_TYPE_JMotorDriverTMC7300, RC_TYPE_JMotorDriverEsp32Servo, RC_Type_JMotorDriverEsp32HBridge, RC_TYPE_JMotorDriverPCA9685HBridge })
                     == false) {
                     return false;
                 }
