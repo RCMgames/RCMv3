@@ -2330,9 +2330,12 @@ async function loadConfig(fromURL = '/loadConfig.json') {
             return false;
         }
         const data = await response.text();
-        let processedText = data.replace(/-Infinity/g, "\"-Infinity\"")
-            .replace(/(?<!-)Infinity/g, "\"Infinity\"")
-            .replace(/NaN/g, "\"NaN\"");
+        let processedText = data;
+        if (fromURL == '/loadConfig.json') {
+            processedText = data.replace(/-Infinity/g, "\"-Infinity\"")
+                .replace(/(?<!-)Infinity/g, "\"Infinity\"")
+                .replace(/NaN/g, "\"NaN\"");
+        }
         let jsonData = await JSON.parse(processedText);
         document.getElementById("config-status").innerHTML = "reloaded";
         document.getElementById("config-status").style.backgroundColor = "lightgreen";
