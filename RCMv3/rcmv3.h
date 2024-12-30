@@ -1567,7 +1567,7 @@ public:
             components.push_back(new RCMv3ComponentBSED(selectedWire, (int)data[1]));
         } break;
         case RC_TYPE_JEncoderBSED: {
-            if (data[1] < 1 || data[1] > 8) {
+            if ((int)data[1] < 1 || (int)data[1] > 8) {
                 create_component_error_msg += " encoderChannel must be between 1 and 8";
                 return false;
             }
