@@ -21,6 +21,7 @@
     "esptool",
     "gobabygocarswithjoysticks",
     "GPIO",
+    "Hcsr",
     "horiz",
     "horiz. slider",
     "inputlable",

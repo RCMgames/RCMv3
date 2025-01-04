@@ -101,7 +101,12 @@ const char* RCMv3ComponentTypeNames[] = {
     "EncoderQuadrature",
     "DrivetrainTwoSide",
     "DrivetrainMecanum",
-    "DrivetrainControlNormalizer"
+    "DrivetrainControlNormalizer",
+    "DigitalRead",
+    "AnalogRead",
+    "HC-SR04",
+    "DigitalWrite",
+    "AnalogWrite"
 };
 // DO NOT REARRANGE arrays, it breaks old config files
 enum RCMv3ComponentType {
@@ -125,6 +130,11 @@ enum RCMv3ComponentType {
     RC_TYPE_JDrivetrainTwoSide,
     RC_TYPE_JDrivetrainMecanum,
     RC_TYPE_DrivetrainControlNormalizer,
+    RC_TYPE_DigitalRead,
+    RC_TYPE_AnalogRead,
+    RC_TYPE_Hcsr04,
+    RC_TYPE_DigitalWrite,
+    RC_TYPE_AnalogWrite,
     RC_TYPE_COUNT
 };
 static_assert(sizeof(RCMv3ComponentTypeNames) / sizeof(RCMv3ComponentTypeNames[0]) == RC_TYPE_COUNT, "RCMv3ComponentTypeNames and RCMv3ComponentType have different number of elements");
@@ -150,6 +160,11 @@ int RCMv3ComponentNumInputs[] = {
     3, // Drivetrain Two Side
     3, // Drivetrain Mecanum
     3, // Drivetrain Control Normalizer
+    0, // DigitalRead
+    0, // AnalogRead
+    0, // Hcsr04
+    1, // DigitalWrite
+    1 // AnalogWrite
 };
 
 /**
@@ -247,6 +262,16 @@ const char* RCMv3ComponentInputNames(RCMv3ComponentType type, uint8_t input)
         case 2:
             return "velocity left";
         }
+    case RC_TYPE_DigitalRead:
+        return "";
+    case RC_TYPE_AnalogRead:
+        return "";
+    case RC_TYPE_Hcsr04:
+        return "";
+    case RC_TYPE_DigitalWrite:
+        return "value";
+    case RC_TYPE_AnalogWrite:
+        return "value";
     } // end of switch
     return "";
 };
@@ -272,6 +297,11 @@ int RCMv3ComponentNumOutputs[] = {
     3, // Drivetrain Two Side
     3, // Drivetrain Mecanum
     0, // Drivetrain Control Normalizer
+    1, // DigitalRead
+    1, // AnalogRead
+    1, // Hcsr04
+    0, // DigitalWrite
+    0 // AnalogWrite
 };
 
 const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
@@ -357,6 +387,16 @@ const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
             return "velocity left";
         }
     case RC_TYPE_DrivetrainControlNormalizer:
+        return "";
+    case RC_TYPE_DigitalRead:
+        return "value";
+    case RC_TYPE_AnalogRead:
+        return "value";
+    case RC_TYPE_Hcsr04:
+        return "distance";
+    case RC_TYPE_DigitalWrite:
+        return "";
+    case RC_TYPE_AnalogWrite:
         return "";
     } // end of switch
     return "";
@@ -523,6 +563,28 @@ public:
                 { "left control deadzone", RC_DATA_Float },
                 { "turning control deadzone", RC_DATA_Float },
                 { "CCW is positive", RC_DATA_Bool }
+            };
+        case RC_TYPE_DigitalRead:
+            return {
+                { "pin", RC_DATA_Pin }
+            };
+        case RC_TYPE_AnalogRead:
+            return {
+                { "pin", RC_DATA_Pin }
+            };
+        case RC_TYPE_Hcsr04:
+            return {
+                { "dataPin", RC_DATA_Pin },
+                { "clockPin", RC_DATA_Pin },
+                { "hx711 distance scale", RC_DATA_Float }
+            };
+        case RC_TYPE_DigitalWrite:
+            return {
+                { "pin", RC_DATA_Pin }
+            };
+        case RC_TYPE_AnalogWrite:
+            return {
+                { "pin", RC_DATA_Pin }
             };
         } // end of switch
         return {};
@@ -979,6 +1041,272 @@ public:
             isrManagerFreePointer(isrBI);
         }
         delete (JEncoderQuadratureAttachInterrupt*)internalInstance;
+    }
+};
+
+class RCMv3ComponentDigitalRead : public RCMv3Component {
+protected:
+    byte pin;
+    boolean reading;
+
+public:
+    RCMv3ComponentDigitalRead(byte _pin)
+        : RCMv3Component(RC_TYPE_DigitalRead)
+    {
+        pin = _pin;
+    }
+    void run()
+    {
+        reading = digitalRead(pin);
+    }
+    float read(int index)
+    {
+        return reading;
+    }
+    void begin()
+    {
+        pinMode(pin, INPUT_PULLUP);
+        reading = HIGH;
+    }
+};
+
+class RCMv3ComponentAnalogRead : public RCMv3Component {
+protected:
+    byte pin;
+    float reading;
+
+public:
+    RCMv3ComponentAnalogRead(byte _pin)
+        : RCMv3Component(RC_TYPE_AnalogRead)
+    {
+        pin = _pin;
+    }
+    void run()
+    {
+        reading = analogReadMilliVolts(pin) / 1000.0;
+    }
+    float read(int index)
+    {
+        return reading;
+    }
+    void begin()
+    {
+        pinMode(pin, INPUT);
+        reading = 3.3;
+    }
+};
+
+class RCMv3ComponentDigitalWrite : public RCMv3Component {
+protected:
+    byte pin;
+    boolean state;
+    boolean enabled;
+
+public:
+    RCMv3ComponentDigitalWrite(byte _pin)
+        : RCMv3Component(RC_TYPE_DigitalWrite)
+    {
+        pin = _pin;
+        state = LOW;
+        enabled = false;
+    }
+    void write(int index, float value)
+    {
+        state = value >= 0.5;
+    }
+    void begin()
+    {
+        pinMode(pin, INPUT);
+    }
+    void enable()
+    {
+        if (!enabled) {
+            pinMode(pin, OUTPUT);
+            enabled = true;
+        }
+    }
+    void disable()
+    {
+        if (enabled) {
+            pinMode(pin, INPUT);
+            enabled = false;
+        }
+    }
+    void run()
+    {
+        if (enabled) {
+            digitalWrite(pin, state);
+        }
+    }
+    ~RCMv3ComponentDigitalWrite()
+    {
+        pinMode(pin, INPUT);
+    }
+};
+
+class RCMv3ComponentAnalogWrite : public RCMv3Component {
+protected:
+    byte pin;
+    float val;
+    boolean enabled;
+
+public:
+    RCMv3ComponentAnalogWrite(byte _pin)
+        : RCMv3Component(RC_TYPE_AnalogWrite)
+    {
+        pin = _pin;
+        val = 0;
+        enabled = false;
+    }
+    void write(int index, float value)
+    {
+        val = value;
+    }
+    void begin()
+    {
+        pinMode(pin, INPUT);
+    }
+    void enable()
+    {
+        if (!enabled) {
+            pinMode(pin, OUTPUT);
+            enabled = true;
+        }
+    }
+    void disable()
+    {
+        if (enabled) {
+            pinMode(pin, INPUT);
+            enabled = false;
+        }
+    }
+    void run()
+    {
+        if (enabled) {
+            analogWrite(pin, constrain(val, 0, 1) * 255);
+        }
+    }
+    ~RCMv3ComponentAnalogWrite()
+    {
+        pinMode(pin, INPUT);
+    }
+};
+
+class RCMv3ComponentHcsr04 : public RCMv3Component {
+protected:
+    float hx711DistanceScale;
+    float distance;
+    boolean successfullyCreatedISRVal;
+
+public:
+    RCMv3ComponentHcsr04(byte _echoPin, byte _trigPin, float _hx711DistanceScale)
+        : RCMv3Component(RC_TYPE_Hcsr04)
+        , echoPin(_echoPin)
+        , trigPin(_trigPin)
+    {
+        hx711DistanceScale = _hx711DistanceScale;
+
+        justGotReading = false;
+        highTime = 0;
+        microsWhenRise = 0;
+        microsWhenFall = 0;
+        microsWhenTrig = 0;
+        waitingAfterPulse = true;
+        echoPulseHigh = false;
+        maxTimeToWaitMicros = 20000;
+        delayBetweenReadingsMicros = 60000;
+        waitingForEcho = false;
+
+        successfullyCreatedISRVal = isrManagerClaimPointer(&isra, &isrAI, this, 3);
+    }
+    void run()
+    {
+        boolean returnVal = false;
+        if (justGotReading) {
+            justGotReading = false;
+            returnVal = true;
+            waitingAfterPulse = true; // for delay between readings
+        }
+        if (echoPulseHigh == false && waitingAfterPulse == true && (micros() - microsWhenFall) > delayBetweenReadingsMicros) {
+            // delay between readings
+            waitingAfterPulse = false;
+            waitingForEcho = true;
+            trigPulse();
+        } else if (echoPulseHigh == false && waitingAfterPulse == false && (micros() - microsWhenTrig) > maxTimeToWaitMicros) {
+            // it's been too long without a pulse, trig again
+            highTime = 0; // distance will be zero
+            returnVal = true;
+            waitingForEcho = true;
+            trigPulse();
+        }
+        if (returnVal == true) {
+            distance = hx711DistanceScale * highTime;
+        }
+    }
+    float read(int index)
+    {
+        return distance;
+    }
+    void begin()
+    {
+        pinMode(echoPin, INPUT);
+        pinMode(trigPin, OUTPUT);
+        distance = 0;
+        attachInterrupt(digitalPinToInterrupt(echoPin), isra, CHANGE);
+        waitingAfterPulse = true;
+        waitingForEcho = true;
+        trigPulse();
+    }
+    void callback(byte id)
+    {
+        if (id == 3) {
+            if (waitingForEcho) {
+                if (digitalRead(echoPin) == HIGH) {
+                    microsWhenRise = micros();
+                    echoPulseHigh = true;
+                } else {
+                    microsWhenFall = micros();
+                    highTime = microsWhenFall - microsWhenRise;
+                    echoPulseHigh = false;
+                    justGotReading = true;
+                    waitingForEcho = false;
+                }
+            }
+        }
+    }
+    boolean successfullyCreatedISR()
+    {
+        return successfullyCreatedISRVal;
+    }
+    ~RCMv3ComponentHcsr04()
+    {
+        if (successfullyCreatedISRVal) {
+            isrManagerFreePointer(isrAI);
+        }
+    }
+
+protected:
+    void (*isra)(void);
+    int isrAI;
+    const byte trigPin;
+    const byte echoPin;
+    float distanceScalar;
+    boolean justGotReading;
+    volatile unsigned long highTime;
+    volatile unsigned long microsWhenRise;
+    volatile unsigned long microsWhenFall;
+    unsigned long microsWhenTrig;
+    unsigned long maxTimeToWaitMicros;
+    unsigned long delayBetweenReadingsMicros;
+    boolean waitingAfterPulse;
+    volatile boolean echoPulseHigh;
+    volatile boolean waitingForEcho;
+    void trigPulse()
+    {
+        digitalWrite(trigPin, HIGH);
+        delayMicroseconds(10);
+        digitalWrite(trigPin, LOW);
+        microsWhenTrig = micros();
     }
 };
 
@@ -1640,6 +1968,18 @@ public:
                 return false;
             }
         } break;
+        case RC_TYPE_Hcsr04: {
+            Serial.printf("creating Hcsr04 with triggerPin %d and echoPin %d and scalar %f\n", (int)data[0], (int)data[1], (float)data[2]);
+            RCMv3ComponentHcsr04* newHcsr04 = new RCMv3ComponentHcsr04((byte)data[0], (byte)data[1], (float)data[2]);
+            if (newHcsr04 && newHcsr04->successfullyCreatedISR()) {
+                Serial.println("        Hcsr04 created successfully");
+                components.push_back(newHcsr04);
+            } else {
+                create_component_error_msg += " failed to create ISR";
+                delete newHcsr04;
+                return false;
+            }
+        } break;
         case RC_TYPE_JDrivetrainTwoSide: {
             if (data[2] == 0) {
                 create_component_error_msg += " width can not be 0";
@@ -1662,6 +2002,22 @@ public:
             JDrivetrain* drivetrain = (JDrivetrain*)components[(int)data[0]]->getInternalInstance();
             Serial.printf("creating DrivetrainControlNormalizer with drivetrain %d and deadzoneTheta %f and deadzoneX %f and deadzoneY %f and CCWIsPositive %d\n", (int)data[0], (float)data[1], (float)data[2], (float)data[3], (int)data[4]);
             components.push_back(new RCMv3ComponentDrivetrainControlNormalizer(*drivetrain, (float)data[3], (float)data[1], (float)data[2], (boolean)data[4]));
+        } break;
+        case RC_TYPE_DigitalRead: {
+            Serial.printf("creating DigitalRead with pin %d\n", (int)data[0]);
+            components.push_back(new RCMv3ComponentDigitalRead((byte)data[0]));
+        } break;
+        case RC_TYPE_AnalogRead: {
+            Serial.printf("creating AnalogRead with pin %d\n", (int)data[0]);
+            components.push_back(new RCMv3ComponentAnalogRead((byte)data[0]));
+        } break;
+        case RC_TYPE_DigitalWrite: {
+            Serial.printf("creating DigitalWrite with pin %d\n", (int)data[0]);
+            components.push_back(new RCMv3ComponentDigitalWrite((byte)data[0]));
+        } break;
+        case RC_TYPE_AnalogWrite: {
+            Serial.printf("creating AnalogWrite with pin %d\n", (int)data[0]);
+            components.push_back(new RCMv3ComponentAnalogWrite((byte)data[0]));
         } break;
         default: {
             create_component_error_msg += " unknown component type ";
