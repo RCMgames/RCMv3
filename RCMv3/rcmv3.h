@@ -574,8 +574,8 @@ public:
             };
         case RC_TYPE_Hcsr04:
             return {
-                { "dataPin", RC_DATA_Pin },
-                { "clockPin", RC_DATA_Pin },
+                { "trigPin", RC_DATA_Pin },
+                { "echoPin", RC_DATA_Pin },
                 { "hx711 distance scale", RC_DATA_Float }
             };
         case RC_TYPE_DigitalWrite:
@@ -1206,10 +1206,10 @@ protected:
     boolean successfullyCreatedISRVal;
 
 public:
-    RCMv3ComponentHcsr04(byte _echoPin, byte _trigPin, float _hx711DistanceScale)
+    RCMv3ComponentHcsr04(byte _trigPin, byte _echoPin, float _hx711DistanceScale)
         : RCMv3Component(RC_TYPE_Hcsr04)
-        , echoPin(_echoPin)
         , trigPin(_trigPin)
+        , echoPin(_echoPin)
     {
         hx711DistanceScale = _hx711DistanceScale;
 
