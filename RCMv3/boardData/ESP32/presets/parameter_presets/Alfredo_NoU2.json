@@ -8,6 +8,22 @@
         ]
     },
     {
+        "type": "float",
+        "name": "inches",
+        "value": "0.00675675",
+        "mask": [
+            "hx711 distance scale"
+        ]
+    },
+    {
+        "type": "float",
+        "name": "centimeters",
+        "value": "0.0172413793",
+        "mask": [
+            "hx711 distance scale"
+        ]
+    },
+    {
         "type": "pin",
         "name": "servo 1 pin",
         "value": 16
