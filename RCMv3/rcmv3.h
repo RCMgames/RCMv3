@@ -1149,6 +1149,7 @@ protected:
     byte pin;
     float val;
     boolean enabled;
+    float setVal;
 
 public:
     RCMv3ComponentAnalogWrite(byte _pin)
@@ -1156,6 +1157,7 @@ public:
     {
         pin = _pin;
         val = 0;
+        setVal = -1;
         enabled = false;
     }
     void write(int index, float value)
@@ -1171,6 +1173,8 @@ public:
         if (!enabled) {
             pinMode(pin, OUTPUT);
             enabled = true;
+            setVal = val;
+            analogWrite(pin, constrain(val, 0, 1) * 255);
         }
     }
     void disable()
@@ -1183,7 +1187,10 @@ public:
     void run()
     {
         if (enabled) {
-            analogWrite(pin, constrain(val, 0, 1) * 255);
+            if (val != setVal) {
+                setVal = val;
+                analogWrite(pin, constrain(val, 0, 1) * 255);
+            }
         }
     }
     ~RCMv3ComponentAnalogWrite()
