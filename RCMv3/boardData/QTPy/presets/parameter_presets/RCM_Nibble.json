@@ -12,7 +12,7 @@
         "name": "inches",
         "value": "0.00675675",
         "mask": [
-            "hx711 distance scale"
+            "HC-SR04 distance scale"
         ]
     },
     {
@@ -20,7 +20,7 @@
         "name": "centimeters",
         "value": "0.0172413",
         "mask": [
-            "hx711 distance scale"
+            "HC-SR04 distance scale"
         ]
     },
     {

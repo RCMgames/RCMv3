@@ -86,7 +86,7 @@ void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType 
                 }
 
                 sendCallback();
-                ws.binary(client->id(), dataToSend, wifiArrayCounter); // TODO when dataToSend is empty, the website stops getting messages and the ping stops
+                ws.binary(client->id(), dataToSend, wifiArrayCounter);
             }
         }
     }

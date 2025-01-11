@@ -2129,8 +2129,7 @@ class ActiveComponent {
             }
             document.getElementById("component-properties").appendChild(helper);
         }
-        //TODO: add special helper for JMotorDriverEsp32Servo
-
+        //TODO: add special helper for JMotorDriverEsp32Servo like l293d ports have (pin and pwm channel)
 
         // display all inputs
         let control_console = document.getElementById("console-control");
@@ -2464,7 +2463,7 @@ async function loadPresets() {
             option.value = parameter_presets[i];
             boardTypeSelector.appendChild(option);
         }
-        // TODO: load non-board specific presets (parameter presets)
+        // TODO: load non-board-specific parameter presets (it's not so good that I had to add a copy of HC-SR04 distance scale to every board individually
         boardTypeSelector.onchange = (event) => {
             let preset = event.target.value;
             if (preset && preset != "null") {
@@ -2602,6 +2601,15 @@ function loadProjectHelper() {
 function projectNameHelperChanged() {
     document.getElementById("project-name").value = document.getElementById("project-name-helper").value;
     document.getElementById("load-project-button").style.border = "5px solid yellow";
+    fetch("https://raw.githubusercontent.com/" + document.getElementById("projecturl").value + "/refs/heads/main/" + document.getElementById("project-name-helper").value + "/README.md").then(response => {
+        if (response.ok) {
+            response.text().then(text => {
+                document.getElementById("project-readme").innerHTML = text;
+            });
+        } else {
+            document.getElementById("project-readme").innerHTML = "No README.md found";
+        }
+    });
 }
 
 function saveProjectToFile() {

@@ -562,7 +562,8 @@ public:
                 { "forwards control deadzone", RC_DATA_Float },
                 { "left control deadzone", RC_DATA_Float },
                 { "turning control deadzone", RC_DATA_Float },
-                { "CCW is positive", RC_DATA_Bool }
+                { "CCW is positive", RC_DATA_Bool },
+                { "Left is positive", RC_DATA_Bool }
             };
         case RC_TYPE_DigitalRead:
             return {
@@ -576,7 +577,7 @@ public:
             return {
                 { "trigPin", RC_DATA_Pin },
                 { "echoPin", RC_DATA_Pin },
-                { "hx711 distance scale", RC_DATA_Float }
+                { "HC-SR04 distance scale", RC_DATA_Float }
             };
         case RC_TYPE_DigitalWrite:
             return {
@@ -1201,17 +1202,17 @@ public:
 
 class RCMv3ComponentHcsr04 : public RCMv3Component {
 protected:
-    float hx711DistanceScale;
+    float HC_SR04DistanceScale;
     float distance;
     boolean successfullyCreatedISRVal;
 
 public:
-    RCMv3ComponentHcsr04(byte _trigPin, byte _echoPin, float _hx711DistanceScale)
+    RCMv3ComponentHcsr04(byte _trigPin, byte _echoPin, float _HC_SR04DistanceScale)
         : RCMv3Component(RC_TYPE_Hcsr04)
         , trigPin(_trigPin)
         , echoPin(_echoPin)
     {
-        hx711DistanceScale = _hx711DistanceScale;
+        HC_SR04DistanceScale = _HC_SR04DistanceScale;
 
         justGotReading = false;
         highTime = 0;
@@ -1247,7 +1248,7 @@ public:
             trigPulse();
         }
         if (returnVal == true) {
-            distance = hx711DistanceScale * highTime;
+            distance = HC_SR04DistanceScale * highTime;
         }
     }
     float read(int index)
@@ -1456,7 +1457,7 @@ public:
         delete (JMotorControllerOpen*)internalInstance;
     }
 };
-// TODO: think about when/how position is reset. avoid the float getting big, but also allow for moving specific distances (most important for when drivetrains are added)
+// TODO: think about when/how position is reset. avoid the float getting big, but also allow for moving specific distances as a motor or a drivetrain
 class RCMv3ComponentJMotorControllerClosed : public RCMv3Component {
 protected:
     int inputMode;
@@ -1639,15 +1640,17 @@ protected:
     JTwoDTransform output;
     JDrivetrain& drivetrain;
     boolean CCWIsPositive;
+    boolean LeftIsPositive;
 
 public:
     // TODO: access the RCMv3 component instead of the drivetrain? then this can use write() instead of setVel()
-    RCMv3ComponentDrivetrainControlNormalizer(JDrivetrain& _drivetrain, float deadzoneTheta, float deadzoneX, float deadzoneY, boolean _CCWIsPositive)
+    RCMv3ComponentDrivetrainControlNormalizer(JDrivetrain& _drivetrain, float deadzoneTheta, float deadzoneX, float deadzoneY, boolean _CCWIsPositive, boolean _leftIsPositive)
         : RCMv3Component(RC_TYPE_DrivetrainControlNormalizer)
         , drivetrain(_drivetrain)
     {
         deadzone = { deadzoneX, deadzoneY, deadzoneTheta };
         CCWIsPositive = _CCWIsPositive;
+        LeftIsPositive = _leftIsPositive;
         val = { 0, 0, 0 };
         output = { 0, 0, 0 };
     }
@@ -1667,7 +1670,7 @@ public:
             val.x = value;
             break;
         case 2:
-            val.y = value;
+            val.y = value * (LeftIsPositive ? 1 : -1);
             break;
         }
     }
@@ -2007,8 +2010,8 @@ public:
         } break;
         case RC_TYPE_DrivetrainControlNormalizer: {
             JDrivetrain* drivetrain = (JDrivetrain*)components[(int)data[0]]->getInternalInstance();
-            Serial.printf("creating DrivetrainControlNormalizer with drivetrain %d and deadzoneTheta %f and deadzoneX %f and deadzoneY %f and CCWIsPositive %d\n", (int)data[0], (float)data[1], (float)data[2], (float)data[3], (int)data[4]);
-            components.push_back(new RCMv3ComponentDrivetrainControlNormalizer(*drivetrain, (float)data[3], (float)data[1], (float)data[2], (boolean)data[4]));
+            Serial.printf("creating DrivetrainControlNormalizer with drivetrain %d and deadzoneTheta %f and deadzoneX %f and deadzoneY %f and CCWIsPositive %d and LeftIsPositive %d\n", (int)data[0], (float)data[1], (float)data[2], (float)data[3], (int)data[4], (int)data[5]);
+            components.push_back(new RCMv3ComponentDrivetrainControlNormalizer(*drivetrain, (float)data[3], (float)data[1], (float)data[2], (boolean)data[4], (boolean)data[5]));
         } break;
         case RC_TYPE_DigitalRead: {
             Serial.printf("creating DigitalRead with pin %d\n", (int)data[0]);
