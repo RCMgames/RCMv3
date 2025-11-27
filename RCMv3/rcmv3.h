@@ -106,7 +106,8 @@ const char* RCMv3ComponentTypeNames[] = {
     "AnalogRead",
     "HC-SR04",
     "DigitalWrite",
-    "AnalogWrite"
+    "AnalogWrite",
+    "MotorDriverEsp32PWMDir",
 };
 // DO NOT REARRANGE arrays, it breaks old config files
 enum RCMv3ComponentType {
@@ -135,6 +136,7 @@ enum RCMv3ComponentType {
     RC_TYPE_Hcsr04,
     RC_TYPE_DigitalWrite,
     RC_TYPE_AnalogWrite,
+    RC_Type_JMotorDriverEsp32PWMDir,
     RC_TYPE_COUNT
 };
 static_assert(sizeof(RCMv3ComponentTypeNames) / sizeof(RCMv3ComponentTypeNames[0]) == RC_TYPE_COUNT, "RCMv3ComponentTypeNames and RCMv3ComponentType have different number of elements");
@@ -164,7 +166,8 @@ int RCMv3ComponentNumInputs[] = {
     0, // AnalogRead
     0, // Hcsr04
     1, // DigitalWrite
-    1 // AnalogWrite
+    1, // AnalogWrite
+    1,  // Motor Driver Esp32 PWM Dir
 };
 
 /**
@@ -272,6 +275,8 @@ const char* RCMv3ComponentInputNames(RCMv3ComponentType type, uint8_t input)
         return "value";
     case RC_TYPE_AnalogWrite:
         return "value";
+    case RC_Type_JMotorDriverEsp32PWMDir:
+        return "power";
     } // end of switch
     return "";
 };
@@ -301,7 +306,8 @@ int RCMv3ComponentNumOutputs[] = {
     1, // AnalogRead
     1, // Hcsr04
     0, // DigitalWrite
-    0 // AnalogWrite
+    0, // AnalogWrite
+    0, // Motor Driver Esp32 PWM Dir
 };
 
 const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
@@ -397,6 +403,8 @@ const char* RCMv3ComponentOutputNames(RCMv3ComponentType type, uint8_t output)
     case RC_TYPE_DigitalWrite:
         return "";
     case RC_TYPE_AnalogWrite:
+        return "";
+    case RC_Type_JMotorDriverEsp32PWMDir:
         return "";
     } // end of switch
     return "";
@@ -586,6 +594,12 @@ public:
         case RC_TYPE_AnalogWrite:
             return {
                 { "pin", RC_DATA_Pin }
+            };
+        case RC_Type_JMotorDriverEsp32PWMDir:
+            return {
+                { "pwmChannel", RC_DATA_Int },
+                { "pwmPin", RC_DATA_Pin },
+                { "dirPin", RC_DATA_Pin }
             };
         } // end of switch
         return {};
@@ -817,6 +831,19 @@ public:
     ~RCMv3ComponentJMotorDriverEsp32HBridge()
     {
         delete (JMotorDriverEsp32HBridge*)internalInstance;
+    }
+};
+
+class RCMv3ComponentJMotorDriverEsp32PWMDir: public RCMv3ComponentJMotorDriver {
+public:
+    RCMv3ComponentJMotorDriverEsp32PWMDir(int pwmChannel, int pwmPin, int dirPin)
+        : RCMv3ComponentJMotorDriver(RC_Type_JMotorDriverEsp32PWMDir)
+    {
+        internalInstance = new JMotorDriverEsp32PWMDir(pwmChannel, pwmPin, dirPin);
+    }
+    ~RCMv3ComponentJMotorDriverEsp32PWMDir()
+    {
+        delete (JMotorDriverEsp32PWMDir*)internalInstance;
     }
 };
 
@@ -1887,6 +1914,10 @@ public:
         case RC_Type_JMotorDriverEsp32HBridge: {
             Serial.printf("creating JMotorDriverEsp32HBridge with pwmChannel %d and in1 %d and in2 %d\n", (int)data[0], (int)data[1], (int)data[2]);
             components.push_back(new RCMv3ComponentJMotorDriverEsp32HBridge((int)data[0], (int)data[1], (int)data[2]));
+        } break;
+        case RC_Type_JMotorDriverEsp32PWMDir: {
+            Serial.printf("creating JMotorDriverEsp32PWMDir with pwmChannel %d and pwmPin %d and dirPin %d\n", (int)data[0], (int)data[1], (int)data[2]);
+            components.push_back(new RCMv3ComponentJMotorDriverEsp32PWMDir((int)data[0], (int)data[1], (int)data[2]));
         } break;
         case RC_TYPE_BSED: {
             Serial.printf("creating BSED with wire %d and address %d\n", (int)data[0], (int)data[1]);
