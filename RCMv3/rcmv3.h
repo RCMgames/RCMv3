@@ -2270,7 +2270,7 @@ void RCMV3_website_save_config(AsyncWebServerRequest* request)
 {
     // print request to Serial
     if (request->hasParam("components", true)) {
-        AsyncWebParameter* p = request->getParam("components", true);
+        const AsyncWebParameter* p = request->getParam("components", true);
         parse_config_error_msg = "";
         if (RCMV3_parse_config(p->value())) {
             request->send(200, "text/plain", "OK");

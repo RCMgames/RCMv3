@@ -2,6 +2,7 @@
 #define WEBSITESERVER_H
 
 #include <Arduino.h>
+#include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
 #include <LittleFS.h>
@@ -155,7 +156,7 @@ void startWebServer()
     // save driverstation data received in post request and save the json to LittleFS
     server.on("/saveUI", HTTP_POST, [](AsyncWebServerRequest* request) {
         if (request->hasParam("UIdata", true)) {
-            AsyncWebParameter* p = request->getParam("UIdata", true);
+            const AsyncWebParameter* p = request->getParam("UIdata", true);
             prefs.begin("uiSettings", false, nvsPartition);
             boolean success = prefs.putBytes("uidata", p->value().c_str(), p->value().length());
             prefs.end();
@@ -171,25 +172,25 @@ void startWebServer()
 
     server.on("/saveWifiSettings", HTTP_POST, [](AsyncWebServerRequest* request) {
         if (request->hasParam("ssid", true)) {
-            AsyncWebParameter* p = request->getParam("ssid", true);
+            const AsyncWebParameter* p = request->getParam("ssid", true);
             prefs.begin("wifiSettings", false, nvsPartition);
             prefs.putString("ssid", p->value().c_str());
             prefs.end();
         }
         if (request->hasParam("password", true)) {
-            AsyncWebParameter* p = request->getParam("password", true);
+            const AsyncWebParameter* p = request->getParam("password", true);
             prefs.begin("wifiSettings", false, nvsPartition);
             prefs.putString("password", p->value().c_str());
             prefs.end();
         }
         if (request->hasParam("hostname", true)) {
-            AsyncWebParameter* p = request->getParam("hostname", true);
+            const AsyncWebParameter* p = request->getParam("hostname", true);
             prefs.begin("wifiSettings", false, nvsPartition);
             prefs.putString("hostname", p->value().c_str());
             prefs.end();
         }
         if (request->hasParam("mode", true)) {
-            AsyncWebParameter* p = request->getParam("mode", true);
+            const AsyncWebParameter* p = request->getParam("mode", true);
             prefs.begin("wifiSettings", false, nvsPartition);
             prefs.putInt("mode", p->value().toInt());
             prefs.end();
@@ -228,7 +229,7 @@ void startWebServer()
 
     server.on("/saveMiscConfigInfo", HTTP_POST, [](AsyncWebServerRequest* request) {
         if (request->hasParam("miscConfigInfo", true)) {
-            AsyncWebParameter* p = request->getParam("miscConfigInfo", true);
+            const AsyncWebParameter* p = request->getParam("miscConfigInfo", true);
             prefs.begin("miscConfigInfo", false, nvsPartition);
             boolean success = prefs.putBytes("miscConfigInfo", p->value().c_str(), p->value().length());
             prefs.end();
