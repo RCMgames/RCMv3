@@ -52,6 +52,7 @@ enum RCMv3DataType {
     RC_DATA_JDrivetrain,
     RC_DATA_COUNT
 };
+
 // DO NOT RENAME without updating docs/ds/script.js and all presets
 const char* RCMv3DataTypeNames[] = {
     "int",
