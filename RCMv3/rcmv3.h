@@ -600,7 +600,8 @@ public:
             return {
                 { "pwmChannel", RC_DATA_Int },
                 { "pwmPin", RC_DATA_Pin },
-                { "dirPin", RC_DATA_Pin }
+                { "dirPin", RC_DATA_Pin },
+                { "reverse", RC_DATA_Bool }
             };
         } // end of switch
         return {};
@@ -837,10 +838,10 @@ public:
 
 class RCMv3ComponentJMotorDriverEsp32PWMDir: public RCMv3ComponentJMotorDriver {
 public:
-    RCMv3ComponentJMotorDriverEsp32PWMDir(int pwmChannel, int pwmPin, int dirPin)
+    RCMv3ComponentJMotorDriverEsp32PWMDir(int pwmChannel, int pwmPin, int dirPin, bool reverse)
         : RCMv3ComponentJMotorDriver(RC_Type_JMotorDriverEsp32PWMDir)
     {
-        internalInstance = new JMotorDriverEsp32PWMDir(pwmChannel, pwmPin, dirPin);
+        internalInstance = new JMotorDriverEsp32PWMDir(pwmChannel, pwmPin, dirPin, reverse);
     }
     ~RCMv3ComponentJMotorDriverEsp32PWMDir()
     {
@@ -1917,8 +1918,8 @@ public:
             components.push_back(new RCMv3ComponentJMotorDriverEsp32HBridge((int)data[0], (int)data[1], (int)data[2]));
         } break;
         case RC_Type_JMotorDriverEsp32PWMDir: {
-            Serial.printf("creating JMotorDriverEsp32PWMDir with pwmChannel %d and pwmPin %d and dirPin %d\n", (int)data[0], (int)data[1], (int)data[2]);
-            components.push_back(new RCMv3ComponentJMotorDriverEsp32PWMDir((int)data[0], (int)data[1], (int)data[2]));
+            Serial.printf("creating JMotorDriverEsp32PWMDir with pwmChannel %d and pwmPin %d and dirPin %d and reverse %d\n", (int)data[0], (int)data[1], (int)data[2], (bool)data[3]);
+            components.push_back(new RCMv3ComponentJMotorDriverEsp32PWMDir((int)data[0], (int)data[1], (int)data[2], (bool)data[3]));
         } break;
         case RC_TYPE_BSED: {
             Serial.printf("creating BSED with wire %d and address %d\n", (int)data[0], (int)data[1]);
