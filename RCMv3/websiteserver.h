@@ -158,7 +158,7 @@ void startWebServer()
         if (request->hasParam("UIdata", true)) {
             const AsyncWebParameter* p = request->getParam("UIdata", true);
             prefs.begin("uiSettings", false, nvsPartition);
-            boolean success = prefs.putBytes("uidata", p->value().c_str(), p->value().length());
+            boolean success = prefs.putBytes("uidata", p->value().c_str(), p->value().length() + 1);
             prefs.end();
             if (success) {
                 request->send(200, "text/plain", "OK");
@@ -218,8 +218,7 @@ void startWebServer()
         prefs.begin("uiSettings", true, nvsPartition);
         if (prefs.isKey("uidata")) {
             size_t len = prefs.getBytesLength("uidata"); // Preferences library allows long byte arrays but limits strings
-            char buf[len + 1];
-            buf[len] = '\0';
+            char buf[len];
             prefs.getBytes("uidata", buf, len);
             request->send(200, "application/json", buf);
         } else {
@@ -232,7 +231,7 @@ void startWebServer()
         if (request->hasParam("miscConfigInfo", true)) {
             const AsyncWebParameter* p = request->getParam("miscConfigInfo", true);
             prefs.begin("miscConfigInfo", false, nvsPartition);
-            boolean success = prefs.putBytes("miscConfigInfo", p->value().c_str(), p->value().length());
+            boolean success = prefs.putBytes("miscConfigInfo", p->value().c_str(), p->value().length() + 1);
             prefs.end();
             if (success) {
                 request->send(200, "text/plain", "OK");
@@ -248,8 +247,7 @@ void startWebServer()
         prefs.begin("miscConfigInfo", true, nvsPartition);
         if (prefs.isKey("miscConfigInfo")) {
             size_t len = prefs.getBytesLength("miscConfigInfo"); // Preferences library allows long byte arrays but limits strings
-            char buf[len + 1];
-            buf[len] = '\0';
+            char buf[len];
             request->send(200, "application/json", buf);
         } else {
             request->send(200, "application/json", "{}");
