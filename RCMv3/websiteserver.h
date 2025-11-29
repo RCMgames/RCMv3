@@ -230,6 +230,9 @@ void startWebServer()
     server.on("/saveMiscConfigInfo", HTTP_POST, [](AsyncWebServerRequest* request) {
         if (request->hasParam("miscConfigInfo", true)) {
             const AsyncWebParameter* p = request->getParam("miscConfigInfo", true);
+            Serial.println("save ");
+            Serial.println(p->value().c_str());
+            Serial.println(p->value().length());
             prefs.begin("miscConfigInfo", false, nvsPartition);
             boolean success = prefs.putBytes("miscConfigInfo", p->value().c_str(), p->value().length());
             prefs.end();
@@ -248,6 +251,9 @@ void startWebServer()
         if (prefs.isKey("miscConfigInfo")) {
             size_t len = prefs.getBytesLength("miscConfigInfo"); // Preferences library allows long byte arrays but limits strings
             char buf[len+1];
+            buf[len] = '\0';
+            Serial.println("load ");
+            Serial.println(buf);
             prefs.getBytes("miscConfigInfo", buf, len);
             request->send(200, "application/json", buf);
         } else {
