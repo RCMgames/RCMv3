@@ -2,11 +2,11 @@
 #define WEBSITESERVER_H
 
 #include <Arduino.h>
-#include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
 #include <LittleFS.h>
 #include <Preferences.h>
+#include <WiFi.h>
 
 #include "rcmv3.h"
 
@@ -218,7 +218,8 @@ void startWebServer()
         prefs.begin("uiSettings", true, nvsPartition);
         if (prefs.isKey("uidata")) {
             size_t len = prefs.getBytesLength("uidata"); // Preferences library allows long byte arrays but limits strings
-            char buf[len+1];
+            char buf[len + 1];
+            buf[len] = '\0';
             prefs.getBytes("uidata", buf, len);
             request->send(200, "application/json", buf);
         } else {
@@ -230,9 +231,6 @@ void startWebServer()
     server.on("/saveMiscConfigInfo", HTTP_POST, [](AsyncWebServerRequest* request) {
         if (request->hasParam("miscConfigInfo", true)) {
             const AsyncWebParameter* p = request->getParam("miscConfigInfo", true);
-            Serial.println("save ");
-            Serial.println(p->value().c_str());
-            Serial.println(p->value().length());
             prefs.begin("miscConfigInfo", false, nvsPartition);
             boolean success = prefs.putBytes("miscConfigInfo", p->value().c_str(), p->value().length());
             prefs.end();
@@ -250,11 +248,8 @@ void startWebServer()
         prefs.begin("miscConfigInfo", true, nvsPartition);
         if (prefs.isKey("miscConfigInfo")) {
             size_t len = prefs.getBytesLength("miscConfigInfo"); // Preferences library allows long byte arrays but limits strings
-            char buf[len+1];
+            char buf[len + 1];
             buf[len] = '\0';
-            Serial.println("load ");
-            Serial.println(buf);
-            prefs.getBytes("miscConfigInfo", buf, len);
             request->send(200, "application/json", buf);
         } else {
             request->send(200, "application/json", "{}");
