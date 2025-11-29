@@ -218,7 +218,7 @@ void startWebServer()
         prefs.begin("uiSettings", true, nvsPartition);
         if (prefs.isKey("uidata")) {
             size_t len = prefs.getBytesLength("uidata"); // Preferences library allows long byte arrays but limits strings
-            char buf[len];
+            char buf[len+1];
             prefs.getBytes("uidata", buf, len);
             request->send(200, "application/json", buf);
         } else {
@@ -247,7 +247,7 @@ void startWebServer()
         prefs.begin("miscConfigInfo", true, nvsPartition);
         if (prefs.isKey("miscConfigInfo")) {
             size_t len = prefs.getBytesLength("miscConfigInfo"); // Preferences library allows long byte arrays but limits strings
-            char buf[len];
+            char buf[len+1];
             prefs.getBytes("miscConfigInfo", buf, len);
             request->send(200, "application/json", buf);
         } else {
