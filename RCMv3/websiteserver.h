@@ -232,6 +232,14 @@ void startWebServer()
             const AsyncWebParameter* p = request->getParam("miscConfigInfo", true);
             prefs.begin("miscConfigInfo", false, nvsPartition);
             boolean success = prefs.putBytes("miscConfigInfo", p->value().c_str(), p->value().length() + 1);
+            // print length then string then bytes in ascii
+            Serial.println(p->value().length() + 1);
+            Serial.println(p->value());
+            for (size_t i = 0; i < p->value().length() + 1; i++) {
+                Serial.print((uint8_t)p->value().c_str()[i], DEC);
+                Serial.print(" ");
+            }
+            Serial.println();
             prefs.end();
             if (success) {
                 request->send(200, "text/plain", "OK");
@@ -245,10 +253,18 @@ void startWebServer()
 
     server.on("/loadMiscConfigInfo.json", HTTP_GET, [](AsyncWebServerRequest* request) {
         prefs.begin("miscConfigInfo", true, nvsPartition);
+        Serial.println("Loading miscConfigInfo:");
         if (prefs.isKey("miscConfigInfo")) {
             size_t len = prefs.getBytesLength("miscConfigInfo"); // Preferences library allows long byte arrays but limits strings
             char buf[len];
             request->send(200, "application/json", buf);
+            Serial.println(len);
+            Serial.println(buf);
+            for (size_t i = 0; i < len; i++) {
+                Serial.print((uint8_t)buf[i], DEC);
+                Serial.print(" ");
+            }
+            Serial.println();
         } else {
             request->send(200, "application/json", "{}");
         }
