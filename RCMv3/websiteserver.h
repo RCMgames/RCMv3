@@ -257,6 +257,7 @@ void startWebServer()
         if (prefs.isKey("miscConfigInfo")) {
             size_t len = prefs.getBytesLength("miscConfigInfo"); // Preferences library allows long byte arrays but limits strings
             char buf[len];
+            prefs.getBytes("miscConfigInfo", buf, len);
             request->send(200, "application/json", buf);
             Serial.println(len);
             Serial.println(buf);
