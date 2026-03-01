@@ -1,0 +1,102 @@
+[
+    {
+        "type": "pin",
+        "name": "M1_Direction",
+        "value": 13
+    },
+    {
+        "type": "pin",
+        "name": "M1_Speed",
+        "value": 14
+    },
+    {
+        "type": "pin",
+        "name": "M2_Direction",
+        "value": 12
+    },
+    {
+        "type": "pin",
+        "name": "M2_Speed",
+        "value": 27
+    },
+    {
+        "type": "pin",
+        "name": "M3_Direction",
+        "value": 26
+    },
+    {
+        "type": "pin",
+        "name": "M3_Speed",
+        "value": 5
+    },
+    {
+        "type": "pin",
+        "name": "M4_Direction",
+        "value": 25
+    },
+    {
+        "type": "pin",
+        "name": "M4_Speed",
+        "value": 17
+    },
+    {
+        "type": "pin",
+        "name": "M6_Direction",
+        "value": 4
+    },
+    {
+        "type": "pin",
+        "name": "M6_Speed",
+        "value": 15
+    },
+    {
+        "type": "MotorDriverEsp32PWMDir",
+        "name": "M1",
+        "value": [
+            1,
+            14,
+            13,
+            false
+        ]
+    },
+    {
+        "type": "MotorDriverEsp32PWMDir",
+        "name": "M2",
+        "value": [
+            2,
+            27,
+            12,
+            false
+        ]
+    },
+    {
+        "type": "MotorDriverEsp32PWMDir",
+        "name": "M3",
+        "value": [
+            3,
+            5,
+            26,
+            false
+        ]
+    },
+    {
+        "type": "MotorDriverEsp32PWMDir",
+        "name": "M4",
+        "value": [
+            4,
+            17,
+            25,
+            false
+        ]
+    },
+    {
+        "type": "MotorDriverEsp32PWMDir",
+        "name": "M6",
+        "value": [
+            6,
+            15,
+            4,
+            false
+        ]
+    }
+]

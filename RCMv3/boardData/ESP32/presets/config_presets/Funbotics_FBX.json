@@ -1,0 +1,77 @@
+[
+    {
+        "type": 25,
+        "name": "MotorDriverEsp32PWMDir",
+        "username": "M1",
+        "inputs": [
+            1
+        ],
+        "outputs": [],
+        "parameters": [
+            1,
+            14,
+            13,
+            false
+        ]
+    },
+    {
+        "type": 25,
+        "name": "MotorDriverEsp32PWMDir",
+        "username": "M2",
+        "inputs": [
+            2
+        ],
+        "outputs": [],
+        "parameters": [
+            2,
+            27,
+            12,
+            false
+        ]
+    },
+    {
+        "type": 25,
+        "name": "MotorDriverEsp32PWMDir",
+        "username": "M3",
+        "inputs": [
+            3
+        ],
+        "outputs": [],
+        "parameters": [
+            3,
+            5,
+            26,
+            false
+        ]
+    },
+    {
+        "type": 25,
+        "name": "MotorDriverEsp32PWMDir",
+        "username": "M4",
+        "inputs": [
+            4
+        ],
+        "outputs": [],
+        "parameters": [
+            4,
+            17,
+            25,
+            false
+        ]
+    },
+    {
+        "type": 25,
+        "name": "MotorDriverEsp32PWMDir",
+        "username": "M6",
+        "inputs": [
+            6
+        ],
+        "outputs": [],
+        "parameters": [
+            6,
+            15,
+            4,
+            false
+        ]
+    }
+]

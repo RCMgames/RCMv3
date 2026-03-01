@@ -21,12 +21,13 @@ https://github.com/RCMgames/RCMv3-examples
 * [RCM_Nibble](https://github.com/RCMgames/RCM-Hardware-Nibble)
 * [Alfredo Systems NoU2](https://www.alfredosys.com/products/alfredo-nou2/)
 * [Alfredo Systems NoU3](https://www.alfredosys.com/products/alfredo-nou3/)
+* [Funbotics FBX PCB Board](https://www.funbotics.org/fbx)
 
 ### ESP32 Microcontrollers
 * ESP32 DevKitC with 38 pins
 * Adafruit ESP32s3 QT Py with no psram (#5426)
 * Adafruit ESP32s3 QT Py with 2MB psram (#5700)
-* ESP32 DevKit with 30 pins (NoU2)
+* ESP32 DevKit with 30 pins (NoU2, FBX)
 * Alfredo Systems NoU3
 
 ## References
