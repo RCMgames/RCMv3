@@ -75,6 +75,8 @@ void setup()
 
     PowerOn();
 
+    Enable();
+
     Disable();
 
     connectToWifi();
